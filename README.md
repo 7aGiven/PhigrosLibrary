@@ -1,4 +1,4 @@
-# PhigrosBot
+# PhigrosLibrary
 基于Mirai Console
 
 基于Phigros 2.4.7
