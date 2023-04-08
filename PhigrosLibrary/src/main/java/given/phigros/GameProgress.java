@@ -1,6 +1,6 @@
 package given.phigros;
 
-class GameProgress {
+public class GameProgress {
     private final ByteReader reader;
     GameProgress(byte[] data) {
         reader = new ByteReader(data);

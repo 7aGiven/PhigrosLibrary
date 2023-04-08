@@ -61,6 +61,18 @@ public class PhigrosUser {
     public GameRecord getGameRecord() throws IOException, InterruptedException {
         return new GameRecord(extractZip("gameRecord"));
     }
+    public GameKey getGamekey() throws IOException, InterruptedException {
+        return new GameKey(extractZip("gameKey"));
+    }
+    public GameProgress getGameProgress() throws IOException, InterruptedException {
+        return new GameProgress(extractZip("gameProgress"));
+    }
+    public GameUser getGameUser() throws IOException, InterruptedException {
+        return new GameUser(extractZip("user"));
+    }
+    public GameSettings getGameSettings() throws IOException, InterruptedException {
+        return new GameSettings(extractZip("settings"));
+    }
     public void modifyData(short num) throws Exception {
         ModifyStrategyImpl.data(this,num);
     }

@@ -21,6 +21,11 @@ dependencies {
 }
 ```
 
+### 其他语言开发者使用PhigrosLibrary
+如果有人提issue，可能会做。
+
+初步考虑是通过grpc来通信。
+
 ### 功能
 
 获取B19数组
@@ -94,9 +99,23 @@ class SongExpect implements Comparable<SongExpect> {
 
 Phigros云存档包含5部分内容
 
-gameRecord, gameKey, gameProgress, user, setting
+gameRecord, gameKey, gameProgress, user, settings
 
 其中gameRecord和gameKey为数组结构，其他三个是普通的结构。
+```java
+class Main {
+    public static void main(String[] args) {
+        PhigrosUser.readInfo(bufferReader);
+        var user = new PhigrosUser(sessionToken);
+        user.update();
+        user.getGameRecord();
+        user.getGameKey();
+        user.getGameProgress();
+        user.getGameUser();
+        user.getGameSettings()
+    }
+}
+```
 ```java
 public class GameSettings {
     GameSettings(byte[] data);
