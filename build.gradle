@@ -1,0 +1,18 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '1.8.20'
+    id 'org.jetbrains.kotlin.plugin.serialization' version '1.8.20'
+    id 'net.mamoe.mirai-console' version '2.14.0'
+}
+
+group = 'given'
+version = '0.4'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation project(':PhigrosLibrary')
+}
+
+mirai.jvmTarget = JavaVersion.VERSION_11
