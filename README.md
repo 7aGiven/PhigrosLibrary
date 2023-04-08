@@ -1,9 +1,7 @@
 # PhigrosLibrary
-基于Mirai Console
 
 基于Phigros 2.4.7
-
-至Phigros 2.5.1
+至 Phigros 2.5.1
 
 ### Java开发者使用PhigrosLibrary
 
@@ -24,7 +22,8 @@ dependencies {
 ```
 
 ### 功能
-绘制B19成绩图
+
+获取B19数组
 
 获取所有已打过的可推分曲的目标ACC
 
@@ -36,22 +35,25 @@ dependencies {
 
 添加存档头像
 
-添加存档收藏品(未经测试)
-
-### Phigros QQ群
-加入 282781492 闲聊
+添加存档收藏品
 
 ### PhigrosLibrary 快速使用
 
-以下代码获取了Phigros账户的B19信息。
+以下代码获取了Phigros账户的B19信息和推分信息。
+
+PhigrosUser.readInfo为读取定数信息，本类库不保存定数信息和曲绘信息。
+定数表为一个csv文件，项目根目录可查看其结构。
+
+PhigrosUser对象执行update方法可以更新存档URL，否则会输出旧的B19图
 ```java
 class Main {
     public static void main(String[] args) {
+        PhigrosUser.readInfo(bufferReader);
         var user = new PhigrosUser(sessionToken);
         user.update();
         SongLevel[] songLevels = user.getB19();
         SongExpect[] accAll = user.getExpects(); //获取所有可推分歌曲的acc和目标acc
-        SongExpect acc = user.getExpect();
+        SongExpect acc = user.getExpect("青芽.茶鸣拾贰律");
     }
 }
 ```
@@ -68,6 +70,20 @@ class SongLevel implements Comparable<SongLevel>{
     @Override
     public int compareTo(SongLevel songLevel) {
         return Double.compare(songLevel.rks, rks);
+    }
+}
+```
+SongExpect的结构是这样的。
+```java
+class SongExpect implements Comparable<SongExpect> {
+    public String id;
+    public String name;
+    public int level;
+    public float acc;
+    public float expect;
+    @Override
+    public int compareTo(SongExpect songExpect) {
+        return Float.compare(expect - acc, songExpect.expect - songExpect.acc);
     }
 }
 ```
@@ -156,3 +172,6 @@ class GameKeyItem {
     public void setAvater(boolean b);
 }
 ```
+
+### Phigros QQ群
+加入 282781492 闲聊
