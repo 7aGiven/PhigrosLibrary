@@ -47,7 +47,7 @@ dependencies {
 以下代码获取了Phigros账户的B19信息和推分信息。
 
 PhigrosUser.readInfo为读取定数信息，本类库不保存定数信息和曲绘信息。
-定数表为一个csv文件，项目根目录可查看其结构。
+定数表为一个csv文件，项目根目录difficulty.csv可查看其结构。
 
 PhigrosUser对象执行update方法可以更新存档URL，否则会输出旧的B19图
 ```java
@@ -71,7 +71,7 @@ class SongLevel implements Comparable<SongLevel>{
     public float acc; 
     public boolean fc;
     public float difficulty; // 定数
-    public float rks;        // 计算出的rks
+    public float rks;        // 单曲rks
     @Override
     public int compareTo(SongLevel songLevel) {
         return Double.compare(songLevel.rks, rks);
@@ -85,7 +85,7 @@ class SongExpect implements Comparable<SongExpect> {
     public String name;
     public int level;
     public float acc;
-    public float expect;
+    public float expect; //目标ACC
     @Override
     public int compareTo(SongExpect songExpect) {
         return Float.compare(expect - acc, songExpect.expect - songExpect.acc);

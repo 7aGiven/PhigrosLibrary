@@ -20,7 +20,7 @@ class B19 implements Iterable<String> {
         final var b19 = new SongLevel[20];
         Arrays.fill(b19,new SongLevel());
         for (String id:this) {
-            final var levels = PhigrosUser.getInfo(id).levels;
+            final var levels = PhigrosUser.getInfo(id);
             int level = levels.length - 1;
             for (; level >= 0; level--) {
                 if (levels[level] <= b19[minIndex].rks && levels[level] <= b19[0].rks)
@@ -56,7 +56,11 @@ class B19 implements Iterable<String> {
                 minIndex = min(b19);
             }
         }
-        Arrays.sort(b19);
+        for (minIndex = 1; minIndex < 20; minIndex++) {
+            if (b19[minIndex].id == null)
+                break;
+        }
+        Arrays.sort(b19, 1, minIndex);
         return b19;
     }
 
@@ -65,22 +69,22 @@ class B19 implements Iterable<String> {
             if (!songId.equals(id))
                 continue;
             final float minRks = getMinRks();
-            final var info = PhigrosUser.getInfo(id);
+            final var levels = PhigrosUser.getInfo(id);
             length = reader.getByte();
             reader.position++;
             final var list = new ArrayList<SongExpect>();
-            for (var level = 0; level < info.levels.length; level++) {
+            for (var level = 0; level < levels.length; level++) {
                 if (levelNotExist(level))
                     continue;
-                if (info.levels[level] <= minRks)
+                if (levels[level] <= minRks)
                     continue;
                 final int score = reader.getInt();
                 if (score == 1000000)
                     continue;
                 final float acc = reader.getFloat();
-                final var expect = (float) Math.sqrt(minRks / info.levels[level]) * 45f + 55f;
+                final var expect = (float) Math.sqrt(minRks / levels[level]) * 45f + 55f;
                 if (expect > acc)
-                    list.add(new SongExpect(id, info.name, level, acc, expect));
+                    list.add(new SongExpect(id, level, acc, expect));
             }
             return list.toArray(SongExpect[]::new);
         }
@@ -90,8 +94,7 @@ class B19 implements Iterable<String> {
         final var minRks = getMinRks();
         final var list = new ArrayList<SongExpect>();
         for (String id:this) {
-            final var info = PhigrosUser.getInfo(id);
-            final var levels = info.levels;
+            final var levels = PhigrosUser.getInfo(id);
             int level = levels.length - 1;
             for (; level >= 0; level--) {
                 if (levels[level] <= minRks)
@@ -111,7 +114,7 @@ class B19 implements Iterable<String> {
                 final float acc = reader.getFloat();
                 final var expect = (float) Math.sqrt(minRks / levels[level]) * 45f + 55f;
                 if (expect > acc)
-                    list.add(new SongExpect(id, info.name, level, acc, expect));
+                    list.add(new SongExpect(id, level, acc, expect));
             }
         }
         final var array = list.toArray(SongExpect[]::new);
@@ -123,7 +126,7 @@ class B19 implements Iterable<String> {
         var minIndex = 0;
         final var b19 = new float[19];
         for (String id:this) {
-            final var levels = PhigrosUser.getInfo(id).levels;
+            final var levels = PhigrosUser.getInfo(id);
             int level = levels.length - 1;
             for (; level >= 0; level--) {
                 if (levels[level] <= b19[minIndex])
@@ -209,7 +212,7 @@ class B19 implements Iterable<String> {
     private class B19Iterator implements Iterator<String> {
         private int position;
         B19Iterator() {
-            position = Util.getBit(data[0], 7) ? 2 : 1;
+            position = data[0] < 0 ? 2 : 1;
         }
 
         @Override

@@ -16,7 +16,7 @@ public class PhigrosUser {
     public String session;
     URI zipUrl;
     public long time;
-    public final static TreeMap<String,SongInfo> info = new TreeMap<>();
+    public final static TreeMap<String, float[]> info = new TreeMap<>();
     public PhigrosUser(String session) {
         if (!session.matches("[a-z0-9]{25}"))
             throw new RuntimeException("SessionToken格式错误。");
@@ -31,19 +31,16 @@ public class PhigrosUser {
         String lineString;
         while ((lineString = reader.readLine()) != null) {
             String[] line = lineString.split(",");
-            SongInfo songInfo = new SongInfo();
-            songInfo.name = line[1];
-            if (line.length != 5 && line.length != 6)
-                throw new RuntimeException(String.format("曲目%s的定数数量错误。",songInfo.name));
-            final var difficulty = new float[line.length - 2];
-            for (int i = 0; i < line.length - 2; i++) {
-                difficulty[i] = Float.parseFloat(line[i + 2]);
+            if (line.length != 4 && line.length != 5)
+                throw new RuntimeException(String.format("曲目%s的定数数量错误。", line[0]));
+            final var difficulty = new float[line.length - 1];
+            for (int i = 0; i < line.length - 1; i++) {
+                difficulty[i] = Float.parseFloat(line[i + 1]);
             }
-            songInfo.levels = difficulty;
-            info.put(line[0],songInfo);
+            info.put(line[0], difficulty);
         }
     }
-    static SongInfo getInfo(String id) {
+    static float[] getInfo(String id) {
         final var songInfo = info.get(id);
         if (songInfo == null)
             throw new RuntimeException(String.format("缺少%s的信息。", id));
