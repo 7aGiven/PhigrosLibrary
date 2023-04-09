@@ -186,15 +186,13 @@ class Main {
         var user = new PhigrosUser(sessionToken);
         user.update();
         String songId = "青芽.茶鸣拾贰律";
-        user.modify("gameRecord", data -> {
-            var gameRecord = new GameRecord(data);
+        user.modify(GameRecord.class, gameRecord -> {
             for (GameRecordItem item:gameRecord) {
                 for (String id:item) {
                     if (id.equals(songId))
                         item.modifySong(level, score, acc, fc);
                 }
             }
-            byte[] data = gameRecord.getData();
         });
     }
 }
@@ -221,16 +219,11 @@ class GameKeyItem {
     public void setAvater(boolean b);
 }
 ```
-修改存档请使用PhigrosUser.modify(SaveType type, ModifyStrategy strategy)
-```java
-public enum SaveType {
-    gameRecord, gameKey, gameProgress, user, settings
-}
-```
+修改存档请使用<T extend GameExtend> PhigrosUser.modify(Class<T> clazz, ModifyStrategy<T> strategy)
 ```java
 @FunctionalInterface
-interface ModifyStrategy {
-    byte[] apply(byte[] data) throws IOException;
+interface ModifyStrategy<T extends GameExtend> {
+    T apply(T data) throws IOException;
 }
 ```
 
