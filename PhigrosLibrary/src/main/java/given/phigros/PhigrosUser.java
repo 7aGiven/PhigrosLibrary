@@ -9,6 +9,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.TreeMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -23,9 +24,6 @@ public class PhigrosUser {
         this.session = session;
     }
     public PhigrosUser(URI saveUrl) {this.saveUrl = saveUrl;}
-    public Summary update() throws IOException, InterruptedException {
-        return new Summary(SaveManager.update(this));
-    }
     public static void readInfo(BufferedReader reader) throws IOException {
         info.clear();
         String lineString;
@@ -50,17 +48,25 @@ public class PhigrosUser {
     public static void validSession(String session) throws IOException, InterruptedException {
         SaveManager.save(session);
     }
+
+    public Summary update() throws IOException, InterruptedException {
+        return new Summary(SaveManager.update(this));
+    }
+
     public SongLevel[] getB19() throws IOException, InterruptedException {
         return new B19(extractZip(GameRecord.class)).getB19();
     }
-    public SongExpect[] getExpect() throws IOException, InterruptedException {
+    public SongExpect[] getExpect(String id) throws IOException, InterruptedException {
+        return new B19(extractZip(GameRecord.class)).getExpect(id);
+    }
+    public SongExpect[] getExpects() throws IOException, InterruptedException {
         return new B19(extractZip(GameRecord.class)).getExpects();
     }
     public <T extends GameExtend> T get(Class<T> clazz) throws IOException, InterruptedException {
         try {
             return clazz.getDeclaredConstructor(byte[].class).newInstance(extractZip(clazz));
         } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
-            throw new RuntimeException();
+            throw new RuntimeException(e);
         }
     }
     public void modifyData(short num) throws Exception {
@@ -82,7 +88,7 @@ public class PhigrosUser {
         SaveManager.modify(this, ModifyStrategyImpl.challengeScore, clazz, strategy);
     }
     public void downloadSave(Path path) throws IOException, InterruptedException {
-        Files.write(path,getData());
+        Files.write(path,getData(), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
     }
     public void uploadSave(Path path) throws IOException, InterruptedException {
         SaveManager saveManager = new SaveManager(this);
@@ -114,7 +120,7 @@ public class PhigrosUser {
         }
         return SaveManager.decrypt(buffer);
     }
-    public byte[] getData() throws IOException, InterruptedException {
+    private byte[] getData() throws IOException, InterruptedException {
         HttpResponse<byte[]> response = SaveManager.client.send(HttpRequest.newBuilder(saveUrl).build(),HttpResponse.BodyHandlers.ofByteArray());
         if (response.statusCode() == 404) throw new RuntimeException("存档文件不存在");
         return response.body();

@@ -219,7 +219,8 @@ class GameKeyItem {
     public void setAvater(boolean b);
 }
 ```
-修改存档请使用<T extend GameExtend> PhigrosUser.modify(Class<T> clazz, ModifyStrategy<T> strategy)
+修改存档请使用
+`<T extend GameExtend> PhigrosUser.modify(Class<T> clazz, ModifyStrategy<T> strategy)`
 ```java
 @FunctionalInterface
 interface ModifyStrategy<T extends GameExtend> {
