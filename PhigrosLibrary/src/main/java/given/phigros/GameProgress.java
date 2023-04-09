@@ -1,7 +1,7 @@
 package given.phigros;
 
 public class GameProgress implements GameExtend {
-    private final static String name = "gameProgress";
+    final static String name = "gameProgress";
     private final ByteReader reader;
     GameProgress(byte[] data) {
         reader = new ByteReader(data);

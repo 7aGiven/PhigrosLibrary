@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 public class GameRecord implements GameExtend, Iterable<GameRecordItem> {
-    private final static String name = "gameRecord";
+    final static String name = "gameRecord";
     private final GameRecordItem[] array;
 
     GameRecord(byte[] data) {

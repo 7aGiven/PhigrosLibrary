@@ -3,7 +3,7 @@ package given.phigros;
 import java.io.IOException;
 
 public class GameUser implements GameExtend {
-    private final static String name = "user";
+    final static String name = "user";
     private final ByteReader reader;
     GameUser(byte[] data) {
         reader = new ByteReader(data);
