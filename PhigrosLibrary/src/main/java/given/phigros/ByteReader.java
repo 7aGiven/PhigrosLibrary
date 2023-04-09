@@ -55,7 +55,7 @@ class ByteReader {
     }
 
     short getVarShort() {
-        if(Util.getBit(data[position],7)) {
+        if(data[position] < 0) {
             position += 2;
             return (short) (0b01111111 & data[position - 2] ^ data[position - 1] << 7);
         }

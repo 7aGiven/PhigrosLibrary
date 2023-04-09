@@ -45,7 +45,7 @@ public class GameRecordItem implements Iterable<SongLevel> {
             id = GameRecordItem.this.getId();
             length = reader.getByte();
             fc = reader.getByte();
-            difficulty = PhigrosUser.getInfo(id).levels;
+            difficulty = PhigrosUser.getInfo(id);
         }
         @Override
         public boolean hasNext() {
