@@ -1,6 +1,9 @@
 package given.phigros;
 
-public class GameUser {
+import java.io.IOException;
+
+public class GameUser extends GameExtend {
+    private final static String name = "user";
     private final ByteReader reader;
     GameUser(byte[] data) {
         reader = new ByteReader(data);
@@ -20,5 +23,10 @@ public class GameUser {
             reader.skipString();
         }
         return reader.getString();
+    }
+
+    @Override
+    byte[] getData() throws IOException {
+        return reader.data;
     }
 }

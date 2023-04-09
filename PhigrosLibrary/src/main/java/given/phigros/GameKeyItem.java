@@ -1,6 +1,6 @@
 package given.phigros;
 
-class GameKeyItem {
+public class GameKeyItem {
     final ByteReader reader;
 
     GameKeyItem(byte[] data) {

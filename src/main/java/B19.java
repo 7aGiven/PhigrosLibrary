@@ -33,7 +33,7 @@ public class B19 {
         final var expect = phigrosUser.getExpect();
         ForwardMessageBuilder builder = new ForwardMessageBuilder(user);
         for (SongExpect songExpect:expect) {
-            builder.add(user,new PlainText(String.format("%s %s\nnow：%.3f\nexpect：%.3f",songExpect.id,levels[songExpect.level],songExpect.acc,songExpect.expect)));
+            builder.add(user,new PlainText(String.format("%s %s\nnow：%.3f\nexpect：%.3f",DAO.INSTANCE.info.get(songExpect.id),levels[songExpect.level],songExpect.acc,songExpect.expect)));
         }
         return builder.build();
     }

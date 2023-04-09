@@ -9,7 +9,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 public final class PhigrosCompositeCommand extends JCompositeCommand {
@@ -60,7 +59,7 @@ public final class PhigrosCompositeCommand extends JCompositeCommand {
     public void restore(CommandContext context) throws Exception {
         SenderFacade sender = new SenderFacade(context);
         Path path = MyPlugin.INSTANCE.resolveDataFile(String.format("backup/%d.zip",sender.user.getId())).toPath();
-        sender.myUser.uploadZip(path);
+        sender.myUser.uploadSave(path);
         sender.sendMessage("恢复成功");
     }
     @SubCommand
@@ -120,11 +119,15 @@ public final class PhigrosCompositeCommand extends JCompositeCommand {
     public void modify(CommandContext context,@Name("歌名") String song,@Name("难度")String levelString,@Name("分数")int s,@Name("acc") float a,@Name("fc") boolean fc) throws Exception {
         SenderFacade sender = new SenderFacade(context);
         if (!(sender.subject instanceof Group)) throw new Exception("只能在群内发送modify指令");
-        final String streamSong = song;
-        Optional<Map.Entry<String, SongInfo>> optional = PhigrosUser.info.entrySet().stream().filter(entry -> entry.getValue().name.equals(streamSong)).findFirst();
-        if (optional.isPresent()) {
-            song = optional.get().getKey();
-        } else {
+        boolean exist = false;
+        for (Map.Entry<String, String> entry : DAO.INSTANCE.info.entrySet()) {
+            if (entry.getValue().equals(song)) {
+                song = entry.getKey();
+                exist = true;
+            } else if (entry.getKey().equals(song))
+                exist = true;
+        }
+        if (!exist) {
             sender.sendMessage("该歌曲不存在");
             return;
         }

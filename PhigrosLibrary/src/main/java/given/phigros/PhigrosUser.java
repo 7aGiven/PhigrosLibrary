@@ -3,6 +3,7 @@ package given.phigros;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -14,15 +15,14 @@ import java.util.zip.ZipInputStream;
 
 public class PhigrosUser {
     public String session;
-    URI zipUrl;
-    public long time;
-    public final static TreeMap<String, float[]> info = new TreeMap<>();
+    URI saveUrl;
+    final static TreeMap<String, float[]> info = new TreeMap<>();
     public PhigrosUser(String session) {
         if (!session.matches("[a-z0-9]{25}"))
             throw new RuntimeException("SessionToken格式错误。");
         this.session = session;
     }
-    public PhigrosUser(URI zipUrl) {this.zipUrl = zipUrl;}
+    public PhigrosUser(URI saveUrl) {this.saveUrl = saveUrl;}
     public Summary update() throws IOException, InterruptedException {
         return new Summary(SaveManager.update(this));
     }
@@ -46,29 +46,22 @@ public class PhigrosUser {
             throw new RuntimeException(String.format("缺少%s的信息。", id));
         return songInfo;
     }
+
     public static void validSession(String session) throws IOException, InterruptedException {
         SaveManager.save(session);
     }
     public SongLevel[] getB19() throws IOException, InterruptedException {
-        return new B19(extractZip("gameRecord")).getB19();
+        return new B19(extractZip(GameRecord.class)).getB19();
     }
     public SongExpect[] getExpect() throws IOException, InterruptedException {
-        return new B19(extractZip("gameRecord")).getExpects();
+        return new B19(extractZip(GameRecord.class)).getExpects();
     }
-    public GameRecord getGameRecord() throws IOException, InterruptedException {
-        return new GameRecord(extractZip("gameRecord"));
-    }
-    public GameKey getGamekey() throws IOException, InterruptedException {
-        return new GameKey(extractZip("gameKey"));
-    }
-    public GameProgress getGameProgress() throws IOException, InterruptedException {
-        return new GameProgress(extractZip("gameProgress"));
-    }
-    public GameUser getGameUser() throws IOException, InterruptedException {
-        return new GameUser(extractZip("user"));
-    }
-    public GameSettings getGameSettings() throws IOException, InterruptedException {
-        return new GameSettings(extractZip("settings"));
+    public <T extends GameExtend> T get(Class<T> clazz) throws IOException, InterruptedException {
+        try {
+            return clazz.getDeclaredConstructor(byte[].class).newInstance(extractZip(clazz));
+        } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
+            throw new RuntimeException();
+        }
     }
     public void modifyData(short num) throws Exception {
         ModifyStrategyImpl.data(this,num);
@@ -85,18 +78,18 @@ public class PhigrosUser {
     public void modifySong(String songId,int level,int s,float a,boolean fc) throws Exception {
         ModifyStrategyImpl.song(this,songId,level,s,a,fc);
     }
-    public void modify(String type, ModifyStrategy strategy) throws IOException, InterruptedException {
-        SaveManager.modify(this, ModifyStrategyImpl.challengeScore, type, strategy);
+    public <T extends GameExtend> void modify(Class<T> clazz, ModifyStrategy<T> strategy) throws IOException, InterruptedException {
+        SaveManager.modify(this, ModifyStrategyImpl.challengeScore, clazz, strategy);
     }
-    public void downloadZip(Path path) throws IOException, InterruptedException {
+    public void downloadSave(Path path) throws IOException, InterruptedException {
         Files.write(path,getData());
     }
-    public void uploadZip(Path path) throws IOException, InterruptedException {
+    public void uploadSave(Path path) throws IOException, InterruptedException {
         SaveManager saveManager = new SaveManager(this);
         saveManager.data = Files.readAllBytes(path);
         saveManager.uploadZip((short) 3);
     }
-    private byte[] extractZip(String name) throws IOException, InterruptedException {
+    private <T extends GameExtend> byte[] extractZip(Class<T> clazz) throws IOException, InterruptedException {
         byte[] buffer;
         byte[] data = getData();
         try (ByteArrayInputStream reader = new ByteArrayInputStream(data)) {
@@ -104,7 +97,13 @@ public class PhigrosUser {
                 while (true) {
                     ZipEntry entry = zipReader.getNextEntry();
                     System.out.println(entry);
-                    if (entry.getName().equals(name)) {
+                    String tmp;
+                    try {
+                        tmp = (String) clazz.getDeclaredField("name").get(null);
+                    } catch (NoSuchFieldException | IllegalAccessException e) {
+                        throw new RuntimeException(e);
+                    }
+                    if (entry.getName().equals(tmp)) {
                         break;
                     }
                 }
@@ -116,7 +115,7 @@ public class PhigrosUser {
         return SaveManager.decrypt(buffer);
     }
     public byte[] getData() throws IOException, InterruptedException {
-        HttpResponse<byte[]> response = SaveManager.client.send(HttpRequest.newBuilder(zipUrl).build(),HttpResponse.BodyHandlers.ofByteArray());
+        HttpResponse<byte[]> response = SaveManager.client.send(HttpRequest.newBuilder(saveUrl).build(),HttpResponse.BodyHandlers.ofByteArray());
         if (response.statusCode() == 404) throw new RuntimeException("存档文件不存在");
         return response.body();
     }

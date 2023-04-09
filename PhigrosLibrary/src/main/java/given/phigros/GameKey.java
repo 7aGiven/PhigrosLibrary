@@ -5,7 +5,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-public class GameKey implements Iterable<GameKeyItem> {
+public class GameKey extends GameExtend implements Iterable<GameKeyItem> {
+    private final static String name = "gameKey";
     private final byte version;
     private final GameKeyItem[] array;
     private final ArrayList<GameKeyItem> list = new ArrayList<>();

@@ -6,10 +6,14 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Stream;
 
 public class DAO {
-    public static final DAO INSTANCE;
+    static final DAO INSTANCE;
+    final TreeMap<String, String> info;
+    final HashMap<Long, PhigrosUser> users;
+
     static {
         try {
             INSTANCE = new DAO();
@@ -17,12 +21,23 @@ public class DAO {
             throw new RuntimeException(e);
         }
     }
-    public final HashMap<Long, PhigrosUser> users;
     private DAO() throws IOException {
-        try (final var reader = Files.newBufferedReader(MyPlugin.INSTANCE.resolveDataPath(Path.of("info.csv")))) {
+        try (final var reader = Files.newBufferedReader(MyPlugin.INSTANCE.resolveDataPath(Path.of("difficulty.csv")))) {
             PhigrosUser.readInfo(reader);
         }
+        info = readInfo();
         users = readUser();
+    }
+
+    private TreeMap<String, String> readInfo() throws IOException {
+        final var treeMap = new TreeMap<String, String>();
+        try (final var stream = Files.lines(MyPlugin.INSTANCE.resolveDataPath(Path.of("info.csv")))) {
+            stream.forEach(lineString -> {
+                final var line = lineString.split(",");
+                treeMap.put(line[0], line[1]);
+            });
+        }
+        return treeMap;
     }
     private HashMap<Long, PhigrosUser> readUser() throws IOException {
         Path path = MyPlugin.INSTANCE.resolveDataFile("user.csv").toPath();
@@ -36,7 +51,7 @@ public class DAO {
         }
         return users;
     }
-    public void writeUser() {
+    void writeUser() {
         StringBuilder builder = new StringBuilder();
         for (Map.Entry<Long, PhigrosUser> entry:users.entrySet()) {
             builder.append(String.format("%d,%s\n",entry.getKey(),entry.getValue().session));

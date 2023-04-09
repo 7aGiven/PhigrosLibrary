@@ -5,6 +5,10 @@
 
 ### Java开发者使用PhigrosLibrary
 
+方法1必须以JDK 11开发
+
+方法1：
+
 下载项目源码
 
 复制PhigrosLibrary目录到您的项目根目录
@@ -18,6 +22,19 @@
 ```groovy
 dependencies {
     implementation project(':PhigrosLibrary')
+}
+```
+
+方法2：
+
+下载Release内jar文件
+
+放入您的项目根目录的libs文件夹下
+
+在需要引用PhigrosLibrary的项目的build.gradle里修改 dependencies
+```groovy
+dependencies {
+    implementation files('libs/PhigrosLibrary-0.4.jar')
 }
 ```
 
@@ -55,7 +72,7 @@ class Main {
     public static void main(String[] args) {
         PhigrosUser.readInfo(bufferReader);
         var user = new PhigrosUser(sessionToken);
-        user.update();
+        Summary summary = user.update();
         SongLevel[] songLevels = user.getB19();
         SongExpect[] accAll = user.getExpects(); //获取所有可推分歌曲的acc和目标acc
         SongExpect acc = user.getExpect("青芽.茶鸣拾贰律");
@@ -82,7 +99,6 @@ SongExpect的结构是这样的。
 ```java
 class SongExpect implements Comparable<SongExpect> {
     public String id;
-    public String name;
     public int level;
     public float acc;
     public float expect; //目标ACC
@@ -99,23 +115,35 @@ class SongExpect implements Comparable<SongExpect> {
 
 Phigros云存档包含5部分内容
 
-gameRecord, gameKey, gameProgress, user, settings
+gameRecord, gameKey, gameProgress, user, settings和summary
 
-其中gameRecord和gameKey为数组结构，其他三个是普通的结构。
+其中gameRecord和gameKey为数组结构，其他四个是普通的结构。
+
+获取这5个对象的方法：
 ```java
 class Main {
     public static void main(String[] args) {
         PhigrosUser.readInfo(bufferReader);
         var user = new PhigrosUser(sessionToken);
-        user.update();
-        user.getGameRecord();
-        user.getGameKey();
-        user.getGameProgress();
-        user.getGameUser();
-        user.getGameSettings()
+        Summary summary = user.update();
+        user.get(GameRecord.class);
+        user.get(GameKey.class);
+        user.get(GameProgress.class);
+        user.get(GameUser.class);
+        user.get(GameSettings.class);
     }
 }
 ```
+Summary结构(未完全解析)
+```java
+public class Summary {
+    public final short challenge; //课题分
+    public final float rks;       //rks
+    public final byte version;    //客户端版本号
+    public final String avater;   //头像
+}
+```
+GameSettings结构
 ```java
 public class GameSettings {
     GameSettings(byte[] data);
@@ -128,21 +156,23 @@ public class GameSettings {
     public float 按键缩放();
 }
 ```
+GameUser结构
 ```java
 public class GameUser {
     GameUser(byte[] data);
-    public String getIntroduction();
-    public String getAvater();
-    public String getIllustration();
+    public String getIntroduction(); //自我介绍
+    public String getAvater();       //头像
+    public String getIllustration(); //曲绘
 }
 ```
+GameProgress结构(未完全解析)
 ```java
 class GameProgress {
     private final ByteReader reader;
     GameProgress(byte[] data);
-    public short getChallenge();
+    public short getChallenge(); //课题分
     public void setChallenge(short score);
-    public int getGameData();
+    public int getGameData();    //
     public void setGameData(short MB);
     public byte[] getData();
 }
@@ -189,6 +219,18 @@ class GameKeyItem {
     public void setIllustration(boolean b);
     public boolean getAvater();
     public void setAvater(boolean b);
+}
+```
+修改存档请使用PhigrosUser.modify(SaveType type, ModifyStrategy strategy)
+```java
+public enum SaveType {
+    gameRecord, gameKey, gameProgress, user, settings
+}
+```
+```java
+@FunctionalInterface
+interface ModifyStrategy {
+    byte[] apply(byte[] data) throws IOException;
 }
 ```
 

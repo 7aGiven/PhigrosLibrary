@@ -3,6 +3,6 @@ package given.phigros;
 import java.io.IOException;
 
 @FunctionalInterface
-interface ModifyStrategy {
-    byte[] apply(byte[] data) throws IOException;
+public interface ModifyStrategy<T> {
+    void apply(T data) throws IOException;
 }

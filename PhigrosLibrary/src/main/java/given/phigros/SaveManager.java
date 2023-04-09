@@ -10,6 +10,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -61,7 +62,7 @@ class SaveManager {
         saveModel.gameObjectId = json.getString("objectId");
         saveModel.updatedTime = json.getString("updatedAt");
         saveModel.checksum = json.getJSONObject("metaData").getString("_checksum");
-        user.zipUrl = URI.create(json.getString("url"));
+        user.saveUrl = URI.create(json.getString("url"));
         this.saveModel = saveModel;
     }
     public static String getZipUrl(String session) throws Exception {
@@ -69,8 +70,8 @@ class SaveManager {
     }
     public static String update(PhigrosUser user) throws IOException, InterruptedException {
         JSONObject json = save(user.session);
-        user.zipUrl = URI.create(json.getJSONObject("gameFile").getString("url"));
-        System.out.println(user.zipUrl);
+        user.saveUrl = URI.create(json.getJSONObject("gameFile").getString("url"));
+        System.out.println(user.saveUrl);
         return json.getString("summary");
     }
     public static JSONObject save(String session) throws IOException, InterruptedException {
@@ -99,13 +100,13 @@ class SaveManager {
         HttpResponse<String> res = client.send(builder.build(),handler);
         System.out.println(res.body());
     }
-    public static void modify(PhigrosUser user, short challengeScore, String type, ModifyStrategy callback) throws IOException, InterruptedException {
+    public static <T extends GameExtend> void modify(PhigrosUser user, short challengeScore, Class<T> type, ModifyStrategy<T> callback) throws IOException, InterruptedException {
         SaveManager saveManagement = new SaveManager(user);
         saveManagement.modify(type,callback);
         saveManagement.uploadZip(challengeScore);
     }
-    public void modify(String type, ModifyStrategy callback) throws IOException, InterruptedException {
-        HttpRequest request = HttpRequest.newBuilder(user.zipUrl).build();
+    private <T extends GameExtend> void modify(Class<T> clazz, ModifyStrategy<T> callback) throws IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder(user.saveUrl).build();
         data = client.send(request,HttpResponse.BodyHandlers.ofByteArray()).body();
         md5.reset();
         if (!md5(data).equals(saveModel.checksum)) throw new RuntimeException("文件校验不一致");
@@ -121,11 +122,24 @@ class SaveManager {
                             ZipEntry dEntry = new ZipEntry(entry);
                             dEntry.setCompressedSize(-1);
                             zipWriter.putNextEntry(dEntry);
-                            if (entry.getName().equals(type)) {
+                            String name;
+                            try {
+                                name = (String) clazz.getDeclaredField("name").get(null);
+                            } catch (NoSuchFieldException | IllegalAccessException e) {
+                                throw new RuntimeException(e);
+                            }
+                            if (entry.getName().equals(name)) {
                                 zipReader.skip(1);
                                 data = zipReader.readAllBytes();
                                 data = decrypt(data);
-                                data = callback.apply(data);
+                                T tmp;
+                                try {
+                                    tmp = clazz.getDeclaredConstructor(byte[].class).newInstance(data);
+                                    callback.apply(tmp);
+                                } catch (Exception e) {
+                                    throw new RuntimeException(e);
+                                }
+                                data = tmp.getData();
                                 data = encrypt(data);
                                 zipWriter.write(1);
                             } else {
