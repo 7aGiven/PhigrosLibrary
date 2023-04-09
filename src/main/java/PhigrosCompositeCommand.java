@@ -51,7 +51,7 @@ public final class PhigrosCompositeCommand extends JCompositeCommand {
         SenderFacade sender = new SenderFacade(context);
         update(sender.myUser);
         Path path = MyPlugin.INSTANCE.resolveDataFile(String.format("backup/%d.zip",sender.user.getId())).toPath();
-        Files.write(path,sender.myUser.getData(), StandardOpenOption.CREATE,StandardOpenOption.WRITE);
+        sender.myUser.downloadSave(path);
         sender.sendMessage("备份成功");
     }
     @SubCommand

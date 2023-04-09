@@ -30,7 +30,7 @@ public class B19 {
         this.phigrosUser = phigrosUser;
     }
     public ForwardMessage expectCalc(User user) throws Exception {
-        final var expect = phigrosUser.getExpect();
+        final var expect = phigrosUser.getExpects();
         ForwardMessageBuilder builder = new ForwardMessageBuilder(user);
         for (SongExpect songExpect:expect) {
             builder.add(user,new PlainText(String.format("%s %s\nnow：%.3f\nexpect：%.3f",DAO.INSTANCE.info.get(songExpect.id),levels[songExpect.level],songExpect.acc,songExpect.expect)));
