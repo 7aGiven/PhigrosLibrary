@@ -2,7 +2,7 @@ package given.phigros;
 
 import java.io.IOException;
 
-public class GameUser extends GameExtend {
+public class GameUser implements GameExtend {
     private final static String name = "user";
     private final ByteReader reader;
     GameUser(byte[] data) {
@@ -26,7 +26,7 @@ public class GameUser extends GameExtend {
     }
 
     @Override
-    byte[] getData() throws IOException {
+    public byte[] getData() throws IOException {
         return reader.data;
     }
 }

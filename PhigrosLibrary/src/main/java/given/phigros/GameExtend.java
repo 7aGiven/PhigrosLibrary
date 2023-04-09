@@ -2,6 +2,7 @@ package given.phigros;
 
 import java.io.IOException;
 
-abstract class GameExtend {
-    abstract byte[] getData() throws IOException;
+@FunctionalInterface
+interface GameExtend {
+    byte[] getData() throws IOException;
 }
