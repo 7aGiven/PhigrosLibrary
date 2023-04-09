@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 public class GameKey implements GameExtend, Iterable<GameKeyItem> {
-    private final static String name = "gameKey";
+    final static String name = "gameKey";
     private final byte version;
     private final GameKeyItem[] array;
     private final ArrayList<GameKeyItem> list = new ArrayList<>();
