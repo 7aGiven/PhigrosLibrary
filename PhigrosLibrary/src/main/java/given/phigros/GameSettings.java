@@ -1,6 +1,9 @@
 package given.phigros;
 
-public class GameSettings {
+import java.io.IOException;
+
+public class GameSettings extends GameExtend {
+    private final static String name = "settings";
     private final ByteReader reader;
     GameSettings(byte[] data) {
         reader = new ByteReader(data);
@@ -34,5 +37,10 @@ public class GameSettings {
             reader.position += 4;
         }
         return reader.getFloat();
+    }
+
+    @Override
+    byte[] getData() throws IOException {
+        return reader.data;
     }
 }

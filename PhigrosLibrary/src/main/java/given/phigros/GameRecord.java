@@ -5,7 +5,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-public class GameRecord implements Iterable<GameRecordItem> {
+public class GameRecord extends GameExtend implements Iterable<GameRecordItem> {
+    private final static String name = "gameRecord";
     private final GameRecordItem[] array;
 
     GameRecord(byte[] data) {
@@ -22,6 +23,7 @@ public class GameRecord implements Iterable<GameRecordItem> {
         }
         array = list.toArray(GameRecordItem[]::new);
     }
+
     byte[] getData() throws IOException {
         try (var outputStream = new ByteArrayOutputStream()) {
             outputStream.writeBytes(Util.getVarShort(array.length));

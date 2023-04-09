@@ -5,7 +5,6 @@ import net.mamoe.mirai.console.command.java.JCompositeCommand;
 import net.mamoe.mirai.message.data.Image;
 import net.mamoe.mirai.utils.ExternalResource;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -74,7 +73,7 @@ public class TestPhigrosCommand extends JCompositeCommand {
         if (sender == null) return;
         try {
             Path path = MyPlugin.INSTANCE.resolveDataFile(String.format("backup/%d/%s.zip",sender.getUser().getId(),time)).toPath();
-            DAO.INSTANCE.users.get(sender.getUser().getId()).uploadZip(path);
+            DAO.INSTANCE.users.get(sender.getUser().getId()).uploadSave(path);
             sender.sendMessage("恢复成功");
         } catch (Exception e) {
             e.printStackTrace();
