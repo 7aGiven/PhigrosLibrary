@@ -105,7 +105,6 @@ public class PhigrosUser {
             try (ZipInputStream zipReader = new ZipInputStream(reader)) {
                 while (true) {
                     ZipEntry entry = zipReader.getNextEntry();
-                    System.out.println(entry);
                     String tmp;
                     try {
                         tmp = (String) clazz.getDeclaredField("name").get(null);
