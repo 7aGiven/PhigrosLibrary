@@ -15,9 +15,9 @@ class B19 implements Iterable<String> {
         reader = new ByteReader(data);
     }
 
-    SongLevel[] getB19() {
+    SongLevel[] getB19(int num) {
         var minIndex = 1;
-        final var b19 = new SongLevel[20];
+        final var b19 = new SongLevel[num + 1];
         Arrays.fill(b19,new SongLevel());
         for (String id:this) {
             final var levels = PhigrosUser.getInfo(id);
@@ -163,7 +163,7 @@ class B19 implements Iterable<String> {
     private int min(SongLevel[] array) {
         var index = -1;
         var min = 17f;
-        for (int i = 1; i < 20; i++) {
+        for (int i = 1; i < array.length; i++) {
             if (array[i].id == null)
                 return i;
             if (array[i].rks < min) {

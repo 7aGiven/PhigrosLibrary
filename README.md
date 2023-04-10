@@ -1,3 +1,61 @@
+本项目分为两个部分，分别为PhigrosRpc和PhigrosLibrary。
+
+PhigrosLibrary是Java实现的Phigros云存档解析库。
+
+PhigrosRpc是利用thrift对PhigrosLibrary的封装。
+
+# PhigrosRpc
+
+基于thrift 0.16.0，PhigrosLibrary 0.4
+
+### 快速使用
+
+下载Release内的PhigrosRpc.jar和phigros.thrift和difficulty.csv文件。
+
+搭建Java环境，执行命令`java -jar PhigrosRpc.jar 8080 /path/to/difficulty.csv`(8080为端口号，默认监听127.0.0.1，第二个参数为csv文件路径)
+
+使用phigros.thrift生成您使用语言的代码。`thrift --gen py phigros`
+
+### phigros.thrift内的定义
+```thrift
+enum Level {
+	EZ, HD, IN, AT
+}
+
+struct Summary {
+	1: required string saveUrl; //存档Url
+	2: required i16 challenge;  //课题分
+	3: required double rks;     //总RKS
+	4: required i8 version;     //客户端版本
+	5: required string avater;  //头像
+}
+
+struct SongLevel {
+	1: required string id;         //曲目id
+	2: required Level level;
+	3: required i32 score;         //分数
+	4: required double acc;        //准确率
+	5: required bool fc;           //是否Full Combo
+	6: required double difficulty; //定数
+	7: required double rks;        //单曲RKS
+}
+
+struct SongExpect {
+	1: required string id;     //曲目id
+	2: required Level level;
+	3: required double acc;    //现在ACC
+	4: required double expect; //目标ACC
+}
+
+//sessionToken为25位字符串，saveUrl为存档URL，需要通过getSaveUrl方法获取
+service Phigros {
+	Summary getSaveUrl(1:string sessionToken);         //获取saveUrl和其他
+	list<SongLevel> best19(1:string saveUrl);          //最佳phi和最佳前19个
+	list<SongLevel> bestn(1:string saveUrl, 2:i8 num); //最佳phi和最佳前N个
+	list<SongExpect> songExpects(1:string saveUrl);    //所有可推分歌曲及其目标ACC
+}
+```
+
 # PhigrosLibrary
 
 基于Phigros 2.4.7
@@ -37,11 +95,6 @@ dependencies {
     implementation files('libs/PhigrosLibrary-0.4.jar')
 }
 ```
-
-### 其他语言开发者使用PhigrosLibrary
-如果有人提issue，可能会做。
-
-初步考虑是通过grpc来通信。
 
 ### 功能
 

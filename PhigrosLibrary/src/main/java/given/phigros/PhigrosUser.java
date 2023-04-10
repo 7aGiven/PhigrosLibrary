@@ -16,7 +16,7 @@ import java.util.zip.ZipInputStream;
 
 public class PhigrosUser {
     public String session;
-    URI saveUrl;
+    public URI saveUrl;
     final static TreeMap<String, float[]> info = new TreeMap<>();
     public PhigrosUser(String session) {
         if (!session.matches("[a-z0-9]{25}"))
@@ -54,7 +54,10 @@ public class PhigrosUser {
     }
 
     public SongLevel[] getB19() throws IOException, InterruptedException {
-        return new B19(extractZip(GameRecord.class)).getB19();
+        return new B19(extractZip(GameRecord.class)).getB19(19);
+    }
+    public SongLevel[] getBestN(int num) throws IOException, InterruptedException {
+        return new B19(extractZip(GameRecord.class)).getB19(num);
     }
     public SongExpect[] getExpect(String id) throws IOException, InterruptedException {
         return new B19(extractZip(GameRecord.class)).getExpect(id);
