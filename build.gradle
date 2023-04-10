@@ -14,3 +14,5 @@ dependencies {
     implementation 'org.apache.thrift:libthrift:0.16.0'
     implementation project(':PhigrosLibrary')
 }
+
+jar.manifest.attributes 'Main-Class': 'Server'
