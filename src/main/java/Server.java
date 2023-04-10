@@ -1,6 +1,8 @@
 import given.phigros.PhigrosUser;
-import org.apache.thrift.server.TNonblockingServer;
-import org.apache.thrift.transport.TNonblockingServerSocket;
+import org.apache.thrift.server.TServer;
+import org.apache.thrift.server.TSimpleServer;
+import org.apache.thrift.transport.TServerSocket;
+import org.apache.thrift.transport.TServerTransport;
 import org.apache.thrift.transport.TTransportException;
 
 import java.io.IOException;
@@ -12,8 +14,8 @@ public class Server {
         try (final var reader = Files.newBufferedReader(Path.of(args[1]))) {
             PhigrosUser.readInfo(reader);
         }
-        final var arg = new TNonblockingServer.Args(new TNonblockingServerSocket(Integer.parseInt(args[0])));
-        arg.processor(new Phigros.Processor<Phigros.Iface>(new PhigrosImpl()));
-        new TNonblockingServer(arg).serve();
+        TServerTransport serverTransport = new TServerSocket(Integer.parseInt(args[0]));
+        TServer server = new TSimpleServer(new TServer.Args(serverTransport).processor(new Phigros.Processor<Phigros.Iface>(new PhigrosImpl())));
+        server.serve();
     }
 }
