@@ -8,11 +8,12 @@ public class GameRecordItem implements Iterable<SongLevel> {
         reader = new ByteReader(data);
     }
     public String getId() {
-        reader.position = 1;
-        return reader.getString();
+        byte length = reader.getByte();
+        reader.position += length;
+        return new String(reader.data, reader.position - length, length - 2);
     }
     public void modifySong(int level,int score,float acc,boolean fc) {
-        reader.position = 1;
+        reader.position = 0;
         reader.skipString();
         byte length = reader.getByte();
         if (!Util.getBit(length, level))
