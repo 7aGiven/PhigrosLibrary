@@ -77,7 +77,7 @@ class ByteReader {
     }
 
     void skipString() {
-        position += getByte();
+        position += getByte() + 1;
     }
 
     void insertBytes(byte[] bytes) {
