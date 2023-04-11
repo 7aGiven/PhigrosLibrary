@@ -10,9 +10,25 @@ PhigrosRpc是利用thrift对PhigrosLibrary的封装。
 
 ### 快速使用
 
-下载Release内的PhigrosRpc.jar和phigros.thrift和difficulty.csv文件。
+#### 服务端启动
 
-搭建Java环境，执行命令`java -jar PhigrosRpc.jar 9090 /path/to/difficulty.csv`(9090为端口号，默认监听127.0.0.1，第二个参数为csv文件路径)
+已安装jdk11的用户:
+
+下载Release内的PhigrosRpc-nojre-0.4.zip
+
+解压后windows运行start.cmd，linux运行start.sh，默认监听127.0.0.1:9090
+
+未安装jdk11的windows用户：
+
+下载Release内的 PhigrosRpc-jre11-windows-0.4.zip
+
+解压后运行start.cmd，默认监听127.0.0.1:9090
+
+未安装jdk11的linux用户：
+
+自行安装
+
+#### 客户端编写
 
 使用phigros.thrift生成您使用语言的代码。`thrift --gen py phigros.thrift`
 
