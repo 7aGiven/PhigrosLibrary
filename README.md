@@ -134,8 +134,8 @@ dependencies {
 
 以下代码获取了Phigros账户的B19信息和推分信息。
 
-PhigrosUser.readInfo为读取定数信息，本类库不保存定数信息和曲绘信息。
-定数表为一个csv文件，项目根目录difficulty.csv可查看其结构。
+PhigrosUser.readInfo为读取定数信息，本类库不保存定数信息。
+定数表为一个csv文件，Release内difficulty.csv可查看其结构。
 
 PhigrosUser对象执行update方法可以更新存档URL，否则会输出旧的B19图
 ```java
