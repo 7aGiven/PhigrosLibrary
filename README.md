@@ -6,6 +6,10 @@ PhigrosRpc是利用thrift对PhigrosLibrary的封装。
 
 以下所有jre11或jdk11都指jre11以上或jdk11以上
 
+**注：此项目为逆向成果，并非调用任何第三方接口。**
+
+**注：个人项目，未学习法律，目的为了让大家可以开发自己的查分机器人。**
+
 # 更新资源
 
 1. [定数表](https://raw.githubusercontent.com/7aGiven/PhigrosLibrary/master/difficulty.csv)
