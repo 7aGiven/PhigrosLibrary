@@ -6,6 +6,12 @@ PhigrosRpc是利用thrift对PhigrosLibrary的封装。
 
 以下所有jre11或jdk11都指jre11以上或jdk11以上
 
+# 更新资源
+
+1. [定数表](https://raw.githubusercontent.com/7aGiven/PhigrosLibrary/master/difficulty.csv)
+2. [头像Id](https://raw.githubusercontent.com/7aGiven/PhigrosLibrary/master/avater.txt)
+3. [收藏品Id](https://raw.githubusercontent.com/7aGiven/PhigrosLibrary/master/collection.txt)
+
 # PhigrosRpc
 
 基于thrift 0.16.0，PhigrosLibrary 0.4
