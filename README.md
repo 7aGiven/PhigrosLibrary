@@ -20,7 +20,7 @@ PhigrosRpc是利用thrift对PhigrosLibrary的封装。
 
 # PhigrosRpc
 
-基于thrift 0.16.0，PhigrosLibrary 0.4
+基于thrift 0.16.0，PhigrosLibrary 0.5
 
 ### 功能
 
@@ -32,13 +32,13 @@ PhigrosRpc是利用thrift对PhigrosLibrary的封装。
 
 已安装jre11的用户:
 
-下载Release内的PhigrosRpc-nojre-0.4.zip
+下载Release内的PhigrosRpc-nojre-0.5.zip
 
 解压后windows运行start.cmd，linux运行start.sh，默认监听127.0.0.1:9090
 
 未安装jre11的windows用户：
 
-下载Release内的 PhigrosRpc-jre11-windows-0.4.zip
+下载Release内的 PhigrosRpc-jre11-windows-0.5.zip
 
 解压后运行start.cmd，默认监听127.0.0.1:9090
 
