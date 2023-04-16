@@ -42,7 +42,7 @@ class B19 implements Iterable<String> {
                 if (songLevel.s == 1000000) {
                     songLevel.rks = levels[level];
                     if (levels[level] > b19[0].rks) {
-                        songLevel.set(id, level, getFC(level), levels[level]);
+                        songLevel.set(id, Level.values()[level], getFC(level), levels[level]);
                         b19[0] = songLevel;
                     }
                 } else {
@@ -51,7 +51,7 @@ class B19 implements Iterable<String> {
                 }
                 if (songLevel.rks < b19[minIndex].rks)
                     continue;
-                songLevel.set(id, level, getFC(level), levels[level]);
+                songLevel.set(id, Level.values()[level], getFC(level), levels[level]);
                 b19[minIndex] = songLevel;
                 minIndex = min(b19);
             }
@@ -84,7 +84,7 @@ class B19 implements Iterable<String> {
                 final float acc = reader.getFloat();
                 final var expect = (float) Math.sqrt(minRks / levels[level]) * 45f + 55f;
                 if (expect > acc)
-                    list.add(new SongExpect(id, level, acc, expect));
+                    list.add(new SongExpect(id, Level.values()[level], acc, expect));
             }
             return list.toArray(SongExpect[]::new);
         }
@@ -114,7 +114,7 @@ class B19 implements Iterable<String> {
                 final float acc = reader.getFloat();
                 final var expect = (float) Math.sqrt(minRks / levels[level]) * 45f + 55f;
                 if (expect > acc)
-                    list.add(new SongExpect(id, level, acc, expect));
+                    list.add(new SongExpect(id, Level.values()[level], acc, expect));
             }
         }
         final var array = list.toArray(SongExpect[]::new);

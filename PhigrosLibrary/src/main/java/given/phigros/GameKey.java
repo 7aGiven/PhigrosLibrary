@@ -6,7 +6,7 @@ import java.util.LinkedHashMap;
 
 public class GameKey extends LinkedHashMap<String, GameKeyValue> implements GameExtend {
     final static String name = "gameKey";
-    public final byte lanotaReadKeys;
+    public byte lanotaReadKeys;
 
     GameKey(byte[] data) {
         final var reader = new ByteReader(data);

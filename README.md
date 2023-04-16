@@ -15,12 +15,16 @@ PhigrosRpc是利用thrift对PhigrosLibrary的封装。
 # 更新资源
 
 1. [定数表](https://raw.githubusercontent.com/7aGiven/PhigrosLibrary/master/difficulty.csv)
-2. [头像Id](https://raw.githubusercontent.com/7aGiven/PhigrosLibrary/master/avater.txt)
-3. [收藏品Id](https://raw.githubusercontent.com/7aGiven/PhigrosLibrary/master/collection.txt)
+2. [头像id](https://raw.githubusercontent.com/7aGiven/PhigrosLibrary/master/avater.txt)
+3. [收藏品id](https://raw.githubusercontent.com/7aGiven/PhigrosLibrary/master/collection.txt)
 
 # PhigrosRpc
 
 基于thrift 0.16.0，PhigrosLibrary 0.4
+
+### 功能
+
+查询Best N数据和可推分的目标ACC数据
 
 ### 快速使用
 
@@ -91,6 +95,12 @@ service Phigros {
 基于Phigros 2.4.7
 至 Phigros 2.5.1
 
+### 功能
+
+对Phigros云存档的序列化和反序列化(gameProgress最后一个字节未知)
+
+封装并优化了常用函数(B19,BestN,目标ACC)
+
 ### Java开发者使用PhigrosLibrary
 
 方法1必须以JDK 11开发
@@ -126,22 +136,6 @@ dependencies {
 }
 ```
 
-### 功能
-
-获取B19数组
-
-获取所有已打过的可推分曲的目标ACC
-
-修改存档已打过歌分数
-
-修改存档课题模式等级
-
-修改存档data(1024MB以内)
-
-添加存档头像
-
-添加存档收藏品
-
 ### PhigrosLibrary 快速使用
 
 以下代码获取了Phigros账户的B19信息和推分信息。
@@ -174,14 +168,14 @@ public final class Summary {
 ```
 SongLevel的结构是这样的。
 ```java
-class SongLevel implements Comparable<SongLevel>{
-    public String id;        //曲目Id
-    public int level;        // 0:EZ / 1:HD / 2:IN / 3:AT
-    public int score;        // 分数
-    public float acc; 
-    public boolean fc;
-    public float difficulty; // 定数
-    public float rks;        // 单曲rks
+public class SongLevel implements Comparable<SongLevel>{
+    public String id;  //曲目Id
+    public Level level;// 0:EZ / 1:HD / 2:IN / 3:AT
+    public int s;      // 分数
+    public float a;    //ACC
+    public boolean c;  //FC
+    public float difficulty;// 定数
+    public float rks;  // 单曲rks
     @Override
     public int compareTo(SongLevel songLevel) {
         return Double.compare(songLevel.rks, rks);
@@ -190,11 +184,11 @@ class SongLevel implements Comparable<SongLevel>{
 ```
 SongExpect的结构是这样的。
 ```java
-class SongExpect implements Comparable<SongExpect> {
-    public String id;
-    public int level;
+public class SongExpect implements Comparable<SongExpect> {
+    public String id;   //曲目Id
+    public Level level; //难度
     public float acc;
-    public float expect; //目标ACC
+    public float expect;//目标ACC
     @Override
     public int compareTo(SongExpect songExpect) {
         return Float.compare(expect - acc, songExpect.expect - songExpect.acc);
@@ -300,7 +294,7 @@ class GameProgress {
     public byte flagOfSongRecordKey;  //AT解锁(倒霉蛋,船,Shadow,心之所向,inferior)
 }
 ```
-对于GameRecord的结构
+对于GameRecord的结构(Map)
 ```java
 public class GameRecord extends LinkedHashMap<String, LevelRecord[]> implements GameExtend {}
 public class LevelRecord {
@@ -309,9 +303,11 @@ public class LevelRecord {
     public float a;  //ACC
 }
 ```
-对于GameKey的结构
+对于GameKey的结构(Map)
 ```java
-public class GameKey extends LinkedHashMap<String, GameKeyValue> implements GameExtend {}
+public class GameKey extends LinkedHashMap<String, GameKeyValue> implements GameExtend {
+    public byte lanotaReadKeys;   //是否读取Lanota收藏品
+}
 public class GameKeyValue {
     public boolean readCollection;//读收藏品
     public boolean unlockSingle;  //解锁单曲

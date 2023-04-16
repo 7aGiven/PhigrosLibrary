@@ -25,7 +25,7 @@ public class PhigrosImpl implements Phigros.Iface{
         try {
             List<SongLevel> list = new ArrayList<>();
             for(final var songLevel:new PhigrosUser(URI.create(saveUrl)).getBestN(19)) {
-                list.add(new SongLevel(songLevel.id, Level.findByValue(songLevel.level), songLevel.s, songLevel.a, songLevel.c, songLevel.difficulty, songLevel.rks));
+                list.add(new SongLevel(songLevel.id, Level.findByValue(songLevel.level.ordinal()), songLevel.s, songLevel.a, songLevel.c, songLevel.difficulty, songLevel.rks));
             }
             return list;
         } catch (IOException | InterruptedException e) {
@@ -38,7 +38,7 @@ public class PhigrosImpl implements Phigros.Iface{
         try {
             List<SongLevel> list = new ArrayList<>();
             for(final var songLevel:new PhigrosUser(URI.create(saveUrl)).getBestN(num)) {
-                list.add(new SongLevel(songLevel.id, Level.findByValue(songLevel.level), songLevel.s, songLevel.a, songLevel.c, songLevel.difficulty, songLevel.rks));
+                list.add(new SongLevel(songLevel.id, Level.findByValue(songLevel.level.ordinal()), songLevel.s, songLevel.a, songLevel.c, songLevel.difficulty, songLevel.rks));
             }
             return list;
         } catch (IOException | InterruptedException e) {
@@ -51,7 +51,7 @@ public class PhigrosImpl implements Phigros.Iface{
         try {
             List<SongExpect> list = new ArrayList<>();
             for(final var songExpect:new PhigrosUser(URI.create(saveUrl)).getExpects()) {
-                list.add(new SongExpect(songExpect.id, Level.findByValue(songExpect.level), songExpect.acc, songExpect.expect));
+                list.add(new SongExpect(songExpect.id, Level.findByValue(songExpect.level.ordinal()), songExpect.acc, songExpect.expect));
             }
             return list;
         } catch (IOException | InterruptedException e) {
