@@ -10,27 +10,30 @@ public class Summary implements org.apache.thrift.TBase<Summary, Summary._Fields
   private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("Summary");
 
   private static final org.apache.thrift.protocol.TField SAVE_URL_FIELD_DESC = new org.apache.thrift.protocol.TField("saveUrl", org.apache.thrift.protocol.TType.STRING, (short)1);
-  private static final org.apache.thrift.protocol.TField CHALLENGE_FIELD_DESC = new org.apache.thrift.protocol.TField("challenge", org.apache.thrift.protocol.TType.I16, (short)2);
-  private static final org.apache.thrift.protocol.TField RKS_FIELD_DESC = new org.apache.thrift.protocol.TField("rks", org.apache.thrift.protocol.TType.DOUBLE, (short)3);
-  private static final org.apache.thrift.protocol.TField VERSION_FIELD_DESC = new org.apache.thrift.protocol.TField("version", org.apache.thrift.protocol.TType.BYTE, (short)4);
-  private static final org.apache.thrift.protocol.TField ICON_FIELD_DESC = new org.apache.thrift.protocol.TField("icon", org.apache.thrift.protocol.TType.STRING, (short)5);
+  private static final org.apache.thrift.protocol.TField SAVE_VERSION_FIELD_DESC = new org.apache.thrift.protocol.TField("saveVersion", org.apache.thrift.protocol.TType.BYTE, (short)2);
+  private static final org.apache.thrift.protocol.TField CHALLENGE_FIELD_DESC = new org.apache.thrift.protocol.TField("challenge", org.apache.thrift.protocol.TType.I16, (short)3);
+  private static final org.apache.thrift.protocol.TField RKS_FIELD_DESC = new org.apache.thrift.protocol.TField("rks", org.apache.thrift.protocol.TType.DOUBLE, (short)4);
+  private static final org.apache.thrift.protocol.TField GAME_VERSION_FIELD_DESC = new org.apache.thrift.protocol.TField("gameVersion", org.apache.thrift.protocol.TType.BYTE, (short)5);
+  private static final org.apache.thrift.protocol.TField AVATAR_FIELD_DESC = new org.apache.thrift.protocol.TField("avatar", org.apache.thrift.protocol.TType.STRING, (short)6);
 
   private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new SummaryStandardSchemeFactory();
   private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new SummaryTupleSchemeFactory();
 
   public @org.apache.thrift.annotation.Nullable java.lang.String saveUrl; // required
+  public byte saveVersion; // required
   public short challenge; // required
   public double rks; // required
-  public byte version; // required
-  public @org.apache.thrift.annotation.Nullable java.lang.String icon; // required
+  public byte gameVersion; // required
+  public @org.apache.thrift.annotation.Nullable java.lang.String avatar; // required
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
     SAVE_URL((short)1, "saveUrl"),
-    CHALLENGE((short)2, "challenge"),
-    RKS((short)3, "rks"),
-    VERSION((short)4, "version"),
-    ICON((short)5, "icon");
+    SAVE_VERSION((short)2, "saveVersion"),
+    CHALLENGE((short)3, "challenge"),
+    RKS((short)4, "rks"),
+    GAME_VERSION((short)5, "gameVersion"),
+    AVATAR((short)6, "avatar");
 
     private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
 
@@ -48,14 +51,16 @@ public class Summary implements org.apache.thrift.TBase<Summary, Summary._Fields
       switch(fieldId) {
         case 1: // SAVE_URL
           return SAVE_URL;
-        case 2: // CHALLENGE
+        case 2: // SAVE_VERSION
+          return SAVE_VERSION;
+        case 3: // CHALLENGE
           return CHALLENGE;
-        case 3: // RKS
+        case 4: // RKS
           return RKS;
-        case 4: // VERSION
-          return VERSION;
-        case 5: // ICON
-          return ICON;
+        case 5: // GAME_VERSION
+          return GAME_VERSION;
+        case 6: // AVATAR
+          return AVATAR;
         default:
           return null;
       }
@@ -97,22 +102,25 @@ public class Summary implements org.apache.thrift.TBase<Summary, Summary._Fields
   }
 
   // isset id assignments
-  private static final int __CHALLENGE_ISSET_ID = 0;
-  private static final int __RKS_ISSET_ID = 1;
-  private static final int __VERSION_ISSET_ID = 2;
+  private static final int __SAVEVERSION_ISSET_ID = 0;
+  private static final int __CHALLENGE_ISSET_ID = 1;
+  private static final int __RKS_ISSET_ID = 2;
+  private static final int __GAMEVERSION_ISSET_ID = 3;
   private byte __isset_bitfield = 0;
   public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
     tmpMap.put(_Fields.SAVE_URL, new org.apache.thrift.meta_data.FieldMetaData("saveUrl", org.apache.thrift.TFieldRequirementType.REQUIRED, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+    tmpMap.put(_Fields.SAVE_VERSION, new org.apache.thrift.meta_data.FieldMetaData("saveVersion", org.apache.thrift.TFieldRequirementType.REQUIRED, 
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BYTE)));
     tmpMap.put(_Fields.CHALLENGE, new org.apache.thrift.meta_data.FieldMetaData("challenge", org.apache.thrift.TFieldRequirementType.REQUIRED, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I16)));
     tmpMap.put(_Fields.RKS, new org.apache.thrift.meta_data.FieldMetaData("rks", org.apache.thrift.TFieldRequirementType.REQUIRED, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.DOUBLE)));
-    tmpMap.put(_Fields.VERSION, new org.apache.thrift.meta_data.FieldMetaData("version", org.apache.thrift.TFieldRequirementType.REQUIRED, 
+    tmpMap.put(_Fields.GAME_VERSION, new org.apache.thrift.meta_data.FieldMetaData("gameVersion", org.apache.thrift.TFieldRequirementType.REQUIRED, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BYTE)));
-    tmpMap.put(_Fields.ICON, new org.apache.thrift.meta_data.FieldMetaData("icon", org.apache.thrift.TFieldRequirementType.REQUIRED, 
+    tmpMap.put(_Fields.AVATAR, new org.apache.thrift.meta_data.FieldMetaData("avatar", org.apache.thrift.TFieldRequirementType.REQUIRED, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(Summary.class, metaDataMap);
@@ -123,20 +131,23 @@ public class Summary implements org.apache.thrift.TBase<Summary, Summary._Fields
 
   public Summary(
     java.lang.String saveUrl,
+    byte saveVersion,
     short challenge,
     double rks,
-    byte version,
-    java.lang.String icon)
+    byte gameVersion,
+    java.lang.String avatar)
   {
     this();
     this.saveUrl = saveUrl;
+    this.saveVersion = saveVersion;
+    setSaveVersionIsSet(true);
     this.challenge = challenge;
     setChallengeIsSet(true);
     this.rks = rks;
     setRksIsSet(true);
-    this.version = version;
-    setVersionIsSet(true);
-    this.icon = icon;
+    this.gameVersion = gameVersion;
+    setGameVersionIsSet(true);
+    this.avatar = avatar;
   }
 
   /**
@@ -147,11 +158,12 @@ public class Summary implements org.apache.thrift.TBase<Summary, Summary._Fields
     if (other.isSetSaveUrl()) {
       this.saveUrl = other.saveUrl;
     }
+    this.saveVersion = other.saveVersion;
     this.challenge = other.challenge;
     this.rks = other.rks;
-    this.version = other.version;
-    if (other.isSetIcon()) {
-      this.icon = other.icon;
+    this.gameVersion = other.gameVersion;
+    if (other.isSetAvatar()) {
+      this.avatar = other.avatar;
     }
   }
 
@@ -162,13 +174,15 @@ public class Summary implements org.apache.thrift.TBase<Summary, Summary._Fields
   @Override
   public void clear() {
     this.saveUrl = null;
+    setSaveVersionIsSet(false);
+    this.saveVersion = 0;
     setChallengeIsSet(false);
     this.challenge = 0;
     setRksIsSet(false);
     this.rks = 0.0;
-    setVersionIsSet(false);
-    this.version = 0;
-    this.icon = null;
+    setGameVersionIsSet(false);
+    this.gameVersion = 0;
+    this.avatar = null;
   }
 
   @org.apache.thrift.annotation.Nullable
@@ -194,6 +208,29 @@ public class Summary implements org.apache.thrift.TBase<Summary, Summary._Fields
     if (!value) {
       this.saveUrl = null;
     }
+  }
+
+  public byte getSaveVersion() {
+    return this.saveVersion;
+  }
+
+  public Summary setSaveVersion(byte saveVersion) {
+    this.saveVersion = saveVersion;
+    setSaveVersionIsSet(true);
+    return this;
+  }
+
+  public void unsetSaveVersion() {
+    __isset_bitfield = org.apache.thrift.EncodingUtils.clearBit(__isset_bitfield, __SAVEVERSION_ISSET_ID);
+  }
+
+  /** Returns true if field saveVersion is set (has been assigned a value) and false otherwise */
+  public boolean isSetSaveVersion() {
+    return org.apache.thrift.EncodingUtils.testBit(__isset_bitfield, __SAVEVERSION_ISSET_ID);
+  }
+
+  public void setSaveVersionIsSet(boolean value) {
+    __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __SAVEVERSION_ISSET_ID, value);
   }
 
   public short getChallenge() {
@@ -242,51 +279,51 @@ public class Summary implements org.apache.thrift.TBase<Summary, Summary._Fields
     __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __RKS_ISSET_ID, value);
   }
 
-  public byte getVersion() {
-    return this.version;
+  public byte getGameVersion() {
+    return this.gameVersion;
   }
 
-  public Summary setVersion(byte version) {
-    this.version = version;
-    setVersionIsSet(true);
+  public Summary setGameVersion(byte gameVersion) {
+    this.gameVersion = gameVersion;
+    setGameVersionIsSet(true);
     return this;
   }
 
-  public void unsetVersion() {
-    __isset_bitfield = org.apache.thrift.EncodingUtils.clearBit(__isset_bitfield, __VERSION_ISSET_ID);
+  public void unsetGameVersion() {
+    __isset_bitfield = org.apache.thrift.EncodingUtils.clearBit(__isset_bitfield, __GAMEVERSION_ISSET_ID);
   }
 
-  /** Returns true if field version is set (has been assigned a value) and false otherwise */
-  public boolean isSetVersion() {
-    return org.apache.thrift.EncodingUtils.testBit(__isset_bitfield, __VERSION_ISSET_ID);
+  /** Returns true if field gameVersion is set (has been assigned a value) and false otherwise */
+  public boolean isSetGameVersion() {
+    return org.apache.thrift.EncodingUtils.testBit(__isset_bitfield, __GAMEVERSION_ISSET_ID);
   }
 
-  public void setVersionIsSet(boolean value) {
-    __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __VERSION_ISSET_ID, value);
+  public void setGameVersionIsSet(boolean value) {
+    __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __GAMEVERSION_ISSET_ID, value);
   }
 
   @org.apache.thrift.annotation.Nullable
-  public java.lang.String getIcon() {
-    return this.icon;
+  public java.lang.String getAvatar() {
+    return this.avatar;
   }
 
-  public Summary setIcon(@org.apache.thrift.annotation.Nullable java.lang.String icon) {
-    this.icon = icon;
+  public Summary setAvatar(@org.apache.thrift.annotation.Nullable java.lang.String avatar) {
+    this.avatar = avatar;
     return this;
   }
 
-  public void unsetIcon() {
-    this.icon = null;
+  public void unsetAvatar() {
+    this.avatar = null;
   }
 
-  /** Returns true if field icon is set (has been assigned a value) and false otherwise */
-  public boolean isSetIcon() {
-    return this.icon != null;
+  /** Returns true if field avatar is set (has been assigned a value) and false otherwise */
+  public boolean isSetAvatar() {
+    return this.avatar != null;
   }
 
-  public void setIconIsSet(boolean value) {
+  public void setAvatarIsSet(boolean value) {
     if (!value) {
-      this.icon = null;
+      this.avatar = null;
     }
   }
 
@@ -297,6 +334,14 @@ public class Summary implements org.apache.thrift.TBase<Summary, Summary._Fields
         unsetSaveUrl();
       } else {
         setSaveUrl((java.lang.String)value);
+      }
+      break;
+
+    case SAVE_VERSION:
+      if (value == null) {
+        unsetSaveVersion();
+      } else {
+        setSaveVersion((java.lang.Byte)value);
       }
       break;
 
@@ -316,19 +361,19 @@ public class Summary implements org.apache.thrift.TBase<Summary, Summary._Fields
       }
       break;
 
-    case VERSION:
+    case GAME_VERSION:
       if (value == null) {
-        unsetVersion();
+        unsetGameVersion();
       } else {
-        setVersion((java.lang.Byte)value);
+        setGameVersion((java.lang.Byte)value);
       }
       break;
 
-    case ICON:
+    case AVATAR:
       if (value == null) {
-        unsetIcon();
+        unsetAvatar();
       } else {
-        setIcon((java.lang.String)value);
+        setAvatar((java.lang.String)value);
       }
       break;
 
@@ -341,17 +386,20 @@ public class Summary implements org.apache.thrift.TBase<Summary, Summary._Fields
     case SAVE_URL:
       return getSaveUrl();
 
+    case SAVE_VERSION:
+      return getSaveVersion();
+
     case CHALLENGE:
       return getChallenge();
 
     case RKS:
       return getRks();
 
-    case VERSION:
-      return getVersion();
+    case GAME_VERSION:
+      return getGameVersion();
 
-    case ICON:
-      return getIcon();
+    case AVATAR:
+      return getAvatar();
 
     }
     throw new java.lang.IllegalStateException();
@@ -366,14 +414,16 @@ public class Summary implements org.apache.thrift.TBase<Summary, Summary._Fields
     switch (field) {
     case SAVE_URL:
       return isSetSaveUrl();
+    case SAVE_VERSION:
+      return isSetSaveVersion();
     case CHALLENGE:
       return isSetChallenge();
     case RKS:
       return isSetRks();
-    case VERSION:
-      return isSetVersion();
-    case ICON:
-      return isSetIcon();
+    case GAME_VERSION:
+      return isSetGameVersion();
+    case AVATAR:
+      return isSetAvatar();
     }
     throw new java.lang.IllegalStateException();
   }
@@ -400,6 +450,15 @@ public class Summary implements org.apache.thrift.TBase<Summary, Summary._Fields
         return false;
     }
 
+    boolean this_present_saveVersion = true;
+    boolean that_present_saveVersion = true;
+    if (this_present_saveVersion || that_present_saveVersion) {
+      if (!(this_present_saveVersion && that_present_saveVersion))
+        return false;
+      if (this.saveVersion != that.saveVersion)
+        return false;
+    }
+
     boolean this_present_challenge = true;
     boolean that_present_challenge = true;
     if (this_present_challenge || that_present_challenge) {
@@ -418,21 +477,21 @@ public class Summary implements org.apache.thrift.TBase<Summary, Summary._Fields
         return false;
     }
 
-    boolean this_present_version = true;
-    boolean that_present_version = true;
-    if (this_present_version || that_present_version) {
-      if (!(this_present_version && that_present_version))
+    boolean this_present_gameVersion = true;
+    boolean that_present_gameVersion = true;
+    if (this_present_gameVersion || that_present_gameVersion) {
+      if (!(this_present_gameVersion && that_present_gameVersion))
         return false;
-      if (this.version != that.version)
+      if (this.gameVersion != that.gameVersion)
         return false;
     }
 
-    boolean this_present_icon = true && this.isSetIcon();
-    boolean that_present_icon = true && that.isSetIcon();
-    if (this_present_icon || that_present_icon) {
-      if (!(this_present_icon && that_present_icon))
+    boolean this_present_avatar = true && this.isSetAvatar();
+    boolean that_present_avatar = true && that.isSetAvatar();
+    if (this_present_avatar || that_present_avatar) {
+      if (!(this_present_avatar && that_present_avatar))
         return false;
-      if (!this.icon.equals(that.icon))
+      if (!this.avatar.equals(that.avatar))
         return false;
     }
 
@@ -447,15 +506,17 @@ public class Summary implements org.apache.thrift.TBase<Summary, Summary._Fields
     if (isSetSaveUrl())
       hashCode = hashCode * 8191 + saveUrl.hashCode();
 
+    hashCode = hashCode * 8191 + (int) (saveVersion);
+
     hashCode = hashCode * 8191 + challenge;
 
     hashCode = hashCode * 8191 + org.apache.thrift.TBaseHelper.hashCode(rks);
 
-    hashCode = hashCode * 8191 + (int) (version);
+    hashCode = hashCode * 8191 + (int) (gameVersion);
 
-    hashCode = hashCode * 8191 + ((isSetIcon()) ? 131071 : 524287);
-    if (isSetIcon())
-      hashCode = hashCode * 8191 + icon.hashCode();
+    hashCode = hashCode * 8191 + ((isSetAvatar()) ? 131071 : 524287);
+    if (isSetAvatar())
+      hashCode = hashCode * 8191 + avatar.hashCode();
 
     return hashCode;
   }
@@ -474,6 +535,16 @@ public class Summary implements org.apache.thrift.TBase<Summary, Summary._Fields
     }
     if (isSetSaveUrl()) {
       lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.saveUrl, other.saveUrl);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = java.lang.Boolean.compare(isSetSaveVersion(), other.isSetSaveVersion());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetSaveVersion()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.saveVersion, other.saveVersion);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -498,22 +569,22 @@ public class Summary implements org.apache.thrift.TBase<Summary, Summary._Fields
         return lastComparison;
       }
     }
-    lastComparison = java.lang.Boolean.compare(isSetVersion(), other.isSetVersion());
+    lastComparison = java.lang.Boolean.compare(isSetGameVersion(), other.isSetGameVersion());
     if (lastComparison != 0) {
       return lastComparison;
     }
-    if (isSetVersion()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.version, other.version);
+    if (isSetGameVersion()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.gameVersion, other.gameVersion);
       if (lastComparison != 0) {
         return lastComparison;
       }
     }
-    lastComparison = java.lang.Boolean.compare(isSetIcon(), other.isSetIcon());
+    lastComparison = java.lang.Boolean.compare(isSetAvatar(), other.isSetAvatar());
     if (lastComparison != 0) {
       return lastComparison;
     }
-    if (isSetIcon()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.icon, other.icon);
+    if (isSetAvatar()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.avatar, other.avatar);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -547,6 +618,10 @@ public class Summary implements org.apache.thrift.TBase<Summary, Summary._Fields
     }
     first = false;
     if (!first) sb.append(", ");
+    sb.append("saveVersion:");
+    sb.append(this.saveVersion);
+    first = false;
+    if (!first) sb.append(", ");
     sb.append("challenge:");
     sb.append(this.challenge);
     first = false;
@@ -555,15 +630,15 @@ public class Summary implements org.apache.thrift.TBase<Summary, Summary._Fields
     sb.append(this.rks);
     first = false;
     if (!first) sb.append(", ");
-    sb.append("version:");
-    sb.append(this.version);
+    sb.append("gameVersion:");
+    sb.append(this.gameVersion);
     first = false;
     if (!first) sb.append(", ");
-    sb.append("icon:");
-    if (this.icon == null) {
+    sb.append("avatar:");
+    if (this.avatar == null) {
       sb.append("null");
     } else {
-      sb.append(this.icon);
+      sb.append(this.avatar);
     }
     first = false;
     sb.append(")");
@@ -575,11 +650,12 @@ public class Summary implements org.apache.thrift.TBase<Summary, Summary._Fields
     if (saveUrl == null) {
       throw new org.apache.thrift.protocol.TProtocolException("Required field 'saveUrl' was not present! Struct: " + toString());
     }
+    // alas, we cannot check 'saveVersion' because it's a primitive and you chose the non-beans generator.
     // alas, we cannot check 'challenge' because it's a primitive and you chose the non-beans generator.
     // alas, we cannot check 'rks' because it's a primitive and you chose the non-beans generator.
-    // alas, we cannot check 'version' because it's a primitive and you chose the non-beans generator.
-    if (icon == null) {
-      throw new org.apache.thrift.protocol.TProtocolException("Required field 'icon' was not present! Struct: " + toString());
+    // alas, we cannot check 'gameVersion' because it's a primitive and you chose the non-beans generator.
+    if (avatar == null) {
+      throw new org.apache.thrift.protocol.TProtocolException("Required field 'avatar' was not present! Struct: " + toString());
     }
     // check for sub-struct validity
   }
@@ -628,7 +704,15 @@ public class Summary implements org.apache.thrift.TBase<Summary, Summary._Fields
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
-          case 2: // CHALLENGE
+          case 2: // SAVE_VERSION
+            if (schemeField.type == org.apache.thrift.protocol.TType.BYTE) {
+              struct.saveVersion = iprot.readByte();
+              struct.setSaveVersionIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 3: // CHALLENGE
             if (schemeField.type == org.apache.thrift.protocol.TType.I16) {
               struct.challenge = iprot.readI16();
               struct.setChallengeIsSet(true);
@@ -636,7 +720,7 @@ public class Summary implements org.apache.thrift.TBase<Summary, Summary._Fields
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
-          case 3: // RKS
+          case 4: // RKS
             if (schemeField.type == org.apache.thrift.protocol.TType.DOUBLE) {
               struct.rks = iprot.readDouble();
               struct.setRksIsSet(true);
@@ -644,18 +728,18 @@ public class Summary implements org.apache.thrift.TBase<Summary, Summary._Fields
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
-          case 4: // VERSION
+          case 5: // GAME_VERSION
             if (schemeField.type == org.apache.thrift.protocol.TType.BYTE) {
-              struct.version = iprot.readByte();
-              struct.setVersionIsSet(true);
+              struct.gameVersion = iprot.readByte();
+              struct.setGameVersionIsSet(true);
             } else { 
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
-          case 5: // ICON
+          case 6: // AVATAR
             if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
-              struct.icon = iprot.readString();
-              struct.setIconIsSet(true);
+              struct.avatar = iprot.readString();
+              struct.setAvatarIsSet(true);
             } else { 
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
@@ -668,14 +752,17 @@ public class Summary implements org.apache.thrift.TBase<Summary, Summary._Fields
       iprot.readStructEnd();
 
       // check for required fields of primitive type, which can't be checked in the validate method
+      if (!struct.isSetSaveVersion()) {
+        throw new org.apache.thrift.protocol.TProtocolException("Required field 'saveVersion' was not found in serialized data! Struct: " + toString());
+      }
       if (!struct.isSetChallenge()) {
         throw new org.apache.thrift.protocol.TProtocolException("Required field 'challenge' was not found in serialized data! Struct: " + toString());
       }
       if (!struct.isSetRks()) {
         throw new org.apache.thrift.protocol.TProtocolException("Required field 'rks' was not found in serialized data! Struct: " + toString());
       }
-      if (!struct.isSetVersion()) {
-        throw new org.apache.thrift.protocol.TProtocolException("Required field 'version' was not found in serialized data! Struct: " + toString());
+      if (!struct.isSetGameVersion()) {
+        throw new org.apache.thrift.protocol.TProtocolException("Required field 'gameVersion' was not found in serialized data! Struct: " + toString());
       }
       struct.validate();
     }
@@ -689,18 +776,21 @@ public class Summary implements org.apache.thrift.TBase<Summary, Summary._Fields
         oprot.writeString(struct.saveUrl);
         oprot.writeFieldEnd();
       }
+      oprot.writeFieldBegin(SAVE_VERSION_FIELD_DESC);
+      oprot.writeByte(struct.saveVersion);
+      oprot.writeFieldEnd();
       oprot.writeFieldBegin(CHALLENGE_FIELD_DESC);
       oprot.writeI16(struct.challenge);
       oprot.writeFieldEnd();
       oprot.writeFieldBegin(RKS_FIELD_DESC);
       oprot.writeDouble(struct.rks);
       oprot.writeFieldEnd();
-      oprot.writeFieldBegin(VERSION_FIELD_DESC);
-      oprot.writeByte(struct.version);
+      oprot.writeFieldBegin(GAME_VERSION_FIELD_DESC);
+      oprot.writeByte(struct.gameVersion);
       oprot.writeFieldEnd();
-      if (struct.icon != null) {
-        oprot.writeFieldBegin(ICON_FIELD_DESC);
-        oprot.writeString(struct.icon);
+      if (struct.avatar != null) {
+        oprot.writeFieldBegin(AVATAR_FIELD_DESC);
+        oprot.writeString(struct.avatar);
         oprot.writeFieldEnd();
       }
       oprot.writeFieldStop();
@@ -721,10 +811,11 @@ public class Summary implements org.apache.thrift.TBase<Summary, Summary._Fields
     public void write(org.apache.thrift.protocol.TProtocol prot, Summary struct) throws org.apache.thrift.TException {
       org.apache.thrift.protocol.TTupleProtocol oprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
       oprot.writeString(struct.saveUrl);
+      oprot.writeByte(struct.saveVersion);
       oprot.writeI16(struct.challenge);
       oprot.writeDouble(struct.rks);
-      oprot.writeByte(struct.version);
-      oprot.writeString(struct.icon);
+      oprot.writeByte(struct.gameVersion);
+      oprot.writeString(struct.avatar);
     }
 
     @Override
@@ -732,14 +823,16 @@ public class Summary implements org.apache.thrift.TBase<Summary, Summary._Fields
       org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
       struct.saveUrl = iprot.readString();
       struct.setSaveUrlIsSet(true);
+      struct.saveVersion = iprot.readByte();
+      struct.setSaveVersionIsSet(true);
       struct.challenge = iprot.readI16();
       struct.setChallengeIsSet(true);
       struct.rks = iprot.readDouble();
       struct.setRksIsSet(true);
-      struct.version = iprot.readByte();
-      struct.setVersionIsSet(true);
-      struct.icon = iprot.readString();
-      struct.setIconIsSet(true);
+      struct.gameVersion = iprot.readByte();
+      struct.setGameVersionIsSet(true);
+      struct.avatar = iprot.readString();
+      struct.setAvatarIsSet(true);
     }
   }
 

@@ -14,7 +14,7 @@ public class PhigrosImpl implements Phigros.Iface{
                 throw new Exception("SessionToken的长度不为25.");
             final var user = new PhigrosUser(sessionToken);
             final var summary = user.update();
-            return new Summary(user.saveUrl.toString(), summary.challengeModeRank, summary.rankingScore, summary.gameVersion, summary.avatar);
+            return new Summary(user.saveUrl.toString(), summary.saveVersion, summary.challengeModeRank, summary.rankingScore, summary.gameVersion, summary.avatar);
         } catch (Exception e) {
             throw new TException(e);
         }

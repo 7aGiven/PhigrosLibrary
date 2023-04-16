@@ -4,10 +4,11 @@ enum Level {
 
 struct Summary {
 	1: required string saveUrl;
-	2: required i16 challenge;
-	3: required double rks;
-	4: required i8 version;
-	5: required string icon;
+	2: required i8 saveVersion;
+	3: required i16 challenge;
+	4: required double rks;
+	5: required i8 gameVersion;
+	6: required string avatar;
 }
 
 struct SongLevel {
