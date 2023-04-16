@@ -14,7 +14,7 @@ public class PhigrosImpl implements Phigros.Iface{
                 throw new Exception("SessionToken的长度不为25.");
             final var user = new PhigrosUser(sessionToken);
             final var summary = user.update();
-            return new Summary(user.saveUrl.toString(), summary.challenge, summary.rks, summary.version, summary.avater);
+            return new Summary(user.saveUrl.toString(), summary.challengeModeRank, summary.rankingScore, summary.gameVersion, summary.avatar);
         } catch (Exception e) {
             throw new TException(e);
         }
@@ -25,7 +25,7 @@ public class PhigrosImpl implements Phigros.Iface{
         try {
             List<SongLevel> list = new ArrayList<>();
             for(final var songLevel:new PhigrosUser(URI.create(saveUrl)).getBestN(19)) {
-                list.add(new SongLevel(songLevel.id, Level.findByValue(songLevel.level), songLevel.score, songLevel.acc, songLevel.fc, songLevel.difficulty, songLevel.rks));
+                list.add(new SongLevel(songLevel.id, Level.findByValue(songLevel.level), songLevel.s, songLevel.a, songLevel.c, songLevel.difficulty, songLevel.rks));
             }
             return list;
         } catch (IOException | InterruptedException e) {
@@ -38,7 +38,7 @@ public class PhigrosImpl implements Phigros.Iface{
         try {
             List<SongLevel> list = new ArrayList<>();
             for(final var songLevel:new PhigrosUser(URI.create(saveUrl)).getBestN(num)) {
-                list.add(new SongLevel(songLevel.id, Level.findByValue(songLevel.level), songLevel.score, songLevel.acc, songLevel.fc, songLevel.difficulty, songLevel.rks));
+                list.add(new SongLevel(songLevel.id, Level.findByValue(songLevel.level), songLevel.s, songLevel.a, songLevel.c, songLevel.difficulty, songLevel.rks));
             }
             return list;
         } catch (IOException | InterruptedException e) {

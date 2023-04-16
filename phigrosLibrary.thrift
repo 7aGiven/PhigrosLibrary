@@ -7,15 +7,15 @@ struct Summary {
 	2: required i16 challenge;
 	3: required double rks;
 	4: required i8 version;
-	5: required string avater;
+	5: required string icon;
 }
 
 struct SongLevel {
 	1: required string id;
 	2: required Level level;
-	3: required i32 score;
-	4: required double acc;
-	5: required bool fc;
+	3: required i32 s;
+	4: required double a;
+	5: required bool c;
 	6: required double difficulty;
 	7: required double rks;
 }

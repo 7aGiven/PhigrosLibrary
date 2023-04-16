@@ -72,23 +72,8 @@ public class PhigrosUser {
             throw new RuntimeException(e);
         }
     }
-    public void modifyData(short num) throws Exception {
-        ModifyStrategyImpl.data(this,num);
-    }
-    public void modifyAvater(String avater) throws Exception {
-        ModifyStrategyImpl.avater(this,avater);
-    }
-    public void modifyCollection(String collection) throws Exception {
-        ModifyStrategyImpl.collection(this,collection);
-    }
-    public void modifyChallenge(short challenge) throws Exception {
-        ModifyStrategyImpl.challenge(this,challenge);
-    }
-    public void modifySong(String songId,int level,int s,float a,boolean fc) throws Exception {
-        ModifyStrategyImpl.song(this,songId,level,s,a,fc);
-    }
     public <T extends GameExtend> void modify(Class<T> clazz, ModifyStrategy<T> strategy) throws IOException, InterruptedException {
-        SaveManager.modify(this, ModifyStrategyImpl.challengeScore, clazz, strategy);
+        SaveManager.modify(this, (short) 3, clazz, strategy);
     }
     public void downloadSave(Path path) throws IOException, InterruptedException {
         Files.write(path,getData(), StandardOpenOption.CREATE, StandardOpenOption.WRITE);

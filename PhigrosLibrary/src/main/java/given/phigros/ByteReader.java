@@ -1,6 +1,6 @@
 package given.phigros;
 
-import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 class ByteReader {
     byte[] data;
@@ -54,7 +54,7 @@ class ByteReader {
         putInt(Float.floatToIntBits(num));
     }
 
-    short getVarShort() {
+    int getVarInt() {
         if(data[position] < 0) {
             position += 2;
             return (short) (0b01111111 & data[position - 2] ^ data[position - 1] << 7);
@@ -63,17 +63,36 @@ class ByteReader {
             return data[position++];
     }
 
-    void skipVarShort() {
+    void skipVarInt(int num) {
+        for (;num > 0; num--) {
+            skipVarInt();
+        }
+    }
+
+    void skipVarInt() {
         if(data[position] < 0)
             position += 2;
         else
             position++;
     }
 
+    byte[] getBytes() {
+        byte length = getByte();
+        position += length;
+        return Arrays.copyOfRange(data, position - length, position);
+    }
+
     String getString() {
         byte length = getByte();
         position += length;
         return new String(data, position - length, length);
+    }
+
+    void putString(String s) {
+        final var b = s.getBytes();
+        data[position++] = (byte) b.length;
+        for (byte value : b)
+            data[position++] = value;
     }
 
     void skipString() {
