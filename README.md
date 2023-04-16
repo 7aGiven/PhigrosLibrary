@@ -50,6 +50,8 @@ PhigrosRpc是利用thrift对PhigrosLibrary的封装。
 
 使用phigros.thrift生成您使用语言的代码。`thrift --gen py phigros.thrift`
 
+示例：[使用python编写的示例](https://github.com/7aGiven/PhigrosLibrary/tree/master/clientExample)
+
 ### phigrosLibrary.thrift内的定义
 ```thrift
 enum Level {
