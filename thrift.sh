@@ -1,1 +1,1 @@
-thrift --out src/main/java --gen java phigros.thrift
+thrift --out src/main/java --gen java phigrosLibrary.thrift

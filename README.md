@@ -231,12 +231,12 @@ GameSettings结构
 public class GameSettings {
     GameSettings(byte[] data);
     public String getDevice();
-    public float 背景亮度();
-    public float 音乐音量();
-    public float 界面音效音量();
-    public float 打击音效音量();
-    public float 铺面延迟();
-    public float 按键缩放();
+    public float getBright();     //背景亮度
+    public float getMusicVolume();//音乐音量
+    public float getSEVolume();   //界面音效音量
+    public float getHitFXVolume();//打击音效音量
+    public float getOffset();     //铺面延迟
+    public float getNoteScale();  //按键缩放
 }
 ```
 GameUser结构

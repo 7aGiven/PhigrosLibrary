@@ -4,29 +4,17 @@ import java.io.IOException;
 
 public class GameUser implements GameExtend {
     final static String name = "user";
-    private final ByteReader reader;
+    public boolean showPlayerId;
+    public String selfIntro;
+    public String avatar;
+    public String background;
+
     GameUser(byte[] data) {
-        reader = new ByteReader(data);
-    }
-    public String getIntroduction() {
-        return getItem(0);
-    }
-    public String getAvater() {
-        return getItem(1);
-    }
-    public String getIllustration() {
-        return getItem(2);
-    }
-    private String getItem(int index) {
-        reader.position = 1;
-        for (var i = 0; i < index; i++) {
-            reader.skipString();
-        }
-        return reader.getString();
+        ByteSerialize.requiredRead(this, data);
     }
 
     @Override
     public byte[] getData() throws IOException {
-        return reader.data;
+        return ByteSerialize.requiredWrite(this);
     }
 }

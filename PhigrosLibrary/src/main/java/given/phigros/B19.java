@@ -35,18 +35,18 @@ class B19 implements Iterable<String> {
                 if (levelNotExist(level))
                     continue;
                 final var songLevel = new SongLevel();
-                songLevel.score = reader.getInt();
-                songLevel.acc = reader.getFloat();
-                if (songLevel.acc < 70f)
+                songLevel.s = reader.getInt();
+                songLevel.a = reader.getFloat();
+                if (songLevel.a < 70f)
                     continue;
-                if (songLevel.score == 1000000) {
+                if (songLevel.s == 1000000) {
                     songLevel.rks = levels[level];
                     if (levels[level] > b19[0].rks) {
                         songLevel.set(id, level, getFC(level), levels[level]);
                         b19[0] = songLevel;
                     }
                 } else {
-                    songLevel.rks = (songLevel.acc - 55f) / 45f;
+                    songLevel.rks = (songLevel.a - 55f) / 45f;
                     songLevel.rks *= songLevel.rks * levels[level];
                 }
                 if (songLevel.rks < b19[minIndex].rks)
