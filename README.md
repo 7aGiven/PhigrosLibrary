@@ -50,7 +50,7 @@ PhigrosRpc是利用thrift对PhigrosLibrary的封装。
 
 使用phigros.thrift生成您使用语言的代码。`thrift --gen py phigros.thrift`
 
-### phigros.thrift内的定义
+### phigrosLibrary.thrift内的定义
 ```thrift
 enum Level {
 	EZ, HD, IN, AT
@@ -142,7 +142,8 @@ dependencies {
 以下代码获取了Phigros账户的B19信息和推分信息。
 
 PhigrosUser.readInfo为读取定数信息，本类库不保存定数信息。
-定数表为一个csv文件，Release内difficulty.csv可查看其结构。
+
+[定数表](https://raw.githubusercontent.com/7aGiven/PhigrosLibrary/master/difficulty.csv)
 
 PhigrosUser对象执行update方法可以更新存档URL，否则会输出旧的B19图
 ```java
@@ -167,11 +168,17 @@ public final class Summary {
     public final String avatar;          //头像
 }
 ```
+Level结构
+```java
+public enum Level {
+    EZ,HD,IN,AT
+}
+```
 SongLevel的结构是这样的。
 ```java
 public class SongLevel implements Comparable<SongLevel>{
     public String id;  //曲目Id
-    public Level level;// 0:EZ / 1:HD / 2:IN / 3:AT
+    public Level level;
     public int s;      // 分数
     public float a;    //ACC
     public boolean c;  //FC
@@ -187,7 +194,7 @@ SongExpect的结构是这样的。
 ```java
 public class SongExpect implements Comparable<SongExpect> {
     public String id;   //曲目Id
-    public Level level; //难度
+    public Level level;
     public float acc;
     public float expect;//目标ACC
     @Override
@@ -197,7 +204,7 @@ public class SongExpect implements Comparable<SongExpect> {
 }
 ```
 
-### PhigrosUser的一些方法
+### PhigrosUser的public方法
 ```java
 public class PhigrosUser {
     public String session;
