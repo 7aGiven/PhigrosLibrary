@@ -57,36 +57,37 @@ enum Level {
 }
 
 struct Summary {
-	1: required string saveUrl; //存档Url
-	2: required i16 challenge;  //课题分
-	3: required double rks;     //总RKS
-	4: required i8 version;     //客户端版本
-	5: required string avater;  //头像
+	1: required string saveUrl;//存档Url
+	2: required i8 saveVersion;//存档版本
+	3: required i16 challenge; //课题分
+	4: required double rks;    //总RKS
+	5: required i8 gameVersion;//客户端版本
+	6: required string avatar; //头像
 }
 
 struct SongLevel {
-	1: required string id;         //曲目id
+	1: required string id;   //曲目id
 	2: required Level level;
-	3: required i32 score;         //分数
-	4: required double acc;        //准确率
-	5: required bool fc;           //是否Full Combo
-	6: required double difficulty; //定数
-	7: required double rks;        //单曲RKS
+	3: required i32 s;       //分数
+	4: required double a;    //准确率
+	5: required bool c;      //是否Full Combo
+	6: required double difficulty;//定数
+	7: required double rks;  //单曲RKS
 }
 
 struct SongExpect {
-	1: required string id;     //曲目id
+	1: required string id;    //曲目id
 	2: required Level level;
-	3: required double acc;    //现在ACC
-	4: required double expect; //目标ACC
+	3: required double acc;   //现在ACC
+	4: required double expect;//目标ACC
 }
 
 //sessionToken为25位字符串，saveUrl为存档URL，需要通过getSaveUrl方法获取
 service Phigros {
-	Summary getSaveUrl(1:string sessionToken);         //获取saveUrl和其他
-	list<SongLevel> best19(1:string saveUrl);          //最佳phi和最佳前19个
-	list<SongLevel> bestn(1:string saveUrl, 2:i8 num); //最佳phi和最佳前N个
-	list<SongExpect> songExpects(1:string saveUrl);    //所有可推分歌曲及其目标ACC
+	Summary getSaveUrl(1:string sessionToken);        //获取saveUrl和其他
+	list<SongLevel> best19(1:string saveUrl);         //最佳phi和最佳前19个
+	list<SongLevel> bestn(1:string saveUrl, 2:i8 num);//最佳phi和最佳前N个
+	list<SongExpect> songExpects(1:string saveUrl);   //所有可推分歌曲及其目标ACC
 }
 ```
 
