@@ -2,7 +2,7 @@ package given.phigros;
 
 import java.util.Base64;
 
-public class Summary {
+public final class Summary {
     public final byte saveVersion;
     public final short challengeModeRank;
     public final float rankingScore;

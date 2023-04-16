@@ -45,10 +45,6 @@ public class PhigrosUser {
         return songInfo;
     }
 
-    public static void validSession(String session) throws IOException, InterruptedException {
-        SaveManager.save(session);
-    }
-
     public Summary update() throws IOException, InterruptedException {
         return new Summary(SaveManager.update(this));
     }

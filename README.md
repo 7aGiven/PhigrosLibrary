@@ -162,6 +162,16 @@ class Main {
     }
 }
 ```
+Summary结构(未完全解析)
+```java
+public final class Summary {
+    public final byte saveVersion;       //存档版本
+    public final short challengeModeRank;//课题分
+    public final float rankingScore;     //rks
+    public final byte gameVersion;       //客户端版本号
+    public final String avatar;          //头像
+}
+```
 SongLevel的结构是这样的。
 ```java
 class SongLevel implements Comparable<SongLevel>{
@@ -192,15 +202,35 @@ class SongExpect implements Comparable<SongExpect> {
 }
 ```
 
+### PhigrosUser的一些方法
+```java
+public class PhigrosUser {
+    public String session;
+    public URI saveUrl;
+    public PhigrosUser(String session);//使用SessionToken初始化
+    public PhigrosUser(URI saveUrl);//使用saveUrl初始化
+    public static void readInfo(BufferedReader reader);//读取定数表
+    public Summary update();//使用SessionToken更新saveUrl，并返回Summary
+    public SongLevel[] getB19();//获取Best Phi和Best 19
+    public SongLevel[] getBestN(int num);//获取Best Phi和Best N
+    public SongExpect[] getExpect(String id);//获取曲目的所有等级的ACC和目标ACC
+    public SongExpect[] getExpects();//获取所有可推分歌曲的ACC和目标ACC
+    public <T extends GameExtend> T get(Class<T> clazz);//获取类为clazz的存档(详情高级应用)
+    public <T extends GameExtend> void modify(Class<T> clazz, ModifyStrategy<T> strategy);//修改存档
+    public void downloadSave(Path path);//备份存档到path
+    public void uploadSave(Path path);  //从path恢复存档
+}
+```
+
 ### PhigrosLibrary的高级应用
 
 注意：如果只想查询B19和ACC，请使用快速使用的例子，PhigrosUser内的对这两个常用情景有优化。
 
-Phigros云存档包含5部分内容
+Phigros云存档包含5部分内容和Summary
 
-gameRecord, gameKey, gameProgress, user, settings和summary
+gameRecord, gameKey, gameProgress, user, settings和Summary
 
-其中gameRecord和gameKey为数组结构，其他四个是普通的结构。
+其中gameRecord和gameKey为字典结构，其他四个是普通的结构。
 
 获取这5个对象的方法：
 ```java
@@ -219,87 +249,75 @@ class Main {
 ```
 Summary结构(未完全解析)
 ```java
-public class Summary {
-    public final short challenge; //课题分
-    public final float rks;       //rks
-    public final byte version;    //客户端版本号
-    public final String avater;   //头像
+public final class Summary {
+    public final byte saveVersion;       //存档版本
+    public final short challengeModeRank;//课题分
+    public final float rankingScore;     //rks
+    public final byte gameVersion;       //客户端版本号
+    public final String avatar;          //头像
 }
 ```
 GameSettings结构
 ```java
 public class GameSettings {
-    GameSettings(byte[] data);
-    public String getDevice();
-    public float getBright();     //背景亮度
-    public float getMusicVolume();//音乐音量
-    public float getSEVolume();   //界面音效音量
-    public float getHitFXVolume();//打击音效音量
-    public float getOffset();     //铺面延迟
-    public float getNoteScale();  //按键缩放
+    public boolean chordSupport;     //多押辅助
+    public boolean fcAPIndicator;    //开启FC/AP指示器
+    public boolean enableHitSound;   //开启打击音效
+    public boolean lowResolutionMode;//低分辨率模式
+    public String deviceName;        //设备名
+    public float bright;             //背景亮度
+    public float musicVolume;        //音乐音量
+    public float effectVolume;       //界面音效音量
+    public float hitSoundVolume;     //打击音效音量
+    public float soundOffset;        //铺面延迟
+    public float noteScale;          //按键缩放
 }
 ```
 GameUser结构
 ```java
 public class GameUser {
-    GameUser(byte[] data);
-    public String getIntroduction(); //自我介绍
-    public String getAvater();       //头像
-    public String getIllustration(); //曲绘
+    public boolean showPlayerId;
+    public String selfIntro; //自我介绍
+    public String avatar;    //头像
+    public String background;//曲绘
 }
 ```
-GameProgress结构(未完全解析)
+GameProgress结构(最后一个字节未知，一直是0,不知道干嘛的)
 ```java
 class GameProgress {
     private final ByteReader reader;
-    GameProgress(byte[] data);
-    public short getChallenge(); //课题分
-    public void setChallenge(short score);
-    public int getGameData();    //
-    public void setGameData(short MB);
-    public byte[] getData();
+    public boolean isFirstRun;                //首次运行
+    public boolean legacyChapterFinished;     //过去的章节已完成
+    public boolean alreadyShowCollectionTip;  //已展示收藏品Tip
+    public boolean alreadyShowAutoUnlockINTip;//已展示自动解锁IN Tip
+    public String completed;          //剧情完成
+    public int songUpdateInfo;        //？？？
+    public short challengeModeRank;   //课题分
+    public int[] money = new int[5];  //data货币
+    public byte unlockFlagOfSpasmodic;//痉挛解锁
+    public byte unlockFlagOfIgallta;  //Igallta解锁
+    public byte unlockFlagOfRrharil;  //Rrhar'il解锁
+    public byte flagOfSongRecordKey;  //AT解锁(倒霉蛋,船,Shadow,心之所向,inferior)
 }
 ```
-对于GameRecord的使用(修改分数)
-
-该方法已经被user.modifySong(String songId, int level, int score, float acc, boolean fc)实现
+对于GameRecord的结构
 ```java
-class Main {
-    public static void main(String[] args) {
-        var user = new PhigrosUser(sessionToken);
-        user.update();
-        String songId = "青芽.茶鸣拾贰律";
-        user.modify(GameRecord.class, gameRecord -> {
-            for (GameRecordItem item:gameRecord) {
-                for (String id:item) {
-                    if (id.equals(songId))
-                        item.modifySong(level, score, acc, fc);
-                }
-            }
-        });
-    }
+public class GameRecord extends LinkedHashMap<String, LevelRecord[]> implements GameExtend {}
+public class LevelRecord {
+    public boolean c;//FC
+    public int s;    //分数
+    public float a;  //ACC
 }
 ```
-
-对于GameKey的使用和GameRecord是一样的，for循环。
-
-GameKey有5个属性为：读收藏品，单曲解锁，收藏品计数(一个收藏品里包含很多项)，曲绘，头像。
+对于GameKey的结构
 ```java
-package given.phigros;
-
-class GameKeyItem {
-    GameKeyItem(byte[] data);
-    public String getId();
-    public boolean getReadCollection();
-    public void setReadCollection(boolean b);
-    public boolean getSingleUnlock();
-    public void setSingleUnlock(boolean b);
-    public byte getCollection();
-    public void setCollection(byte num);
-    public boolean getIllustration();
-    public void setIllustration(boolean b);
-    public boolean getAvater();
-    public void setAvater(boolean b);
+public class GameKey extends LinkedHashMap<String, GameKeyValue> implements GameExtend {}
+public class GameKeyValue {
+    public boolean readCollection;//读收藏品
+    public boolean unlockSingle;  //解锁单曲
+    public byte collection;       //收藏品
+    public boolean illustration;  //曲绘
+    public boolean avatar;        //头像
 }
 ```
 修改存档请使用
@@ -308,6 +326,34 @@ class GameKeyItem {
 @FunctionalInterface
 interface ModifyStrategy<T extends GameExtend> {
     T apply(T data) throws IOException;
+}
+```
+修改存档示例
+```java
+class Main {
+    public static void main(String[] args) {
+        var user = new PhigrosUser(sessionToken);
+        user.update();
+        String songId = "青芽.茶鸣拾贰律";
+        int level = Level.IN.ordinal();
+        int s = 1000000;
+        float a = 100f;
+        boolean c = true;
+        user.modify(GameRecord.class, gameRecord -> {
+            for (String id:gameRecord.keySet()) {
+                if (id.equals(songId)) {
+                    LevelRecord[] value = gameRecord.get(songId);
+                    value[level].s = s;
+                    value[level].a = a;
+                    value[level].c = c;
+                }
+                for (String id:item) {
+                    if (id.equals(songId))
+                        item.modifySong(level, score, acc, fc);
+                }
+            }
+        });
+    }
 }
 ```
 

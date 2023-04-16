@@ -65,9 +65,7 @@ class SaveManager {
         user.saveUrl = URI.create(json.getString("url"));
         this.saveModel = saveModel;
     }
-    public static String getZipUrl(String session) throws Exception {
-        return save(session).getJSONObject("gameFile").getString("url");
-    }
+
     public static String update(PhigrosUser user) throws IOException, InterruptedException {
         JSONObject json = save(user.session);
         user.saveUrl = URI.create(json.getJSONObject("gameFile").getString("url"));
