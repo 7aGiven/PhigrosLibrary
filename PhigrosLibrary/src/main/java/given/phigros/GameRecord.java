@@ -2,25 +2,21 @@ package given.phigros;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 
 public class GameRecord extends LinkedHashMap<String, LevelRecord[]> implements GameExtend {
     final static String name = "gameRecord";
 
     GameRecord(byte[] data) {
-//        System.out.println(Arrays.toString(data));
         final var reader = new ByteReader(data);
         var length = reader.getVarInt();
         int mark;
+        byte strLength;
         for (; length > 0; length--){
-//            System.out.println("开头" + reader.position);
-            byte strLength = reader.getByte();
+            strLength = reader.getByte();
             final var key = new String(data, reader.position, strLength - 2);
-//            System.out.println(key);
             reader.position += strLength;
             mark = reader.position++;
-//            System.out.println(mark);
             strLength = reader.getByte();
             byte fc = reader.getByte();
             final var levelRecords = new LevelRecord[4];
@@ -67,8 +63,6 @@ public class GameRecord extends LinkedHashMap<String, LevelRecord[]> implements 
                 outputStream.write(reader.data.length);
                 outputStream.writeBytes(reader.data);
             }
-//            System.out.println(Arrays.toString(outputStream.toByteArray()));
-//            throw new RuntimeException("暂停");
             return outputStream.toByteArray();
         }
     }

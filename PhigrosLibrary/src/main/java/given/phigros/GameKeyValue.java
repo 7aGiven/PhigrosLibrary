@@ -1,7 +1,7 @@
 package given.phigros;
 
 public class GameKeyValue {
-    public boolean readCollection;
+    public byte readCollection;
     public boolean unlockSingle;
     public byte collection;
     public boolean illustration;
@@ -10,7 +10,7 @@ public class GameKeyValue {
     byte get(int index) {
         switch (index) {
             case 0:
-                return b2b(readCollection);
+                return readCollection;
             case 1:
                 return b2b(unlockSingle);
             case 2:
@@ -26,7 +26,7 @@ public class GameKeyValue {
     void set(int index, byte b) {
         switch (index) {
             case 0:
-                readCollection = b2b(b);
+                readCollection = b;
                 return;
             case 1:
                 unlockSingle = b2b(b);

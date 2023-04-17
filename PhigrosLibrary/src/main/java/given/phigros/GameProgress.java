@@ -16,6 +16,7 @@ public class GameProgress implements GameExtend {
     public byte unlockFlagOfIgallta;
     public byte unlockFlagOfRrharil;
     public byte flagOfSongRecordKey;
+    public byte randomVersionUnlocked;
     GameProgress(byte[] data) {
         ByteSerialize.requiredRead(this, data);
     }

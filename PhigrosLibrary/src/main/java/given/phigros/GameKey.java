@@ -12,10 +12,11 @@ public class GameKey extends LinkedHashMap<String, GameKeyValue> implements Game
         final var reader = new ByteReader(data);
         var length = reader.getVarInt();
         int mark;
+        byte strLength;
         for (; length > 0; length--){
             final var key = reader.getString();
             mark = reader.position++;
-            final byte strLength = reader.getByte();
+            strLength = reader.getByte();
             GameKeyValue value = new GameKeyValue();
             for (var i = 0; i < 5; i++) {
                 if (Util.getBit(strLength, i)) {
@@ -24,7 +25,8 @@ public class GameKey extends LinkedHashMap<String, GameKeyValue> implements Game
             }
             put(key, value);
             reader.position = mark;
-            reader.position += reader.getByte();
+            strLength = reader.getByte();
+            reader.position += strLength;
         }
         lanotaReadKeys = data[data.length - 1];
     }
