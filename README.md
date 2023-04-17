@@ -160,7 +160,7 @@ class Main {
     }
 }
 ```
-Summary结构(未完全解析)
+Summary结构
 ```java
 public final class Summary {
     public byte saveVersion;       //存档版本
