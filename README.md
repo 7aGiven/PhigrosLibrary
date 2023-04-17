@@ -163,11 +163,14 @@ class Main {
 Summary结构(未完全解析)
 ```java
 public final class Summary {
-    public final byte saveVersion;       //存档版本
-    public final short challengeModeRank;//课题分
-    public final float rankingScore;     //rks
-    public final byte gameVersion;       //客户端版本号
-    public final String avatar;          //头像
+    public byte saveVersion;       //存档版本
+    public short challengeModeRank;//课题分
+    public float rankingScore;     //rks
+    public byte gameVersion;       //客户端版本号
+    public String avatar;          //头像
+    public short[] cleared = new short[4];  //完成曲目数量
+    public short[] fullCombo = new short[4];//FC曲目数量
+    public short[] phi = new short[4];      //AP曲目数量
 }
 ```
 Level结构
