@@ -340,6 +340,12 @@ interface ModifyStrategy<T extends GameExtend> {
 }
 ```
 修改存档示例
+
+Phigros使用Summary的异同来判断是否给出使用云端和使用本地界面
+
+PhigrosUser.modify强制修改Summary中的课题分为003(正常游玩不可能获得)
+
+这样修改完就无需清除游戏数据来云存档覆盖本地。
 ```java
 class Main {
     public static void main(String[] args) {
