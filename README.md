@@ -251,14 +251,17 @@ class Main {
     }
 }
 ```
-Summary结构(未完全解析)
+Summary结构
 ```java
 public final class Summary {
-    public final byte saveVersion;       //存档版本
-    public final short challengeModeRank;//课题分
-    public final float rankingScore;     //rks
-    public final byte gameVersion;       //客户端版本号
-    public final String avatar;          //头像
+    public byte saveVersion;       //存档版本
+    public short challengeModeRank;//课题分
+    public float rankingScore;     //rks
+    public byte gameVersion;       //客户端版本号
+    public String avatar;          //头像
+    public short[] cleared = new short[4];  //完成曲目数量
+    public short[] fullCombo = new short[4];//FC曲目数量
+    public short[] phi = new short[4];      //AP曲目数量
 }
 ```
 GameSettings结构
@@ -280,21 +283,20 @@ public class GameSettings {
 GameUser结构
 ```java
 public class GameUser {
-    public boolean showPlayerId;
-    public String selfIntro; //自我介绍
-    public String avatar;    //头像
-    public String background;//曲绘
+    public boolean showPlayerId;//右上角展示用户id
+    public String selfIntro;    //自我介绍
+    public String avatar;       //头像
+    public String background;   //曲绘
 }
 ```
 GameProgress结构(最后一个字节未知，一直是0,不知道干嘛的)
 ```java
 class GameProgress {
-    private final ByteReader reader;
     public boolean isFirstRun;                //首次运行
     public boolean legacyChapterFinished;     //过去的章节已完成
     public boolean alreadyShowCollectionTip;  //已展示收藏品Tip
     public boolean alreadyShowAutoUnlockINTip;//已展示自动解锁IN Tip
-    public String completed;          //剧情完成
+    public String completed;          //剧情完成(显示全部歌曲和课题模式入口)
     public int songUpdateInfo;        //？？？
     public short challengeModeRank;   //课题分
     public int[] money = new int[5];  //data货币
@@ -308,7 +310,7 @@ class GameProgress {
 ```java
 public class GameRecord extends LinkedHashMap<String, LevelRecord[]> implements GameExtend {}
 public class LevelRecord {
-    public boolean c;//FC
+    public boolean c;//Full Combo
     public int s;    //分数
     public float a;  //ACC
 }
@@ -316,7 +318,7 @@ public class LevelRecord {
 对于GameKey的结构(Map)
 ```java
 public class GameKey extends LinkedHashMap<String, GameKeyValue> implements GameExtend {
-    public byte lanotaReadKeys;   //是否读取Lanota收藏品
+    public byte lanotaReadKeys;   //是否读取Lanota收藏品(解锁倒霉蛋和船的AT)
 }
 public class GameKeyValue {
     public boolean readCollection;//读收藏品

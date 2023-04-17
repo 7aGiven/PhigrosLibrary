@@ -91,8 +91,7 @@ class ByteReader {
     void putString(String s) {
         final var b = s.getBytes();
         data[position++] = (byte) b.length;
-        for (byte value : b)
-            data[position++] = value;
+        System.arraycopy(b, 0, data, position, b.length);
     }
 
     void skipString() {
