@@ -358,10 +358,6 @@ class Main {
                     value[level].a = a;
                     value[level].c = c;
                 }
-                for (String id:item) {
-                    if (id.equals(songId))
-                        item.modifySong(level, score, acc, fc);
-                }
             }
         });
     }
