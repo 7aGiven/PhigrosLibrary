@@ -100,7 +100,7 @@ service Phigros {
 
 ### 功能
 
-对Phigros云存档的序列化和反序列化(gameProgress最后一个字节未知)
+对Phigros云存档的序列化和反序列化
 
 封装并优化了常用函数(B19,BestN,目标ACC)
 
@@ -118,7 +118,7 @@ service Phigros {
 
 `include 'PhigrosLibrary'`
 
-在需要引用PhigrosLibrary的项目的build.gradle里修改 dependencies
+在需要引用PhigrosLibrary的项目的build.gradle里修改dependencies
 
 ```groovy
 dependencies {
@@ -292,7 +292,7 @@ public class GameUser {
     public String background;   //曲绘
 }
 ```
-GameProgress结构(最后一个字节未知，一直是0,不知道干嘛的)
+GameProgress结构
 ```java
 class GameProgress {
     public boolean isFirstRun;                //首次运行
@@ -307,6 +307,7 @@ class GameProgress {
     public byte unlockFlagOfIgallta;  //Igallta解锁
     public byte unlockFlagOfRrharil;  //Rrhar'il解锁
     public byte flagOfSongRecordKey;  //AT解锁(倒霉蛋,船,Shadow,心之所向,inferior)
+    public byte randomVersionUnlocked;//Random切片解锁
 }
 ```
 对于GameRecord的结构(Map)
@@ -324,11 +325,11 @@ public class GameKey extends LinkedHashMap<String, GameKeyValue> implements Game
     public byte lanotaReadKeys;   //是否读取Lanota收藏品(解锁倒霉蛋和船的AT)
 }
 public class GameKeyValue {
-    public boolean readCollection;//读收藏品
-    public boolean unlockSingle;  //解锁单曲
-    public byte collection;       //收藏品
-    public boolean illustration;  //曲绘
-    public boolean avatar;        //头像
+    public byte readCollection; //读收藏品
+    public boolean unlockSingle;//解锁单曲
+    public byte collection;     //收藏品
+    public boolean illustration;//曲绘
+    public boolean avatar;      //头像
 }
 ```
 修改存档请使用
