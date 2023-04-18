@@ -16,11 +16,11 @@ public class GameSettings implements GameExtend {
     public float soundOffset;
     public float noteScale;
     GameSettings(byte[] data) {
-        ByteSerialize.requiredRead(this, data);
+        ByteSerialize.read(this, data);
     }
     
     @Override
     public byte[] getData() throws IOException {
-        return ByteSerialize.requiredWrite(this);
+        return ByteSerialize.write(this);
     }
 }

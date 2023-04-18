@@ -18,12 +18,12 @@ public class GameProgress implements GameExtend {
     public byte flagOfSongRecordKey;
     public byte randomVersionUnlocked;
     GameProgress(byte[] data) {
-        ByteSerialize.requiredRead(this, data);
+        ByteSerialize.read(this, data);
     }
 
     public byte[] getData() throws IOException {
         if (money.length != 5)
             throw new RuntimeException("money数组长度不为5。");
-        return ByteSerialize.requiredWrite(this);
+        return ByteSerialize.write(this);
     }
 }
