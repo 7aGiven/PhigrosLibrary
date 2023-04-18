@@ -32,13 +32,13 @@ PhigrosRpc是利用thrift对PhigrosLibrary的封装。
 
 已安装jre11的用户:
 
-下载Release内的PhigrosRpc-nojre-0.5.zip
+下载Release内的PhigrosRpc-nojre.zip
 
 解压后windows运行start.cmd，linux运行start.sh，默认监听127.0.0.1:9090
 
 未安装jre11的windows用户：
 
-下载Release内的 PhigrosRpc-jre11-windows-0.5.zip
+下载Release内的 PhigrosRpc-jre11-windows.zip
 
 解压后运行start.cmd，默认监听127.0.0.1:9090
 
@@ -48,7 +48,7 @@ PhigrosRpc是利用thrift对PhigrosLibrary的封装。
 
 #### 客户端编写
 
-使用phigros.thrift生成您使用语言的代码。`thrift --gen py phigros.thrift`
+使用phigrosLibrary.thrift生成您使用语言的代码。`thrift --gen py phigrosLibrary.thrift`
 
 示例：[使用python编写的示例](https://github.com/7aGiven/PhigrosLibrary/tree/master/clientExample)
 
@@ -95,8 +95,7 @@ service Phigros {
 
 # PhigrosLibrary
 
-基于Phigros 2.4.7
-至 Phigros 2.5.1
+基于Phigros 2.5.1
 
 ### 功能
 
@@ -128,14 +127,14 @@ dependencies {
 
 方法2：
 
-下载Release内jar文件
+下载Release内PhigrosLibrary.jar文件
 
 放入您的项目根目录的libs文件夹下
 
 在需要引用PhigrosLibrary的项目的build.gradle里修改 dependencies
 ```groovy
 dependencies {
-    implementation files('libs/PhigrosLibrary-0.4.jar')
+    implementation files('libs/PhigrosLibrary.jar')
 }
 ```
 
