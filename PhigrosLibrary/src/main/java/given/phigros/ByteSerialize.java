@@ -2,17 +2,52 @@ package given.phigros;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class ByteSerialize {
-    static void requiredRead(Object object, byte[] data) {
+    static void mapRead(LinkedHashMap<String, ?> map, byte[] data) {
+        if (!(map instanceof GameExtend))
+            throw new RuntimeException("参数不为GameExtend。");
+        var length = getVarInt(data, 0);
+        var position = data[0] < 0 ? 2 : 1;
+        byte keyLength;
+        try {
+            for (; length > 0; length--) {
+                map.getClass().getDeclaredMethod("putBytes", byte[].class, int.class).invoke(map, data, position);
+                keyLength = data[position];
+                position += keyLength + data[position + keyLength + 1] + 2;
+            }
+            if (map instanceof GameKey) {
+                map.getClass().getFields()[0].setByte(map, data[position]);
+            }
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    static byte[] mapWrite(LinkedHashMap<String, ?> map) throws IOException {
+        if (!(map instanceof GameExtend))
+            throw new RuntimeException("参数不为GameExtend。");
+        try (var outputStream = new ByteArrayOutputStream()) {
+            outputStream.writeBytes(varInt2bytes(map.size()));
+            for (final var entry : map.entrySet())
+                map.getClass().getDeclaredMethod("getBytes", ByteArrayOutputStream.class, Map.Entry.class).invoke(null, outputStream, entry);
+            if (map instanceof GameKey)
+                outputStream.write(map.getClass().getFields()[0].getByte(map));
+            return outputStream.toByteArray();
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    static void read(GameExtend object, byte[] data) {
         final var fields = object.getClass().getFields();
         try {
             byte index = 0;
             for (final var field : fields) {
-                if (field.getType() == boolean.class) {
-                    field.setBoolean(object, Util.getBit(data[0], index));
-                    index++;
-                }
+                if (field.getType() == boolean.class)
+                    field.setBoolean(object, Util.getBit(data[0], index++));
             }
             var position = 1;
             for (final var field : fields) {
@@ -51,23 +86,21 @@ public class ByteSerialize {
             }
             for (final var field : fields) {
                 if (field.getType() == byte.class)
-                    field.setShort(object, data[position++]);
+                    field.setByte(object, data[position++]);
             }
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }
 
     }
-    static byte[] requiredWrite(Object object) throws IOException {
+    static byte[] write(GameExtend object) throws IOException {
         final var fields = object.getClass().getFields();
         try (var outputStream = new ByteArrayOutputStream()) {
             byte b = 0;
             byte index = 0;
             for (final var field : fields) {
-                if (field.getType() == boolean.class) {
-                    b = Util.modifyBit(b, index, field.getBoolean(object));
-                    index++;
-                }
+                if (field.getType() == boolean.class)
+                    b = Util.modifyBit(b, index++, field.getBoolean(object));
             }
             outputStream.write(b);
             for (final var field : fields) {
@@ -106,11 +139,11 @@ public class ByteSerialize {
         }
     }
 
-    private static int getInt(byte[] data, int position) {
+    static int getInt(byte[] data, int position) {
         return data[position + 3] << 24 ^ Byte.toUnsignedInt(data[position + 2]) << 16 ^ Byte.toUnsignedInt(data[position + 1]) << 8 ^ Byte.toUnsignedInt(data[position]);
     }
 
-    private static byte[] int2bytes(int num) {
+    static byte[] int2bytes(int num) {
         final var bytes = new byte[4];
         bytes[0] = (byte) num;
         bytes[1] = (byte) (num >>> 8 & 0xff);

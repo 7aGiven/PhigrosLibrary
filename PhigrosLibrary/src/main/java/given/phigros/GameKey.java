@@ -3,61 +3,51 @@ package given.phigros;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class GameKey extends LinkedHashMap<String, GameKeyValue> implements GameExtend {
     final static String name = "gameKey";
     public byte lanotaReadKeys;
 
     GameKey(byte[] data) {
-        final var reader = new ByteReader(data);
-        var length = reader.getVarInt();
-        int mark;
-        byte strLength;
-        for (; length > 0; length--){
-            final var key = reader.getString();
-            mark = reader.position++;
-            strLength = reader.getByte();
-            GameKeyValue value = new GameKeyValue();
-            for (var i = 0; i < 5; i++) {
-                if (Util.getBit(strLength, i)) {
-                    value.set(i, reader.getByte());
-                }
+        ByteSerialize.mapRead(this, data);
+    }
+
+    static void getBytes(ByteArrayOutputStream outputStream, Map.Entry<String, GameKeyValue> entry) {
+        final var strBytes = entry.getKey().getBytes();
+        outputStream.write(strBytes.length);
+        outputStream.writeBytes(strBytes);
+        final var value = entry.getValue();
+        byte length = 0;
+        var num = 1;
+        for (var index = 0; index < 5; index++) {
+            if (value.get(index) != 0) {
+                length = Util.modifyBit(length, index, true);
+                num++;
             }
-            put(key, value);
-            reader.position = mark;
-            strLength = reader.getByte();
-            reader.position += strLength;
         }
-        lanotaReadKeys = data[data.length - 1];
+        outputStream.write(num);
+        outputStream.write(length);
+        for (var index = 0; index < 5; index++) {
+            if (value.get(index) != 0) {
+                outputStream.write(value.get(index));
+            }
+        }
+    }
+
+    void putBytes(byte[] data, int position) {
+        final var key = new String(data, position + 1, data[position]);
+        position += data[position] + 2;
+        final var length = data[position++];
+        final var value = new GameKeyValue();
+        for (var index = 0; index < 5; index++) {
+            if (Util.getBit(length, index))
+                value.set(index, data[position++]);
+        }
+        put(key, value);
     }
 
     public byte[] getData() throws IOException {
-        try (var outputStream = new ByteArrayOutputStream()) {
-            outputStream.writeBytes(Util.getVarShort(size()));
-            for (final var entry : entrySet()) {
-                var bytes = entry.getKey().getBytes();
-                outputStream.write(bytes.length);
-                outputStream.writeBytes(bytes);
-                final var value = entry.getValue();
-                var num = 0;
-                for (var i = 0; i < 5; i++) {
-                    if (value.get(i) != 0)
-                        num++;
-                }
-                bytes = new byte[++num];
-                var position = 1;
-                for (num = 0; num < 5; num++) {
-                    if (value.get(num) != 0) {
-                        bytes[0] = Util.modifyBit(bytes[0], num, true);
-                        bytes[position] = value.get(num);
-                        position++;
-                    }
-                }
-                outputStream.write(bytes.length);
-                outputStream.writeBytes(bytes);
-            }
-            outputStream.write(lanotaReadKeys);
-            return outputStream.toByteArray();
-        }
+        return ByteSerialize.mapWrite(this);
     }
 }

@@ -50,9 +50,6 @@ class SaveManager {
     }
     public SaveManager(PhigrosUser user) throws IOException, InterruptedException {
         this.user = user;
-        HttpRequest request = globalRequest.copy().header("X-LC-Session",user.session).uri(URI.create(save)).build();
-        String response = client.send(request,handler).body();
-        System.out.println(response);
         JSONObject json = SaveManager.save(user.session);
         SaveModel saveModel = new SaveModel();
         saveModel.summary = json.getString("summary");
