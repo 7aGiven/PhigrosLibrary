@@ -18,6 +18,13 @@ PhigrosRpc是利用thrift对PhigrosLibrary的封装。
 2. [头像id](https://raw.githubusercontent.com/7aGiven/PhigrosLibrary/master/avater.txt)
 3. [收藏品id](https://raw.githubusercontent.com/7aGiven/PhigrosLibrary/master/collection.txt)
 
+# 目录
+
+[PhigrosRpc](#phigrosrpc)
+[PhigrosLibrary简单应用](#phigroslibrary)
+[PhigrosLibrary高级应用](#phigroslibrary的高级应用)
+[Phigros QQ群](#phigros-qq群)
+
 # PhigrosRpc
 
 基于thrift 0.16.0，PhigrosLibrary 1.0
@@ -105,7 +112,7 @@ service Phigros {
 
 ### Java开发者使用PhigrosLibrary
 
-方法1必须以JDK 11开发
+必须以JDK11开发
 
 方法1：
 
@@ -228,7 +235,7 @@ public class PhigrosUser {
 }
 ```
 
-### PhigrosLibrary的高级应用
+# PhigrosLibrary的高级应用
 
 注意：如果只想查询B19和ACC，请使用快速使用的例子，PhigrosUser内的对这两个常用情景有优化。
 
