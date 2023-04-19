@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.TreeMap;
+import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -46,7 +47,9 @@ public class PhigrosUser {
     }
 
     public Summary update() throws IOException, InterruptedException {
-        return new Summary(SaveManager.update(this));
+        Summary summary = new Summary(SaveManager.update(this));
+        Logger.getGlobal().info(summary.toString());
+        return summary;
     }
 
     public SongLevel[] getB19() throws IOException, InterruptedException {

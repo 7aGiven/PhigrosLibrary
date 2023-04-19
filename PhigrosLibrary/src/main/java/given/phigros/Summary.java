@@ -40,4 +40,14 @@ public final class Summary {
         }
         return Base64.getEncoder().encodeToString(reader.data);
     }
+
+    @Override
+    public String toString() {
+        return String.format("{'存档版本':%d,'课题分':%d,'RKS':%.4f,'游戏版本':%d,'头像':'%s','EZ':[%d,%d,%d],'HD':[%d,%d,%d],'IN':[%d,%d,%d],'AT':[%d,%d,%d]}",
+                saveVersion, challengeModeRank, rankingScore, gameVersion, avatar,
+                cleared[0], fullCombo[0], phi[0],
+                cleared[1], fullCombo[1], phi[1],
+                cleared[2], fullCombo[2], phi[2],
+                cleared[3], fullCombo[3], phi[3]);
+    }
 }

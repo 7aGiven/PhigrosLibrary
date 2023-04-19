@@ -18,12 +18,15 @@ PhigrosRpc是利用thrift对PhigrosLibrary的封装。
 2. [头像id](https://raw.githubusercontent.com/7aGiven/PhigrosLibrary/master/avater.txt)
 3. [收藏品id](https://raw.githubusercontent.com/7aGiven/PhigrosLibrary/master/collection.txt)
 
+**注：3个文件都在项目根目录下，查看修改时间判断版本。**
+
 # 目录
 
-[PhigrosRpc](#phigrosrpc)
-[PhigrosLibrary简单应用](#phigroslibrary)
-[PhigrosLibrary高级应用](#phigroslibrary的高级应用)
-[Phigros QQ群](#phigros-qq群)
+- [PhigrosRpc](#phigrosrpc)
+- [PhigrosLibrary](#phigroslibrary)
+  - [PhigrosLibrary简单应用](#phigroslibrary-简单应用)
+  - [PhigrosLibrary高级应用](#phigroslibrary的高级应用)
+- [Phigros QQ群](#phigros-qq群)
 
 # PhigrosRpc
 
@@ -145,7 +148,7 @@ dependencies {
 }
 ```
 
-### PhigrosLibrary 快速使用
+## PhigrosLibrary 简单应用
 
 以下代码获取了Phigros账户的B19信息和推分信息。
 
@@ -235,7 +238,7 @@ public class PhigrosUser {
 }
 ```
 
-# PhigrosLibrary的高级应用
+## PhigrosLibrary的高级应用
 
 注意：如果只想查询B19和ACC，请使用快速使用的例子，PhigrosUser内的对这两个常用情景有优化。
 

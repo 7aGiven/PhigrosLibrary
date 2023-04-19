@@ -22,6 +22,7 @@ import java.text.SimpleDateFormat;
 import java.util.Base64;
 import java.util.Date;
 import java.util.TimeZone;
+import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -66,13 +67,13 @@ class SaveManager {
     public static String update(PhigrosUser user) throws IOException, InterruptedException {
         JSONObject json = save(user.session);
         user.saveUrl = URI.create(json.getJSONObject("gameFile").getString("url"));
-        System.out.println(user.saveUrl);
+        Logger.getGlobal().info(user.saveUrl.toString());
         return json.getString("summary");
     }
     public static JSONObject save(String session) throws IOException, InterruptedException {
         HttpRequest request = globalRequest.copy().header("X-LC-Session",session).uri(URI.create(save)).build();
         String response = client.send(request,handler).body();
-        System.out.println(response);
+        Logger.getGlobal().info(response);
         JSONArray array = JSON.parseObject(response).getJSONArray("results");
         if (array.size() != 1) {
             throw new RuntimeException("存档有误，请修复存档");
@@ -85,7 +86,7 @@ class SaveManager {
         builder.uri(new URI(baseUrl + "/classes/_GameSave/" + objectId));
         builder.header("X-LC-Session",session);
         HttpResponse<String> res = client.send(builder.build(),handler);
-        System.out.println(res.body());
+        Logger.getGlobal().info(res.body());
     }
     public static void deleteFile(String session, String objectId) throws Exception {
         HttpRequest.Builder builder = globalRequest.copy();
@@ -93,7 +94,7 @@ class SaveManager {
         builder.uri(new URI(baseUrl + "/files/" + objectId));
         builder.header("X-LC-Session",session);
         HttpResponse<String> res = client.send(builder.build(),handler);
-        System.out.println(res.body());
+        Logger.getGlobal().info(res.body());
     }
     public static <T extends GameExtend> void modify(PhigrosUser user, short challengeScore, Class<T> type, ModifyStrategy<T> callback) throws IOException, InterruptedException {
         SaveManager saveManagement = new SaveManager(user);
@@ -151,14 +152,12 @@ class SaveManager {
     }
     public void uploadZip(short score) throws IOException, InterruptedException {
         String response;
-        HttpRequest.Builder template = globalRequest.copy().header("X-LC-Session",user.session);
+        final HttpRequest.Builder template = globalRequest.copy().header("X-LC-Session",user.session);
 
-        ByteBuffer byteBuffer = ByteBuffer.wrap(Base64.getDecoder().decode(saveModel.summary));
-        byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
-        byteBuffer.position(1);
-        byteBuffer.putShort(score);
-        saveModel.summary = Base64.getEncoder().encodeToString(byteBuffer.array());
-        System.out.println(saveModel.summary);
+        final var reader = new ByteReader(Base64.getDecoder().decode(saveModel.summary), 1);
+        reader.putShort(score);
+        saveModel.summary = Base64.getEncoder().encodeToString(reader.data);
+        Logger.getGlobal().info(new Summary(saveModel.summary).toString());
 
 
 
@@ -170,7 +169,7 @@ class SaveManager {
         String tokenKey = Base64.getEncoder().encodeToString(JSON.parseObject(response).getString("key").getBytes());
         String newGameObjectId = JSON.parseObject(response).getString("objectId");
         String authorization = "UpToken "+JSON.parseObject(response).getString("token");
-        System.out.println(response);
+        Logger.getGlobal().info(response);
 
 
 
@@ -178,8 +177,8 @@ class SaveManager {
         builder.header("Authorization",authorization);
         builder.POST(HttpRequest.BodyPublishers.noBody());
         response = client.send(builder.build(),handler).body();
-        String uploadId = JSON.parseObject(response).getString("uploadId");
-        System.out.println(response);
+        final var uploadId = JSON.parseObject(response).getString("uploadId");
+        Logger.getGlobal().info(response);
 
 
 
@@ -188,8 +187,8 @@ class SaveManager {
         builder.header("Content-Type","application/octet-stream");
         builder.PUT(HttpRequest.BodyPublishers.ofByteArray(data));
         response = client.send(builder.build(),handler).body();
-        String etag = JSON.parseObject(response).getString("etag");
-        System.out.println(response);
+        final var etag = JSON.parseObject(response).getString("etag");
+        Logger.getGlobal().info(response);
 
 
 
@@ -197,7 +196,8 @@ class SaveManager {
         builder.header("Authorization",authorization);
         builder.header("Content-Type","application/json");
         builder.POST(HttpRequest.BodyPublishers.ofString(String.format("{\"parts\":[{\"partNumber\":1,\"etag\":\"%s\"}]}",etag)));
-        client.send(builder.build(),handler);
+        response = client.send(builder.build(),handler).body();
+        Logger.getGlobal().info(response);
 
 
 
@@ -205,7 +205,8 @@ class SaveManager {
         builder.uri(URI.create(fileCallback));
         builder.header("Content-Type","application/json");
         builder.POST(HttpRequest.BodyPublishers.ofString(String.format("{\"result\":true,\"token\":\"%s\"}",tokenKey)));
-        client.send(builder.build(),HttpResponse.BodyHandlers.discarding());
+        response = client.send(builder.build(), handler).body();
+        Logger.getGlobal().info(response);
 
 
 
@@ -213,17 +214,16 @@ class SaveManager {
         builder.uri(URI.create(String.format(baseUrl + "/classes/_GameSave/%s?",saveModel.objectId)));
         builder.header("Content-Type","application/json");
         builder.PUT(HttpRequest.BodyPublishers.ofString(String.format("{\"summary\":\"%s\",\"modifiedAt\":{\"__type\":\"Date\",\"iso\":\"%sZ\"},\"gameFile\":{\"__type\":\"Pointer\",\"className\":\"_File\",\"objectId\":\"%s\"},\"ACL\":{\"%s\":{\"read\":true,\"write\":true}},\"user\":{\"__type\":\"Pointer\",\"className\":\"_User\",\"objectId\":\"%s\"}}",saveModel.summary,format.format(new Date()),newGameObjectId,saveModel.userObjectId,saveModel.userObjectId)));
-        response = client.send(builder.build(),HttpResponse.BodyHandlers.ofString()).body();
-        System.out.println(response);
+        response = client.send(builder.build(),handler).body();
+        Logger.getGlobal().info(response);
 
 
 
         builder = template.copy();
         builder.uri(URI.create(String.format(baseUrl + "/files/%s",saveModel.gameObjectId)));
         builder.DELETE();
-        response = client.send(builder.build(),HttpResponse.BodyHandlers.ofString()).body();
-        System.out.println(response);
-
+        response = client.send(builder.build(),handler).body();
+        Logger.getGlobal().info(response);
     }
     private static final byte[] key = new byte[] {-24,-106,-102,-46,-91,64,37,-101,-105,-111,-112,-117,-120,-26,-65,3,30,109,33,-107,110,-6,-42,-118,80,-35,85,-42,122,-80,-110,75};
     private static final byte[] iv = new byte[] {42,79,-16,-118,-56,13,99,7,0,87,-59,-107,24,-56,50,83};
