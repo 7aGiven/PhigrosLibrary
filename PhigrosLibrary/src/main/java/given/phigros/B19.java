@@ -3,6 +3,7 @@ package given.phigros;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.logging.Logger;
 
 class B19 implements Iterable<String> {
     private final byte[] data;
@@ -109,8 +110,10 @@ class B19 implements Iterable<String> {
                 if (levelNotExist(level))
                     continue;
                 final int score = reader.getInt();
-                if (score == 1000000)
+                if (score == 1000000) {
+                    reader.position += 4;
                     continue;
+                }
                 final float acc = reader.getFloat();
                 final var expect = (float) Math.sqrt(minRks / levels[level]) * 45f + 55f;
                 if (expect > acc)
