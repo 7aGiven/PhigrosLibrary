@@ -8,6 +8,9 @@ public class GameProgress implements GameExtend {
     public boolean legacyChapterFinished;
     public boolean alreadyShowCollectionTip;
     public boolean alreadyShowAutoUnlockINTip;
+    public boolean chapter8UnlockBegin;
+    public boolean chapter8UnlockSecondPhase;
+    public boolean chapter8Passed;
     public String completed;
     public int songUpdateInfo;
     public short challengeModeRank;
@@ -17,6 +20,7 @@ public class GameProgress implements GameExtend {
     public byte unlockFlagOfRrharil;
     public byte flagOfSongRecordKey;
     public byte randomVersionUnlocked;
+    public byte chapter8SongUnlocked;
     GameProgress(byte[] data) {
         ByteSerialize.read(this, data);
     }
