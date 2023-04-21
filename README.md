@@ -105,7 +105,7 @@ service Phigros {
 
 # PhigrosLibrary
 
-基于Phigros 2.5.1
+基于Phigros 3.0.0
 
 ### 功能
 
@@ -308,6 +308,9 @@ class GameProgress {
     public boolean legacyChapterFinished;     //过去的章节已完成
     public boolean alreadyShowCollectionTip;  //已展示收藏品Tip
     public boolean alreadyShowAutoUnlockINTip;//已展示自动解锁IN Tip
+    public boolean chapter8UnlockBegin;
+    public boolean chapter8UnlockSecondPhase;
+    public boolean chapter8Passed;
     public String completed;          //剧情完成(显示全部歌曲和课题模式入口)
     public int songUpdateInfo;        //？？？
     public short challengeModeRank;   //课题分
@@ -317,6 +320,7 @@ class GameProgress {
     public byte unlockFlagOfRrharil;  //Rrhar'il解锁
     public byte flagOfSongRecordKey;  //AT解锁(倒霉蛋,船,Shadow,心之所向,inferior)
     public byte randomVersionUnlocked;//Random切片解锁
+    public byte chapter8SongUnlocked;
 }
 ```
 对于GameRecord的结构(Map)
