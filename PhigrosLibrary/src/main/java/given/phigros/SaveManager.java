@@ -169,7 +169,7 @@ class SaveManager {
         String tokenKey = Base64.getEncoder().encodeToString(JSON.parseObject(response).getString("key").getBytes());
         String newGameObjectId = JSON.parseObject(response).getString("objectId");
         String authorization = "UpToken "+JSON.parseObject(response).getString("token");
-        Logger.getGlobal().info(response);
+        Logger.getGlobal().fine(response);
 
 
 
@@ -178,7 +178,7 @@ class SaveManager {
         builder.POST(HttpRequest.BodyPublishers.noBody());
         response = client.send(builder.build(),handler).body();
         final var uploadId = JSON.parseObject(response).getString("uploadId");
-        Logger.getGlobal().info(response);
+        Logger.getGlobal().fine(response);
 
 
 
@@ -188,7 +188,7 @@ class SaveManager {
         builder.PUT(HttpRequest.BodyPublishers.ofByteArray(data));
         response = client.send(builder.build(),handler).body();
         final var etag = JSON.parseObject(response).getString("etag");
-        Logger.getGlobal().info(response);
+        Logger.getGlobal().fine(response);
 
 
 
@@ -197,7 +197,7 @@ class SaveManager {
         builder.header("Content-Type","application/json");
         builder.POST(HttpRequest.BodyPublishers.ofString(String.format("{\"parts\":[{\"partNumber\":1,\"etag\":\"%s\"}]}",etag)));
         response = client.send(builder.build(),handler).body();
-        Logger.getGlobal().info(response);
+        Logger.getGlobal().fine(response);
 
 
 
@@ -206,7 +206,7 @@ class SaveManager {
         builder.header("Content-Type","application/json");
         builder.POST(HttpRequest.BodyPublishers.ofString(String.format("{\"result\":true,\"token\":\"%s\"}",tokenKey)));
         response = client.send(builder.build(), handler).body();
-        Logger.getGlobal().info(response);
+        Logger.getGlobal().fine(response);
 
 
 
@@ -215,7 +215,7 @@ class SaveManager {
         builder.header("Content-Type","application/json");
         builder.PUT(HttpRequest.BodyPublishers.ofString(String.format("{\"summary\":\"%s\",\"modifiedAt\":{\"__type\":\"Date\",\"iso\":\"%sZ\"},\"gameFile\":{\"__type\":\"Pointer\",\"className\":\"_File\",\"objectId\":\"%s\"},\"ACL\":{\"%s\":{\"read\":true,\"write\":true}},\"user\":{\"__type\":\"Pointer\",\"className\":\"_User\",\"objectId\":\"%s\"}}",saveModel.summary,format.format(new Date()),newGameObjectId,saveModel.userObjectId,saveModel.userObjectId)));
         response = client.send(builder.build(),handler).body();
-        Logger.getGlobal().info(response);
+        Logger.getGlobal().fine(response);
 
 
 
@@ -223,14 +223,14 @@ class SaveManager {
         builder.uri(URI.create(String.format(baseUrl + "/files/%s",saveModel.gameObjectId)));
         builder.DELETE();
         response = client.send(builder.build(),handler).body();
-        Logger.getGlobal().info(response);
+        Logger.getGlobal().fine(response);
     }
-    private static final byte[] key = new byte[] {-24,-106,-102,-46,-91,64,37,-101,-105,-111,-112,-117,-120,-26,-65,3,30,109,33,-107,110,-6,-42,-118,80,-35,85,-42,122,-80,-110,75};
-    private static final byte[] iv = new byte[] {42,79,-16,-118,-56,13,99,7,0,87,-59,-107,24,-56,50,83};
+    private static final SecretKeySpec key = new SecretKeySpec(new byte[] {-24,-106,-102,-46,-91,64,37,-101,-105,-111,-112,-117,-120,-26,-65,3,30,109,33,-107,110,-6,-42,-118,80,-35,85,-42,122,-80,-110,75}, "AES");
+    private static final IvParameterSpec iv = new IvParameterSpec(new byte[] {42,79,-16,-118,-56,13,99,7,0,87,-59,-107,24,-56,50,83});
     public static byte[] decrypt(byte[] data) {
         try {
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-            cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key,"AES"),new IvParameterSpec(iv));
+            cipher.init(Cipher.DECRYPT_MODE, key, iv);
             return cipher.doFinal(data);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -239,7 +239,7 @@ class SaveManager {
     public static byte[] encrypt(byte[] data) {
         try {
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-            cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(key,"AES"),new IvParameterSpec(iv));
+            cipher.init(Cipher.ENCRYPT_MODE, key, iv);
             return cipher.doFinal(data);
         } catch (Exception e) {
             throw new RuntimeException(e);
