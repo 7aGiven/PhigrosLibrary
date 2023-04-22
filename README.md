@@ -14,9 +14,9 @@ PhigrosRpc是利用thrift对PhigrosLibrary的封装。
 
 # 更新资源
 
-1. [定数表](https://raw.githubusercontent.com/7aGiven/PhigrosLibrary/master/difficulty.csv)
-2. [头像id](https://raw.githubusercontent.com/7aGiven/PhigrosLibrary/master/avater.txt)
-3. [收藏品id](https://raw.githubusercontent.com/7aGiven/PhigrosLibrary/master/collection.txt)
+1. [定数表](https://github.com/7aGiven/PhigrosLibrary/blob/master/difficulty.csv)
+2. [头像id](https://github.com/7aGiven/PhigrosLibrary/blob/master/avater.txt)
+3. [收藏品id](https://github.com/7aGiven/PhigrosLibrary/blob/master/collection.txt)
 
 **注：3个文件都在项目根目录下，查看修改时间判断版本。**
 
