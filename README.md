@@ -371,14 +371,16 @@ class Main {
         float a = 100f;
         boolean c = true;
         user.modify(GameRecord.class, gameRecord -> {
-            for (String id:gameRecord.keySet()) {
-                if (id.equals(songId)) {
-                    LevelRecord[] value = gameRecord.get(songId);
-                    value[level].s = s;
-                    value[level].a = a;
-                    value[level].c = c;
-                }
-            }
+            LevelRecord[] levelRecords = gameRecord.get(songId);
+            if (levelRecords != null) {
+                if (levelRecords[level] != null) {
+                    levelRecords[level].s = s;
+                    levelRecords[level].a = a;
+                    levelRecords[level].c = c;
+                } else
+                    throw new RuntimeException("未游玩曲目该难度。");
+            } else
+                throw new RuntimeException("未游玩该曲目。");
         });
     }
 }
