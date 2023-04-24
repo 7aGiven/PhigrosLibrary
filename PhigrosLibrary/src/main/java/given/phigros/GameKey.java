@@ -1,16 +1,15 @@
 package given.phigros;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class GameKey extends LinkedHashMap<String, GameKeyValue> implements GameExtend {
+public class GameKey extends LinkedHashMap<String, GameKeyValue> implements MapSaveModule {
     final static String name = "gameKey";
     public byte lanotaReadKeys;
 
     GameKey(byte[] data) {
-        ByteSerialize.mapRead(this, data);
+        loadFromBinary(data);
     }
 
     static void getBytes(ByteArrayOutputStream outputStream, Map.Entry<String, GameKeyValue> entry) {
@@ -45,9 +44,5 @@ public class GameKey extends LinkedHashMap<String, GameKeyValue> implements Game
                 value.set(index, data[position++]);
         }
         put(key, value);
-    }
-
-    public byte[] getData() throws IOException {
-        return ByteSerialize.mapWrite(this);
     }
 }

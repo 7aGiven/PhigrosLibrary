@@ -6,138 +6,145 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class ByteSerialize {
-    static void mapRead(LinkedHashMap<String, ?> map, byte[] data) {
-        if (!(map instanceof GameExtend))
-            throw new RuntimeException("参数不为GameExtend。");
-        var length = getVarInt(data, 0);
+interface MapSaveModule extends ISaveModule {
+    default void loadFromBinary(byte[] data) {
+        ((LinkedHashMap<String, ?>) this).clear();
+        var length = ISaveModule.getVarInt(data, 0);
         var position = data[0] < 0 ? 2 : 1;
         byte keyLength;
         try {
             for (; length > 0; length--) {
-                map.getClass().getDeclaredMethod("putBytes", byte[].class, int.class).invoke(map, data, position);
+                this.getClass().getMethod("putBytes", byte[].class, int.class).invoke(null, data, position);
                 keyLength = data[position];
                 position += keyLength + data[position + keyLength + 1] + 2;
             }
-            if (map instanceof GameKey) {
-                map.getClass().getFields()[0].setByte(map, data[position]);
-            }
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
             throw new RuntimeException(e);
         }
+        if (this instanceof GameKey)
+            ((GameKey) this).lanotaReadKeys = data[position];
     }
 
-    static byte[] mapWrite(LinkedHashMap<String, ?> map) throws IOException {
-        if (!(map instanceof GameExtend))
-            throw new RuntimeException("参数不为GameExtend。");
+    default byte[] serialize() throws IOException {
         try (var outputStream = new ByteArrayOutputStream()) {
-            outputStream.writeBytes(varInt2bytes(map.size()));
-            for (final var entry : map.entrySet())
-                map.getClass().getDeclaredMethod("getBytes", ByteArrayOutputStream.class, Map.Entry.class).invoke(null, outputStream, entry);
-            if (map instanceof GameKey)
-                outputStream.write(map.getClass().getFields()[0].getByte(map));
+            final var map = (LinkedHashMap<String, ?>) this;
+            outputStream.writeBytes(ISaveModule.varInt2bytes(map.size()));
+            try {
+                for (final var entry : map.entrySet())
+                    this.getClass().getMethod("getBytes", ByteArrayOutputStream.class, Map.Entry.class).invoke(map, outputStream, entry);
+            } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+                throw new RuntimeException(e);
+            }
+            if (this instanceof GameKey)
+                outputStream.write(((GameKey) this).lanotaReadKeys);
             return outputStream.toByteArray();
-        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-            throw new RuntimeException(e);
         }
     }
-    static void read(GameExtend object, byte[] data) {
-        final var fields = object.getClass().getFields();
+}
+
+interface SaveModule extends ISaveModule {
+    default void loadFromBinary(byte[] data) {
+        final var fields = getClass().getFields();
         try {
             byte index = 0;
             for (final var field : fields) {
                 if (field.getType() == boolean.class)
-                    field.setBoolean(object, Util.getBit(data[0], index++));
+                    field.setBoolean(this, Util.getBit(data[0], index++));
             }
             var position = 1;
             for (final var field : fields) {
                 if (field.getType() == String.class) {
                     final byte length = data[position++];
-                    field.set(object, new String(data, position, length));
+                    field.set(this, new String(data, position, length));
                     position += length;
                 }
             }
             for (final var field : fields) {
                 if (field.getType() == float.class) {
-                    field.setFloat(object, Float.intBitsToFloat(getInt(data, position)));
+                    field.setFloat(this, Float.intBitsToFloat(ISaveModule.getInt(data, position)));
                     position += 4;
                 }
             }
             for (final var field : fields) {
                 if (field.getType() == int.class) {
-                    field.setInt(object, getVarInt(data, position));
+                    field.setInt(this, ISaveModule.getVarInt(data, position));
                     position += data[position] >= 0 ? 1 : 2;
                 }
             }
             for (final var field : fields) {
                 if (field.getType() == short.class) {
-                    field.setShort(object, getShort(data, position));
+                    field.setShort(this, ISaveModule.getShort(data, position));
                     position += 2;
                 }
             }
             for (final var field : fields) {
                 if (field.getType() == int[].class) {
-                    var array = (int[]) field.get(object);
+                    var array = (int[]) field.get(this);
                     for (var i = 0; i < array.length; i++) {
-                        array[i] = getVarInt(data, position);
+                        array[i] = ISaveModule.getVarInt(data, position);
                         position += data[position] >= 0 ? 1 : 2;
                     }
                 }
             }
             for (final var field : fields) {
                 if (field.getType() == byte.class)
-                    field.setByte(object, data[position++]);
+                    field.setByte(this, data[position++]);
             }
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }
-
     }
-    static byte[] write(GameExtend object) throws IOException {
-        final var fields = object.getClass().getFields();
+
+    default byte[] serialize() throws IOException {
+        final var fields = getClass().getFields();
         try (var outputStream = new ByteArrayOutputStream()) {
             byte b = 0;
             byte index = 0;
             for (final var field : fields) {
                 if (field.getType() == boolean.class)
-                    b = Util.modifyBit(b, index++, field.getBoolean(object));
+                    b = Util.modifyBit(b, index++, field.getBoolean(this));
             }
             outputStream.write(b);
             for (final var field : fields) {
                 if (field.getType() == String.class) {
-                    final var bytes = ((String) field.get(object)).getBytes();
+                    final var bytes = ((String) field.get(this)).getBytes();
                     outputStream.write(bytes.length);
                     outputStream.writeBytes(bytes);
                 }
             }
             for (final var field : fields) {
                 if (field.getType() == float.class)
-                    outputStream.writeBytes(int2bytes(Float.floatToIntBits(field.getFloat(object))));
+                    outputStream.writeBytes(ISaveModule.int2bytes(Float.floatToIntBits(field.getFloat(this))));
             }
             for (final var field : fields) {
                 if (field.getType() == int.class)
-                    outputStream.writeBytes(varInt2bytes(field.getInt(object)));
+                    outputStream.writeBytes(ISaveModule.varInt2bytes(field.getInt(this)));
             }
             for (final var field : fields) {
                 if (field.getType() == short.class)
-                    outputStream.writeBytes(short2bytes(field.getShort(object)));
+                    outputStream.writeBytes(ISaveModule.short2bytes(field.getShort(this)));
             }
             for (final var field : fields) {
                 if (field.getType() == int[].class) {
-                    var array = (int[]) field.get(object);
+                    var array = (int[]) field.get(this);
                     for (int i : array)
-                        outputStream.writeBytes(varInt2bytes(i));
+                        outputStream.writeBytes(ISaveModule.varInt2bytes(i));
                 }
             }
             for (final var field : fields) {
                 if (field.getType() == byte.class)
-                    outputStream.write(field.getByte(object));
+                    outputStream.write(field.getByte(this));
             }
             return outputStream.toByteArray();
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }
     }
+}
+interface ISaveModule {
+    void loadFromBinary(byte[] data);
+
+    byte[] serialize() throws IOException;
 
     static int getInt(byte[] data, int position) {
         return data[position + 3] << 24 ^ Byte.toUnsignedInt(data[position + 2]) << 16 ^ Byte.toUnsignedInt(data[position + 1]) << 8 ^ Byte.toUnsignedInt(data[position]);
@@ -152,25 +159,25 @@ public class ByteSerialize {
         return bytes;
     }
 
-    private static short getShort(byte[] data, int position) {
+    static short getShort(byte[] data, int position) {
         return (short) (Byte.toUnsignedInt(data[position + 1]) << 8 ^ Byte.toUnsignedInt(data[position]));
     }
 
-    private static byte[] short2bytes(short num) {
+    static byte[] short2bytes(short num) {
         final var bytes = new byte[2];
         bytes[0] = (byte) num;
         bytes[1] = (byte) (num >>> 8);
         return bytes;
     }
 
-    private static int getVarInt(byte[] data, int position) {
+    static int getVarInt(byte[] data, int position) {
         if (data[position] >= 0)
             return data[position];
         else
             return data[position + 1] << 7 ^ data[position] & 0x7f;
     }
 
-    private static byte[] varInt2bytes(int num) {
+    static byte[] varInt2bytes(int num) {
         if (num < 128)
             return new byte[] {(byte) num};
         else

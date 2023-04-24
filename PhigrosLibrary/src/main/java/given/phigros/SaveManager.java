@@ -10,13 +10,10 @@ import javax.crypto.spec.SecretKeySpec;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.security.MessageDigest;
 import java.text.SimpleDateFormat;
 import java.util.Base64;
@@ -96,12 +93,12 @@ class SaveManager {
         HttpResponse<String> res = client.send(builder.build(),handler);
         Logger.getGlobal().info(res.body());
     }
-    public static <T extends GameExtend> void modify(PhigrosUser user, short challengeScore, Class<T> type, ModifyStrategy<T> callback) throws IOException, InterruptedException {
+    public static <T extends ISaveModule> void modify(PhigrosUser user, short challengeScore, Class<T> type, ModifyStrategy<T> callback) throws IOException, InterruptedException {
         SaveManager saveManagement = new SaveManager(user);
         saveManagement.modify(type,callback);
         saveManagement.uploadZip(challengeScore);
     }
-    private <T extends GameExtend> void modify(Class<T> clazz, ModifyStrategy<T> callback) throws IOException, InterruptedException {
+    private <T extends ISaveModule> void modify(Class<T> clazz, ModifyStrategy<T> callback) throws IOException, InterruptedException {
         HttpRequest request = HttpRequest.newBuilder(user.saveUrl).build();
         data = client.send(request,HttpResponse.BodyHandlers.ofByteArray()).body();
         md5.reset();
@@ -135,8 +132,7 @@ class SaveManager {
                                 } catch (Exception e) {
                                     throw new RuntimeException(e);
                                 }
-                                data = tmp.getData();
-                                data = encrypt(data);
+                                data = encrypt(tmp.serialize());
                                 zipWriter.write(1);
                             } else {
                                 data = zipReader.readAllBytes();
