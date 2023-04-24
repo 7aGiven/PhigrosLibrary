@@ -278,7 +278,7 @@ public final class Summary {
 ```
 GameSettings结构
 ```java
-public class GameSettings {
+public class GameSettings implements ISaveModule {
     public boolean chordSupport;     //多押辅助
     public boolean fcAPIndicator;    //开启FC/AP指示器
     public boolean enableHitSound;   //开启打击音效
@@ -294,7 +294,7 @@ public class GameSettings {
 ```
 GameUser结构
 ```java
-public class GameUser {
+public class GameUser implements ISaveModule {
     public boolean showPlayerId;//右上角展示用户id
     public String selfIntro;    //自我介绍
     public String avatar;       //头像
@@ -303,7 +303,7 @@ public class GameUser {
 ```
 GameProgress结构
 ```java
-class GameProgress {
+class GameProgress implements ISaveModule {
     public boolean isFirstRun;                //首次运行
     public boolean legacyChapterFinished;     //过去的章节已完成
     public boolean alreadyShowCollectionTip;  //已展示收藏品Tip
@@ -325,7 +325,7 @@ class GameProgress {
 ```
 对于GameRecord的结构(Map)
 ```java
-public class GameRecord extends LinkedHashMap<String, LevelRecord[]> implements GameExtend {}
+public class GameRecord extends LinkedHashMap<String, LevelRecord[]> implements ISaveModule {}
 public class LevelRecord {
     public boolean c;//Full Combo
     public int s;    //分数
@@ -334,7 +334,7 @@ public class LevelRecord {
 ```
 对于GameKey的结构(Map)
 ```java
-public class GameKey extends LinkedHashMap<String, GameKeyValue> implements GameExtend {
+public class GameKey extends LinkedHashMap<String, GameKeyValue> implements ISaveModule {
     public byte lanotaReadKeys;   //是否读取Lanota收藏品(解锁倒霉蛋和船的AT)
 }
 public class GameKeyValue {
@@ -349,7 +349,7 @@ public class GameKeyValue {
 `<T extend GameExtend> PhigrosUser.modify(Class<T> clazz, ModifyStrategy<T> strategy)`
 ```java
 @FunctionalInterface
-interface ModifyStrategy<T extends GameExtend> {
+interface ModifyStrategy<T extends ISaveModule> {
     T apply(T data) throws IOException;
 }
 ```

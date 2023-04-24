@@ -25,7 +25,7 @@ public final class Summary {
         }
     }
 
-    String getBase64() {
+    String serialize() {
         final var bytes = avatar.getBytes();
         final var reader = new ByteReader(new byte[33 + bytes.length]);
         reader.putByte(saveVersion);

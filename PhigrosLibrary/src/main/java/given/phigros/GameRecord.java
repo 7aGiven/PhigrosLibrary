@@ -1,15 +1,14 @@
 package given.phigros;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class GameRecord extends LinkedHashMap<String, LevelRecord[]> implements GameExtend {
+public class GameRecord extends LinkedHashMap<String, LevelRecord[]> implements MapSaveModule {
     final static String name = "gameRecord";
 
     GameRecord(byte[] data) {
-        ByteSerialize.mapRead(this, data);
+        loadFromBinary(data);
     }
 
     static void getBytes(ByteArrayOutputStream outputStream, Map.Entry<String, LevelRecord[]> entry) {
@@ -35,8 +34,8 @@ public class GameRecord extends LinkedHashMap<String, LevelRecord[]> implements 
         outputStream.write(fc);
         for (var level = 0; level < 4; level++) {
             if (levelRecords[level] != null) {
-                outputStream.writeBytes(ByteSerialize.int2bytes(levelRecords[level].s));
-                outputStream.writeBytes(ByteSerialize.int2bytes(Float.floatToIntBits(levelRecords[level].a)));
+                outputStream.writeBytes(ISaveModule.int2bytes(levelRecords[level].s));
+                outputStream.writeBytes(ISaveModule.int2bytes(Float.floatToIntBits(levelRecords[level].a)));
             }
         }
     }
@@ -56,9 +55,5 @@ public class GameRecord extends LinkedHashMap<String, LevelRecord[]> implements 
             }
         }
         put(key, levelRecords);
-    }
-
-    public byte[] getData() throws IOException {
-        return ByteSerialize.mapWrite(this);
     }
 }

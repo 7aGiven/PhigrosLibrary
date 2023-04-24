@@ -1,8 +1,6 @@
 package given.phigros;
 
-import java.io.IOException;
-
-public class GameProgress implements GameExtend {
+public class GameProgress implements SaveModule {
     final static String name = "gameProgress";
     public boolean isFirstRun;
     public boolean legacyChapterFinished;
@@ -22,12 +20,6 @@ public class GameProgress implements GameExtend {
     public byte randomVersionUnlocked;
     public byte chapter8SongUnlocked;
     GameProgress(byte[] data) {
-        ByteSerialize.read(this, data);
-    }
-
-    public byte[] getData() throws IOException {
-        if (money.length != 5)
-            throw new RuntimeException("money数组长度不为5。");
-        return ByteSerialize.write(this);
+        loadFromBinary(data);
     }
 }

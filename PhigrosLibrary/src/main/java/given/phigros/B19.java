@@ -3,7 +3,6 @@ package given.phigros;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.logging.Logger;
 
 class B19 implements Iterable<String> {
     private final byte[] data;

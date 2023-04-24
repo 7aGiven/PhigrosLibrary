@@ -64,14 +64,14 @@ public class PhigrosUser {
     public SongExpect[] getExpects() throws IOException, InterruptedException {
         return new B19(extractZip(GameRecord.class)).getExpects();
     }
-    public <T extends GameExtend> T get(Class<T> clazz) throws IOException, InterruptedException {
+    public <T extends ISaveModule> T get(Class<T> clazz) throws IOException, InterruptedException {
         try {
             return clazz.getDeclaredConstructor(byte[].class).newInstance(extractZip(clazz));
         } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
             throw new RuntimeException(e);
         }
     }
-    public <T extends GameExtend> void modify(Class<T> clazz, ModifyStrategy<T> strategy) throws IOException, InterruptedException {
+    public <T extends ISaveModule> void modify(Class<T> clazz, ModifyStrategy<T> strategy) throws IOException, InterruptedException {
         SaveManager.modify(this, (short) 3, clazz, strategy);
     }
     public void downloadSave(Path path) throws IOException, InterruptedException {
@@ -82,7 +82,7 @@ public class PhigrosUser {
         saveManager.data = Files.readAllBytes(path);
         saveManager.uploadZip((short) 3);
     }
-    private <T extends GameExtend> byte[] extractZip(Class<T> clazz) throws IOException, InterruptedException {
+    private <T extends ISaveModule> byte[] extractZip(Class<T> clazz) throws IOException, InterruptedException {
         byte[] buffer;
         byte[] data = getData();
         try (ByteArrayInputStream reader = new ByteArrayInputStream(data)) {
