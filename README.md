@@ -30,7 +30,7 @@ PhigrosRpc是利用thrift对PhigrosLibrary的封装。
 
 # PhigrosRpc
 
-基于thrift 0.16.0，PhigrosLibrary 1.0
+基于thrift 0.16.0，PhigrosLibrary 2.0
 
 ### 功能
 
@@ -278,7 +278,7 @@ public final class Summary {
 ```
 GameSettings结构
 ```java
-public class GameSettings implements ISaveModule {
+public class GameSettings implements SaveModule {
     public boolean chordSupport;     //多押辅助
     public boolean fcAPIndicator;    //开启FC/AP指示器
     public boolean enableHitSound;   //开启打击音效
@@ -294,7 +294,7 @@ public class GameSettings implements ISaveModule {
 ```
 GameUser结构
 ```java
-public class GameUser implements ISaveModule {
+public class GameUser implements SaveModule {
     public boolean showPlayerId;//右上角展示用户id
     public String selfIntro;    //自我介绍
     public String avatar;       //头像
@@ -303,7 +303,7 @@ public class GameUser implements ISaveModule {
 ```
 GameProgress结构
 ```java
-class GameProgress implements ISaveModule {
+class GameProgress implements SaveModule {
     public boolean isFirstRun;                //首次运行
     public boolean legacyChapterFinished;     //过去的章节已完成
     public boolean alreadyShowCollectionTip;  //已展示收藏品Tip
@@ -325,7 +325,7 @@ class GameProgress implements ISaveModule {
 ```
 对于GameRecord的结构(Map)
 ```java
-public class GameRecord extends LinkedHashMap<String, LevelRecord[]> implements ISaveModule {}
+public class GameRecord extends LinkedHashMap<String, LevelRecord[]> implements SaveModule {}
 public class LevelRecord {
     public boolean c;//Full Combo
     public int s;    //分数
@@ -334,7 +334,7 @@ public class LevelRecord {
 ```
 对于GameKey的结构(Map)
 ```java
-public class GameKey extends LinkedHashMap<String, GameKeyValue> implements ISaveModule {
+public class GameKey extends LinkedHashMap<String, GameKeyValue> implements SaveModule {
     public byte lanotaReadKeys;   //是否读取Lanota收藏品(解锁倒霉蛋和船的AT)
 }
 public class GameKeyValue {
@@ -346,10 +346,10 @@ public class GameKeyValue {
 }
 ```
 修改存档请使用
-`<T extend GameExtend> PhigrosUser.modify(Class<T> clazz, ModifyStrategy<T> strategy)`
+`<T extend SaveModule> PhigrosUser.modify(Class<T> clazz, ModifyStrategy<T> strategy)`
 ```java
 @FunctionalInterface
-interface ModifyStrategy<T extends ISaveModule> {
+interface ModifyStrategy<T extends SaveModule> {
     T apply(T data) throws IOException;
 }
 ```
