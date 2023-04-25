@@ -1,10 +1,9 @@
 package given.phigros;
 
 import java.io.ByteArrayOutputStream;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class GameKey extends LinkedHashMap<String, GameKeyValue> implements MapSaveModule {
+public class GameKey extends MapSaveModule<GameKeyValue> {
     final static String name = "gameKey";
     public byte lanotaReadKeys;
 
@@ -12,7 +11,7 @@ public class GameKey extends LinkedHashMap<String, GameKeyValue> implements MapS
         loadFromBinary(data);
     }
 
-    static void getBytes(ByteArrayOutputStream outputStream, Map.Entry<String, GameKeyValue> entry) {
+    void getBytes(ByteArrayOutputStream outputStream, Map.Entry<String, GameKeyValue> entry) {
         final var strBytes = entry.getKey().getBytes();
         outputStream.write(strBytes.length);
         outputStream.writeBytes(strBytes);
