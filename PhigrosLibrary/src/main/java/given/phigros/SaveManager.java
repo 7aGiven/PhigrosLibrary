@@ -10,6 +10,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -93,12 +94,12 @@ class SaveManager {
         HttpResponse<String> res = client.send(builder.build(),handler);
         Logger.getGlobal().info(res.body());
     }
-    public static <T extends ISaveModule> void modify(PhigrosUser user, short challengeScore, Class<T> type, ModifyStrategy<T> callback) throws IOException, InterruptedException {
+    public static <T extends SaveModule> void modify(PhigrosUser user, short challengeScore, Class<T> type, ModifyStrategy<T> callback) throws IOException, InterruptedException {
         SaveManager saveManagement = new SaveManager(user);
         saveManagement.modify(type,callback);
         saveManagement.uploadZip(challengeScore);
     }
-    private <T extends ISaveModule> void modify(Class<T> clazz, ModifyStrategy<T> callback) throws IOException, InterruptedException {
+    private <T extends SaveModule> void modify(Class<T> clazz, ModifyStrategy<T> callback) throws IOException, InterruptedException {
         HttpRequest request = HttpRequest.newBuilder(user.saveUrl).build();
         data = client.send(request,HttpResponse.BodyHandlers.ofByteArray()).body();
         md5.reset();
@@ -107,36 +108,31 @@ class SaveManager {
             try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream(inputStream.available())) {
                 try (ZipOutputStream zipWriter = new ZipOutputStream(outputStream)) {
                     try (ZipInputStream zipReader = new ZipInputStream(inputStream)) {
-                        while (true) {
-                            ZipEntry entry = zipReader.getNextEntry();
-                            if (entry == null) {
-                                break;
-                            }
+                        String name;
+                        try {
+                            name = (String) clazz.getDeclaredField("name").get(null);
+                        } catch (NoSuchFieldException | IllegalAccessException e) {
+                            throw new RuntimeException(e);
+                        }
+                        ZipEntry entry;
+                        while ((entry = zipReader.getNextEntry()) != null) {
                             ZipEntry dEntry = new ZipEntry(entry);
                             dEntry.setCompressedSize(-1);
                             zipWriter.putNextEntry(dEntry);
-                            String name;
-                            try {
-                                name = (String) clazz.getDeclaredField("name").get(null);
-                            } catch (NoSuchFieldException | IllegalAccessException e) {
-                                throw new RuntimeException(e);
-                            }
                             if (entry.getName().equals(name)) {
                                 zipReader.skip(1);
-                                data = zipReader.readAllBytes();
-                                data = decrypt(data);
+                                data = decrypt(zipReader.readAllBytes());
                                 T tmp;
                                 try {
                                     tmp = clazz.getDeclaredConstructor(byte[].class).newInstance(data);
-                                    callback.apply(tmp);
-                                } catch (Exception e) {
+                                } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
                                     throw new RuntimeException(e);
                                 }
+                                callback.apply(tmp);
                                 data = encrypt(tmp.serialize());
                                 zipWriter.write(1);
-                            } else {
+                            } else
                                 data = zipReader.readAllBytes();
-                            }
                             zipWriter.write(data);
                         }
                         zipReader.closeEntry();

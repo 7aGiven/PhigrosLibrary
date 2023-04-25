@@ -2,39 +2,35 @@ package given.phigros;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-interface MapSaveModule extends ISaveModule {
-    default void loadFromBinary(byte[] data) {
-        ((LinkedHashMap<String, ?>) this).clear();
-        var length = ISaveModule.getVarInt(data, 0);
+abstract class MapSaveModule<T> extends LinkedHashMap<String, T> implements SaveModule {
+    abstract void getBytes(ByteArrayOutputStream outputStream, Map.Entry<String, T> entry);
+
+    abstract void putBytes(byte[] data, int position);
+
+    @Override
+    public void loadFromBinary(byte[] data) {
+        clear();
+        var length = SaveModule.getVarInt(data, 0);
         var position = data[0] < 0 ? 2 : 1;
         byte keyLength;
-        try {
-            for (; length > 0; length--) {
-                this.getClass().getMethod("putBytes", byte[].class, int.class).invoke(null, data, position);
-                keyLength = data[position];
-                position += keyLength + data[position + keyLength + 1] + 2;
-            }
-        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-            throw new RuntimeException(e);
+        for (; length > 0; length--) {
+            putBytes(data, position);
+            keyLength = data[position];
+            position += keyLength + data[position + keyLength + 1] + 2;
         }
         if (this instanceof GameKey)
             ((GameKey) this).lanotaReadKeys = data[position];
     }
 
-    default byte[] serialize() throws IOException {
+    @Override
+    public byte[] serialize() throws IOException {
         try (var outputStream = new ByteArrayOutputStream()) {
-            final var map = (LinkedHashMap<String, ?>) this;
-            outputStream.writeBytes(ISaveModule.varInt2bytes(map.size()));
-            try {
-                for (final var entry : map.entrySet())
-                    this.getClass().getMethod("getBytes", ByteArrayOutputStream.class, Map.Entry.class).invoke(map, outputStream, entry);
-            } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-                throw new RuntimeException(e);
-            }
+            outputStream.writeBytes(SaveModule.varInt2bytes(size()));
+            for (final var entry : entrySet())
+                getBytes(outputStream, entry);
             if (this instanceof GameKey)
                 outputStream.write(((GameKey) this).lanotaReadKeys);
             return outputStream.toByteArray();
@@ -42,7 +38,7 @@ interface MapSaveModule extends ISaveModule {
     }
 }
 
-interface SaveModule extends ISaveModule {
+interface SaveModule {
     default void loadFromBinary(byte[] data) {
         final var fields = getClass().getFields();
         try {
@@ -61,19 +57,19 @@ interface SaveModule extends ISaveModule {
             }
             for (final var field : fields) {
                 if (field.getType() == float.class) {
-                    field.setFloat(this, Float.intBitsToFloat(ISaveModule.getInt(data, position)));
+                    field.setFloat(this, Float.intBitsToFloat(getInt(data, position)));
                     position += 4;
                 }
             }
             for (final var field : fields) {
                 if (field.getType() == int.class) {
-                    field.setInt(this, ISaveModule.getVarInt(data, position));
+                    field.setInt(this, getVarInt(data, position));
                     position += data[position] >= 0 ? 1 : 2;
                 }
             }
             for (final var field : fields) {
                 if (field.getType() == short.class) {
-                    field.setShort(this, ISaveModule.getShort(data, position));
+                    field.setShort(this, getShort(data, position));
                     position += 2;
                 }
             }
@@ -81,7 +77,7 @@ interface SaveModule extends ISaveModule {
                 if (field.getType() == int[].class) {
                     var array = (int[]) field.get(this);
                     for (var i = 0; i < array.length; i++) {
-                        array[i] = ISaveModule.getVarInt(data, position);
+                        array[i] = getVarInt(data, position);
                         position += data[position] >= 0 ? 1 : 2;
                     }
                 }
@@ -114,21 +110,21 @@ interface SaveModule extends ISaveModule {
             }
             for (final var field : fields) {
                 if (field.getType() == float.class)
-                    outputStream.writeBytes(ISaveModule.int2bytes(Float.floatToIntBits(field.getFloat(this))));
+                    outputStream.writeBytes(int2bytes(Float.floatToIntBits(field.getFloat(this))));
             }
             for (final var field : fields) {
                 if (field.getType() == int.class)
-                    outputStream.writeBytes(ISaveModule.varInt2bytes(field.getInt(this)));
+                    outputStream.writeBytes(varInt2bytes(field.getInt(this)));
             }
             for (final var field : fields) {
                 if (field.getType() == short.class)
-                    outputStream.writeBytes(ISaveModule.short2bytes(field.getShort(this)));
+                    outputStream.writeBytes(short2bytes(field.getShort(this)));
             }
             for (final var field : fields) {
                 if (field.getType() == int[].class) {
                     var array = (int[]) field.get(this);
                     for (int i : array)
-                        outputStream.writeBytes(ISaveModule.varInt2bytes(i));
+                        outputStream.writeBytes(varInt2bytes(i));
                 }
             }
             for (final var field : fields) {
@@ -140,11 +136,6 @@ interface SaveModule extends ISaveModule {
             throw new RuntimeException(e);
         }
     }
-}
-interface ISaveModule {
-    void loadFromBinary(byte[] data);
-
-    byte[] serialize() throws IOException;
 
     static int getInt(byte[] data, int position) {
         return data[position + 3] << 24 ^ Byte.toUnsignedInt(data[position + 2]) << 16 ^ Byte.toUnsignedInt(data[position + 1]) << 8 ^ Byte.toUnsignedInt(data[position]);

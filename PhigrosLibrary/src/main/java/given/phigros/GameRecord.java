@@ -1,17 +1,16 @@
 package given.phigros;
 
 import java.io.ByteArrayOutputStream;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class GameRecord extends LinkedHashMap<String, LevelRecord[]> implements MapSaveModule {
+public class GameRecord extends MapSaveModule<LevelRecord[]> {
     final static String name = "gameRecord";
 
     GameRecord(byte[] data) {
         loadFromBinary(data);
     }
 
-    static void getBytes(ByteArrayOutputStream outputStream, Map.Entry<String, LevelRecord[]> entry) {
+    void getBytes(ByteArrayOutputStream outputStream, Map.Entry<String, LevelRecord[]> entry) {
         final var strBytes = entry.getKey().getBytes();
         outputStream.write(strBytes.length + 2);
         outputStream.writeBytes(strBytes);
@@ -34,8 +33,8 @@ public class GameRecord extends LinkedHashMap<String, LevelRecord[]> implements 
         outputStream.write(fc);
         for (var level = 0; level < 4; level++) {
             if (levelRecords[level] != null) {
-                outputStream.writeBytes(ISaveModule.int2bytes(levelRecords[level].s));
-                outputStream.writeBytes(ISaveModule.int2bytes(Float.floatToIntBits(levelRecords[level].a)));
+                outputStream.writeBytes(SaveModule.int2bytes(levelRecords[level].s));
+                outputStream.writeBytes(SaveModule.int2bytes(Float.floatToIntBits(levelRecords[level].a)));
             }
         }
     }
