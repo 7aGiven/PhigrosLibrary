@@ -13,7 +13,4 @@ public class GameSettings implements SaveModule {
     public float hitSoundVolume;
     public float soundOffset;
     public float noteScale;
-    GameSettings(byte[] data) {
-        loadFromBinary(data);
-    }
 }

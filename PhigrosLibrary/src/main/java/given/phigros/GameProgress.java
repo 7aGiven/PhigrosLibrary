@@ -19,7 +19,4 @@ public class GameProgress implements SaveModule {
     public byte flagOfSongRecordKey;
     public byte randomVersionUnlocked;
     public byte chapter8SongUnlocked;
-    GameProgress(byte[] data) {
-        loadFromBinary(data);
-    }
 }

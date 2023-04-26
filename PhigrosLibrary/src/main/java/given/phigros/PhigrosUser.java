@@ -66,7 +66,9 @@ public class PhigrosUser {
     }
     public <T extends SaveModule> T get(Class<T> clazz) throws IOException, InterruptedException {
         try {
-            return clazz.getDeclaredConstructor(byte[].class).newInstance(extractZip(clazz));
+            T saveModule = clazz.getDeclaredConstructor().newInstance();
+            saveModule.loadFromBinary(extractZip(clazz));
+            return saveModule;
         } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
             throw new RuntimeException(e);
         }
