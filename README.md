@@ -31,7 +31,7 @@ PhigrosRpc是利用thrift对PhigrosLibrary的封装。
 
 # PhigrosRpc
 
-基于thrift 0.16.0，PhigrosLibrary 2.0
+基于thrift 0.16.0，PhigrosLibrary 3.0
 
 ### 功能
 
