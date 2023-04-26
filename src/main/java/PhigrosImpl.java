@@ -25,6 +25,10 @@ public class PhigrosImpl implements Phigros.Iface{
         try {
             List<SongLevel> list = new ArrayList<>();
             for(final var songLevel:new PhigrosUser(URI.create(saveUrl)).getBestN(19)) {
+                if (songLevel.id == null) {
+                    songLevel.id = "";
+                    songLevel.level = given.phigros.Level.EZ;
+                }
                 list.add(new SongLevel(songLevel.id, Level.findByValue(songLevel.level.ordinal()), songLevel.s, songLevel.a, songLevel.c, songLevel.difficulty, songLevel.rks));
             }
             return list;
