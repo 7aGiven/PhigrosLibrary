@@ -6,8 +6,4 @@ public class GameUser implements SaveModule {
     public String selfIntro;
     public String avatar;
     public String background;
-
-    GameUser(byte[] data) {
-        loadFromBinary(data);
-    }
 }

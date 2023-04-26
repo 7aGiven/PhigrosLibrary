@@ -7,10 +7,6 @@ public class GameKey extends MapSaveModule<GameKeyValue> {
     final static String name = "gameKey";
     public byte lanotaReadKeys;
 
-    GameKey(byte[] data) {
-        loadFromBinary(data);
-    }
-
     void getBytes(ByteArrayOutputStream outputStream, Map.Entry<String, GameKeyValue> entry) {
         final var strBytes = entry.getKey().getBytes();
         outputStream.write(strBytes.length);

@@ -6,10 +6,7 @@ import java.util.Map;
 public class GameRecord extends MapSaveModule<LevelRecord[]> {
     final static String name = "gameRecord";
 
-    GameRecord(byte[] data) {
-        loadFromBinary(data);
-    }
-
+    @Override
     void getBytes(ByteArrayOutputStream outputStream, Map.Entry<String, LevelRecord[]> entry) {
         final var strBytes = entry.getKey().getBytes();
         outputStream.write(strBytes.length + 2);
@@ -39,6 +36,7 @@ public class GameRecord extends MapSaveModule<LevelRecord[]> {
         }
     }
 
+    @Override
     void putBytes(byte[] data, int position) {
         final var key = new String(data, position + 1, data[position] - 2);
         final var reader = new ByteReader(data, position + data[position] + 2);

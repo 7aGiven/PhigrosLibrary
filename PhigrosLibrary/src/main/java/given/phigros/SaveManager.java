@@ -108,12 +108,7 @@ class SaveManager {
             try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream(inputStream.available())) {
                 try (ZipOutputStream zipWriter = new ZipOutputStream(outputStream)) {
                     try (ZipInputStream zipReader = new ZipInputStream(inputStream)) {
-                        String name;
-                        try {
-                            name = (String) clazz.getDeclaredField("name").get(null);
-                        } catch (NoSuchFieldException | IllegalAccessException e) {
-                            throw new RuntimeException(e);
-                        }
+                        String name = (String) clazz.getDeclaredField("name").get(null);
                         ZipEntry entry;
                         while ((entry = zipReader.getNextEntry()) != null) {
                             ZipEntry dEntry = new ZipEntry(entry);
@@ -122,12 +117,8 @@ class SaveManager {
                             if (entry.getName().equals(name)) {
                                 zipReader.skip(1);
                                 data = decrypt(zipReader.readAllBytes());
-                                T tmp;
-                                try {
-                                    tmp = clazz.getDeclaredConstructor(byte[].class).newInstance(data);
-                                } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
-                                    throw new RuntimeException(e);
-                                }
+                                T tmp = clazz.getDeclaredConstructor().newInstance();
+                                tmp.loadFromBinary(data);
                                 callback.apply(tmp);
                                 data = encrypt(tmp.serialize());
                                 zipWriter.write(1);
@@ -136,6 +127,8 @@ class SaveManager {
                             zipWriter.write(data);
                         }
                         zipReader.closeEntry();
+                    } catch (NoSuchFieldException | NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
+                        throw new RuntimeException(e);
                     }
                 }
                 data = outputStream.toByteArray();
@@ -146,7 +139,9 @@ class SaveManager {
         String response;
         final HttpRequest.Builder template = globalRequest.copy().header("X-LC-Session",user.session);
 
-        final var reader = new ByteReader(Base64.getDecoder().decode(saveModel.summary), 1);
+        final var reader = new ByteReader(Base64.getDecoder().decode(saveModel.summary));
+        if (reader.getByte() != 4)
+            throw new RuntimeException("存档版本不为4，请尽快更新。");
         reader.putShort(score);
         saveModel.summary = Base64.getEncoder().encodeToString(reader.data);
         Logger.getGlobal().info(new Summary(saveModel.summary).toString());
