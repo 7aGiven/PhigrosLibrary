@@ -1,7 +1,6 @@
 import given.phigros.PhigrosUser;
 import org.apache.thrift.TException;
 
-import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +15,7 @@ public class PhigrosImpl implements Phigros.Iface{
             final var summary = user.update();
             return new Summary(user.saveUrl.toString(), summary.saveVersion, summary.challengeModeRank, summary.rankingScore, summary.gameVersion, summary.avatar);
         } catch (Exception e) {
+            e.printStackTrace();
             throw new TException(e);
         }
     }
@@ -28,7 +28,8 @@ public class PhigrosImpl implements Phigros.Iface{
                 list.add(new SongLevel(songLevel.id, Level.findByValue(songLevel.level.ordinal()), songLevel.s, songLevel.a, songLevel.c, songLevel.difficulty, songLevel.rks));
             }
             return list;
-        } catch (IOException | InterruptedException e) {
+        } catch (Exception e) {
+            e.printStackTrace();
             throw new TException(e);
         }
     }
@@ -41,7 +42,8 @@ public class PhigrosImpl implements Phigros.Iface{
                 list.add(new SongLevel(songLevel.id, Level.findByValue(songLevel.level.ordinal()), songLevel.s, songLevel.a, songLevel.c, songLevel.difficulty, songLevel.rks));
             }
             return list;
-        } catch (IOException | InterruptedException e) {
+        } catch (Exception e) {
+            e.printStackTrace();
             throw new TException(e);
         }
     }
@@ -54,7 +56,8 @@ public class PhigrosImpl implements Phigros.Iface{
                 list.add(new SongExpect(songExpect.id, Level.findByValue(songExpect.level.ordinal()), songExpect.acc, songExpect.expect));
             }
             return list;
-        } catch (IOException | InterruptedException e) {
+        } catch (Exception e) {
+            e.printStackTrace();
             throw new TException(e);
         }
     }
