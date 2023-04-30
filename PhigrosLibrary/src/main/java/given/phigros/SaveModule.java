@@ -40,51 +40,40 @@ abstract class MapSaveModule<T> extends LinkedHashMap<String, T> implements Save
 
 interface SaveModule {
     default void loadFromBinary(byte[] data) {
-        final var fields = getClass().getFields();
         try {
             byte index = 0;
-            for (final var field : fields) {
-                if (field.getType() == boolean.class)
-                    field.setBoolean(this, Util.getBit(data[0], index++));
-            }
-            var position = 1;
-            for (final var field : fields) {
+            var position = 0;
+            for (final var field : getClass().getFields()) {
+                if (field.getType() == boolean.class) {
+                    field.setBoolean(this, Util.getBit(data[position], index++));
+                    continue;
+                }
+                if (index != 0) {
+                    index = 0;
+                    position++;
+                }
                 if (field.getType() == String.class) {
                     final byte length = data[position++];
                     field.set(this, new String(data, position, length));
                     position += length;
-                }
-            }
-            for (final var field : fields) {
-                if (field.getType() == float.class) {
+                } else if (field.getType() == float.class) {
                     field.setFloat(this, Float.intBitsToFloat(getInt(data, position)));
                     position += 4;
-                }
-            }
-            for (final var field : fields) {
-                if (field.getType() == int.class) {
+                } else if (field.getType() == int.class) {
                     field.setInt(this, getVarInt(data, position));
                     position += data[position] >= 0 ? 1 : 2;
-                }
-            }
-            for (final var field : fields) {
-                if (field.getType() == short.class) {
+                } else if (field.getType() == short.class) {
                     field.setShort(this, getShort(data, position));
                     position += 2;
-                }
-            }
-            for (final var field : fields) {
-                if (field.getType() == int[].class) {
+                } else if (field.getType() == int[].class) {
                     var array = (int[]) field.get(this);
                     for (var i = 0; i < array.length; i++) {
                         array[i] = getVarInt(data, position);
                         position += data[position] >= 0 ? 1 : 2;
                     }
-                }
-            }
-            for (final var field : fields) {
-                if (field.getType() == byte.class)
+                } else if (field.getType() == byte.class)
                     field.setByte(this, data[position++]);
+                else throw new RuntimeException("出现新类型。");
             }
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
@@ -92,43 +81,33 @@ interface SaveModule {
     }
 
     default byte[] serialize() throws IOException {
-        final var fields = getClass().getFields();
         try (var outputStream = new ByteArrayOutputStream()) {
             byte b = 0;
             byte index = 0;
-            for (final var field : fields) {
-                if (field.getType() == boolean.class)
+            for (final var field : getClass().getFields()) {
+                if (field.getType() == boolean.class) {
                     b = Util.modifyBit(b, index++, field.getBoolean(this));
-            }
-            outputStream.write(b);
-            for (final var field : fields) {
+                    continue;
+                }
+                if (b != 0 && index != 0) {
+                    outputStream.write(b);
+                    b = index = 0;
+                }
                 if (field.getType() == String.class) {
                     final var bytes = ((String) field.get(this)).getBytes();
                     outputStream.write(bytes.length);
                     outputStream.writeBytes(bytes);
-                }
-            }
-            for (final var field : fields) {
-                if (field.getType() == float.class)
+                } else if (field.getType() == float.class)
                     outputStream.writeBytes(int2bytes(Float.floatToIntBits(field.getFloat(this))));
-            }
-            for (final var field : fields) {
-                if (field.getType() == int.class)
+                else if (field.getType() == int.class)
                     outputStream.writeBytes(varInt2bytes(field.getInt(this)));
-            }
-            for (final var field : fields) {
-                if (field.getType() == short.class)
+                else if (field.getType() == short.class)
                     outputStream.writeBytes(short2bytes(field.getShort(this)));
-            }
-            for (final var field : fields) {
-                if (field.getType() == int[].class) {
+                else if (field.getType() == int[].class) {
                     var array = (int[]) field.get(this);
                     for (int i : array)
                         outputStream.writeBytes(varInt2bytes(i));
-                }
-            }
-            for (final var field : fields) {
-                if (field.getType() == byte.class)
+                } else if (field.getType() == byte.class)
                     outputStream.write(field.getByte(this));
             }
             return outputStream.toByteArray();

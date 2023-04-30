@@ -78,21 +78,21 @@ class SaveManager {
         }
         return array.getJSONObject(0);
     }
-    public static void delete(String session, String objectId) throws Exception {
+    public static void delete(String session, String objectId) throws IOException, InterruptedException {
         HttpRequest.Builder builder = globalRequest.copy();
         builder.DELETE();
-        builder.uri(new URI(baseUrl + "/classes/_GameSave/" + objectId));
+        builder.uri(URI.create(baseUrl + "/classes/_GameSave/" + objectId));
         builder.header("X-LC-Session",session);
-        HttpResponse<String> res = client.send(builder.build(),handler);
-        Logger.getGlobal().info(res.body());
+        String response = client.send(builder.build(),handler).body();
+        Logger.getGlobal().info(response);
     }
-    public static void deleteFile(String session, String objectId) throws Exception {
+    public static void deleteFile(String session, String objectId) throws IOException, InterruptedException {
         HttpRequest.Builder builder = globalRequest.copy();
         builder.DELETE();
-        builder.uri(new URI(baseUrl + "/files/" + objectId));
+        builder.uri(URI.create(baseUrl + "/files/" + objectId));
         builder.header("X-LC-Session",session);
-        HttpResponse<String> res = client.send(builder.build(),handler);
-        Logger.getGlobal().info(res.body());
+        String response = client.send(builder.build(),handler).body();
+        Logger.getGlobal().info(response);
     }
     public static <T extends SaveModule> void modify(PhigrosUser user, short challengeScore, Class<T> type, ModifyStrategy<T> callback) throws IOException, InterruptedException {
         SaveManager saveManagement = new SaveManager(user);
@@ -115,13 +115,16 @@ class SaveManager {
                             dEntry.setCompressedSize(-1);
                             zipWriter.putNextEntry(dEntry);
                             if (entry.getName().equals(name)) {
-                                zipReader.skip(1);
+                                byte version = clazz.getDeclaredField("version").getByte(null);
+                                if (zipReader.read() != version)
+                                    throw new RuntimeException("存档该部分已升级。");
+                                Logger.getGlobal().info(String.valueOf(version));
                                 data = decrypt(zipReader.readAllBytes());
                                 T tmp = clazz.getDeclaredConstructor().newInstance();
                                 tmp.loadFromBinary(data);
                                 callback.apply(tmp);
                                 data = encrypt(tmp.serialize());
-                                zipWriter.write(1);
+                                zipWriter.write(version);
                             } else
                                 data = zipReader.readAllBytes();
                             zipWriter.write(data);
@@ -140,8 +143,6 @@ class SaveManager {
         final HttpRequest.Builder template = globalRequest.copy().header("X-LC-Session",user.session);
 
         final var reader = new ByteReader(Base64.getDecoder().decode(saveModel.summary));
-        if (reader.getByte() != 4)
-            throw new RuntimeException("存档版本不为4，请尽快更新。");
         reader.putShort(score);
         saveModel.summary = Base64.getEncoder().encodeToString(reader.data);
         Logger.getGlobal().info(new Summary(saveModel.summary).toString());

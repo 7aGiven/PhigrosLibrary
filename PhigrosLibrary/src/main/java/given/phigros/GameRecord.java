@@ -5,6 +5,7 @@ import java.util.Map;
 
 public class GameRecord extends MapSaveModule<LevelRecord[]> {
     final static String name = "gameRecord";
+    final static byte version = 1;
 
     @Override
     void getBytes(ByteArrayOutputStream outputStream, Map.Entry<String, LevelRecord[]> entry) {

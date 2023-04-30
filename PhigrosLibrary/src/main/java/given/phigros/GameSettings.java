@@ -2,6 +2,7 @@ package given.phigros;
 
 public class GameSettings implements SaveModule {
     final static String name = "settings";
+    final static byte version = 1;
     public boolean chordSupport;
     public boolean fcAPIndicator;
     public boolean enableHitSound;
