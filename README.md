@@ -227,6 +227,7 @@ public class PhigrosUser {
     public PhigrosUser(String session);//使用SessionToken初始化
     public PhigrosUser(URI saveUrl);//使用saveUrl初始化
     public static void readInfo(BufferedReader reader);//读取定数表
+    public String getPlayerId();//获取玩家昵称
     public Summary update();//使用SessionToken更新saveUrl，并返回Summary
     public SongLevel[] getB19();//获取Best Phi和Best 19
     public SongLevel[] getBestN(int num);//获取Best Phi和Best N
@@ -267,6 +268,7 @@ class Main {
 Summary结构
 ```java
 public final class Summary {
+    public Instant updatedAt;      //存档更新时间
     public byte saveVersion;       //存档版本
     public short challengeModeRank;//课题分
     public float rankingScore;     //rks
@@ -299,7 +301,7 @@ public class GameUser implements SaveModule {
     public boolean showPlayerId;//右上角展示用户id
     public String selfIntro;    //自我介绍
     public String avatar;       //头像
-    public String background;   //曲绘
+    public String background;   //背景曲绘
 }
 ```
 GameProgress结构
@@ -309,19 +311,19 @@ class GameProgress implements SaveModule {
     public boolean legacyChapterFinished;     //过去的章节已完成
     public boolean alreadyShowCollectionTip;  //已展示收藏品Tip
     public boolean alreadyShowAutoUnlockINTip;//已展示自动解锁IN Tip
-    public boolean chapter8UnlockBegin;
-    public boolean chapter8UnlockSecondPhase;
-    public boolean chapter8Passed;
     public String completed;          //剧情完成(显示全部歌曲和课题模式入口)
     public int songUpdateInfo;        //？？？
     public short challengeModeRank;   //课题分
-    public int[] money = new int[5];  //data货币
+    public short[] money = new short[5];//data货币
     public byte unlockFlagOfSpasmodic;//痉挛解锁
     public byte unlockFlagOfIgallta;  //Igallta解锁
     public byte unlockFlagOfRrharil;  //Rrhar'il解锁
-    public byte flagOfSongRecordKey;  //AT解锁(倒霉蛋,船,Shadow,心之所向,inferior)
+    public byte flagOfSongRecordKey;  //IN达到S(倒霉蛋,船,Shadow,心之所向,inferior,DESTRUCTION 3,2,1,Distorted Fate)
     public byte randomVersionUnlocked;//Random切片解锁
-    public byte chapter8SongUnlocked;
+    public boolean chapter8UnlockBegin;      //第八章入场
+    public boolean chapter8UnlockSecondPhase;//第八章第二阶段
+    public boolean chapter8Passed;           //第八章通过
+    public byte chapter8SongUnlocked;        //第八章各曲目解锁
 }
 ```
 对于GameRecord的结构(Map)

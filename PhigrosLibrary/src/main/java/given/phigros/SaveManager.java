@@ -33,6 +33,7 @@ class SaveManager {
     private static final String fileTokens = baseUrl + "/fileTokens";
     private static final String fileCallback = baseUrl + "/fileCallback";
     private static final String save = baseUrl + "/classes/_GameSave";
+    private static final String userInfo = baseUrl + "/users/me";
     private static final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
     private static final MessageDigest md5;
     public final SaveModel saveModel;
@@ -47,7 +48,7 @@ class SaveManager {
             throw new RuntimeException(e);
         }
     }
-    public SaveManager(PhigrosUser user) throws IOException, InterruptedException {
+    SaveManager(PhigrosUser user) throws IOException, InterruptedException {
         this.user = user;
         JSONObject json = SaveManager.save(user.session);
         SaveModel saveModel = new SaveModel();
@@ -62,13 +63,27 @@ class SaveManager {
         this.saveModel = saveModel;
     }
 
-    public static String update(PhigrosUser user) throws IOException, InterruptedException {
+    static String getPlayerId(String session) throws IOException, InterruptedException {
+        final var request = globalRequest.copy().header("X-LC-Session",session).uri(URI.create(userInfo)).build();
+        final var response = client.send(request, handler).body();
+        Logger.getGlobal().info(response);
+        return JSON.parseObject(response).getString("nickname");
+    }
+
+    static String update(PhigrosUser user) throws IOException, InterruptedException {
         JSONObject json = save(user.session);
         user.saveUrl = URI.create(json.getJSONObject("gameFile").getString("url"));
         Logger.getGlobal().info(user.saveUrl.toString());
-        return json.getString("summary");
+        return json.getString("summary") + '\n' + json.getString("updatedAt");
     }
-    public static JSONObject save(String session) throws IOException, InterruptedException {
+
+    static String[] b19(PhigrosUser user) throws IOException, InterruptedException {
+        JSONObject json = save(user.session);
+        user.saveUrl = URI.create(json.getJSONObject("gameFile").getString("url"));
+        Logger.getGlobal().info(user.saveUrl.toString());
+        return new String[] {json.getString("summary"), json.getString("updatedAt")};
+    }
+    static JSONObject save(String session) throws IOException, InterruptedException {
         HttpRequest request = globalRequest.copy().header("X-LC-Session",session).uri(URI.create(save)).build();
         String response = client.send(request,handler).body();
         Logger.getGlobal().info(response);
@@ -78,7 +93,7 @@ class SaveManager {
         }
         return array.getJSONObject(0);
     }
-    public static void delete(String session, String objectId) throws IOException, InterruptedException {
+    static void delete(String session, String objectId) throws IOException, InterruptedException {
         HttpRequest.Builder builder = globalRequest.copy();
         builder.DELETE();
         builder.uri(URI.create(baseUrl + "/classes/_GameSave/" + objectId));
@@ -86,7 +101,7 @@ class SaveManager {
         String response = client.send(builder.build(),handler).body();
         Logger.getGlobal().info(response);
     }
-    public static void deleteFile(String session, String objectId) throws IOException, InterruptedException {
+    static void deleteFile(String session, String objectId) throws IOException, InterruptedException {
         HttpRequest.Builder builder = globalRequest.copy();
         builder.DELETE();
         builder.uri(URI.create(baseUrl + "/files/" + objectId));
@@ -94,7 +109,7 @@ class SaveManager {
         String response = client.send(builder.build(),handler).body();
         Logger.getGlobal().info(response);
     }
-    public static <T extends SaveModule> void modify(PhigrosUser user, short challengeScore, Class<T> type, ModifyStrategy<T> callback) throws IOException, InterruptedException {
+    static <T extends SaveModule> void modify(PhigrosUser user, short challengeScore, Class<T> type, ModifyStrategy<T> callback) throws IOException, InterruptedException {
         SaveManager saveManagement = new SaveManager(user);
         saveManagement.modify(type,callback);
         saveManagement.uploadZip(challengeScore);
@@ -138,7 +153,7 @@ class SaveManager {
             }
         }
     }
-    public void uploadZip(short score) throws IOException, InterruptedException {
+    void uploadZip(short score) throws IOException, InterruptedException {
         String response;
         final HttpRequest.Builder template = globalRequest.copy().header("X-LC-Session",user.session);
 
@@ -215,7 +230,7 @@ class SaveManager {
     }
     private static final SecretKeySpec key = new SecretKeySpec(new byte[] {-24,-106,-102,-46,-91,64,37,-101,-105,-111,-112,-117,-120,-26,-65,3,30,109,33,-107,110,-6,-42,-118,80,-35,85,-42,122,-80,-110,75}, "AES");
     private static final IvParameterSpec iv = new IvParameterSpec(new byte[] {42,79,-16,-118,-56,13,99,7,0,87,-59,-107,24,-56,50,83});
-    public static byte[] decrypt(byte[] data) {
+    static byte[] decrypt(byte[] data) {
         try {
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
             cipher.init(Cipher.DECRYPT_MODE, key, iv);
@@ -224,7 +239,7 @@ class SaveManager {
             throw new RuntimeException(e);
         }
     }
-    public static byte[] encrypt(byte[] data) {
+    static byte[] encrypt(byte[] data) {
         try {
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
             cipher.init(Cipher.ENCRYPT_MODE, key, iv);

@@ -13,7 +13,7 @@ abstract class MapSaveModule<T> extends LinkedHashMap<String, T> implements Save
     @Override
     public void loadFromBinary(byte[] data) {
         clear();
-        var length = SaveModule.getVarInt(data, 0);
+        var length = SaveModule.getVarShort(data, 0);
         var position = data[0] < 0 ? 2 : 1;
         byte keyLength;
         for (; length > 0; length--) {
@@ -28,7 +28,7 @@ abstract class MapSaveModule<T> extends LinkedHashMap<String, T> implements Save
     @Override
     public byte[] serialize() throws IOException {
         try (var outputStream = new ByteArrayOutputStream()) {
-            outputStream.writeBytes(SaveModule.varInt2bytes(size()));
+            outputStream.writeBytes(SaveModule.varShort2bytes((short) size()));
             for (final var entry : entrySet())
                 getBytes(outputStream, entry);
             if (this instanceof GameKey)
@@ -59,16 +59,13 @@ interface SaveModule {
                 } else if (field.getType() == float.class) {
                     field.setFloat(this, Float.intBitsToFloat(getInt(data, position)));
                     position += 4;
-                } else if (field.getType() == int.class) {
-                    field.setInt(this, getVarInt(data, position));
-                    position += data[position] >= 0 ? 1 : 2;
                 } else if (field.getType() == short.class) {
                     field.setShort(this, getShort(data, position));
                     position += 2;
-                } else if (field.getType() == int[].class) {
-                    var array = (int[]) field.get(this);
+                } else if (field.getType() == short[].class) {
+                    final var array = (short[]) field.get(this);
                     for (var i = 0; i < array.length; i++) {
-                        array[i] = getVarInt(data, position);
+                        array[i] = getVarShort(data, position);
                         position += data[position] >= 0 ? 1 : 2;
                     }
                 } else if (field.getType() == byte.class)
@@ -99,16 +96,15 @@ interface SaveModule {
                     outputStream.writeBytes(bytes);
                 } else if (field.getType() == float.class)
                     outputStream.writeBytes(int2bytes(Float.floatToIntBits(field.getFloat(this))));
-                else if (field.getType() == int.class)
-                    outputStream.writeBytes(varInt2bytes(field.getInt(this)));
                 else if (field.getType() == short.class)
                     outputStream.writeBytes(short2bytes(field.getShort(this)));
-                else if (field.getType() == int[].class) {
-                    var array = (int[]) field.get(this);
-                    for (int i : array)
-                        outputStream.writeBytes(varInt2bytes(i));
-                } else if (field.getType() == byte.class)
+                else if (field.getType() == short[].class)
+                    for (final var h : (short[]) field.get(this))
+                        outputStream.writeBytes(varShort2bytes(h));
+                else if (field.getType() == byte.class)
                     outputStream.write(field.getByte(this));
+                else
+                    throw new RuntimeException("出现新类型。");
             }
             return outputStream.toByteArray();
         } catch (IllegalAccessException e) {
@@ -117,7 +113,7 @@ interface SaveModule {
     }
 
     static int getInt(byte[] data, int position) {
-        return data[position + 3] << 24 ^ Byte.toUnsignedInt(data[position + 2]) << 16 ^ Byte.toUnsignedInt(data[position + 1]) << 8 ^ Byte.toUnsignedInt(data[position]);
+        return data[position + 3] << 24 ^ (data[position + 2] & 0xff) << 16 ^ (data[position + 1] & 0xff) << 8 ^ (data[position] & 0xff);
     }
 
     static byte[] int2bytes(int num) {
@@ -125,12 +121,12 @@ interface SaveModule {
         bytes[0] = (byte) num;
         bytes[1] = (byte) (num >>> 8 & 0xff);
         bytes[2] = (byte) (num >>> 16 & 0xff);
-        bytes[3] = (byte) (num >>> 24 & 0xff);
+        bytes[3] = (byte) (num >>> 24);
         return bytes;
     }
 
     static short getShort(byte[] data, int position) {
-        return (short) (Byte.toUnsignedInt(data[position + 1]) << 8 ^ Byte.toUnsignedInt(data[position]));
+        return (short) ((data[position + 1] & 0xff) << 8 ^ (data[position] & 0xff));
     }
 
     static byte[] short2bytes(short num) {
@@ -140,17 +136,17 @@ interface SaveModule {
         return bytes;
     }
 
-    static int getVarInt(byte[] data, int position) {
+    static short getVarShort(byte[] data, int position) {
         if (data[position] >= 0)
             return data[position];
         else
-            return data[position + 1] << 7 ^ data[position] & 0x7f;
+            return (short) (data[position + 1] << 7 ^ data[position] & 0x7f);
     }
 
-    static byte[] varInt2bytes(int num) {
+    static byte[] varShort2bytes(short num) {
         if (num < 128)
             return new byte[] {(byte) num};
         else
-            return new byte[] {(byte) (num & 0xff | 0b10000000), (byte) (num >>> 7)};
+            return new byte[] {(byte) (num & 0x7f | 0b10000000), (byte) (num >>> 7)};
     }
 }
