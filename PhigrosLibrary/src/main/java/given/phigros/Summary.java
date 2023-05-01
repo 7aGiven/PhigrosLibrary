@@ -1,8 +1,10 @@
 package given.phigros;
 
+import java.time.Instant;
 import java.util.Base64;
 
 public final class Summary {
+    public Instant updatedAt;
     public byte saveVersion;
     public short challengeModeRank;
     public float rankingScore;

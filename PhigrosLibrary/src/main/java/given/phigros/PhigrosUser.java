@@ -1,5 +1,7 @@
 package given.phigros;
 
+import com.alibaba.fastjson2.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -10,6 +12,7 @@ import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.time.Instant;
 import java.util.TreeMap;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
@@ -46,8 +49,16 @@ public class PhigrosUser {
         return songInfo;
     }
 
+    public String getPlayerId() throws IOException, InterruptedException {
+        return SaveManager.getPlayerId(session);
+    }
+
     public Summary update() throws IOException, InterruptedException {
-        Summary summary = new Summary(SaveManager.update(this));
+        JSONObject json = SaveManager.save(session);
+        saveUrl = URI.create(json.getJSONObject("gameFile").getString("url"));
+        Logger.getGlobal().info(saveUrl.toString());
+        Summary summary = new Summary(json.getString("summary"));
+        summary.updatedAt = Instant.parse(json.getString("updatedAt"));
         Logger.getGlobal().info(summary.toString());
         return summary;
     }

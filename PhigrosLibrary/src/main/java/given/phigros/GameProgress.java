@@ -8,9 +8,9 @@ public class GameProgress implements SaveModule {
     public boolean alreadyShowCollectionTip;
     public boolean alreadyShowAutoUnlockINTip;
     public String completed;
-    public int songUpdateInfo;
+    public byte songUpdateInfo;
     public short challengeModeRank;
-    public int[] money = new int[5];
+    public short[] money = new short[5];
     public byte unlockFlagOfSpasmodic;
     public byte unlockFlagOfIgallta;
     public byte unlockFlagOfRrharil;
