@@ -4,7 +4,7 @@ PhigrosLibrary是Java实现的Phigros云存档解析库。
 
 PhigrosRpc是利用thrift对PhigrosLibrary的封装。
 
-以下所有jre11或jdk11都指jre11以上或jdk11以上
+本项目强制使用java 17
 
 **注：此项目为逆向成果，未非调用任何第三方接口。**
 
@@ -31,7 +31,7 @@ PhigrosRpc是利用thrift对PhigrosLibrary的封装。
 
 # PhigrosRpc
 
-基于thrift 0.16.0，PhigrosLibrary 3.0
+基于Javalin 5.5.0，PhigrosLibrary 3.0
 
 ### 功能
 
@@ -41,7 +41,7 @@ PhigrosRpc是利用thrift对PhigrosLibrary的封装。
 
 #### 服务端启动
 
-已安装jre11的用户:
+已安装jre17的用户:
 
 下载Release内的PhigrosRpc-nojre.zip
 
@@ -49,59 +49,38 @@ PhigrosRpc是利用thrift对PhigrosLibrary的封装。
 
 未安装jre11的windows用户：
 
-下载Release内的 PhigrosRpc-jre11-windows.zip
+下载Release内的 PhigrosRpc-jre17-windows.zip
 
 解压后运行start.cmd，默认监听127.0.0.1:9090
 
-未安装jre11的linux用户：
+未安装jre17的linux用户：
 
 自行安装
 
 #### 客户端编写
 
-使用phigrosLibrary.thrift生成您使用语言的代码。`thrift --gen py phigrosLibrary.thrift`
+使用http api
 
-示例：[使用python编写的示例](https://github.com/7aGiven/PhigrosLibrary/tree/master/clientExample)
-
-### phigrosLibrary.thrift内的定义
-```thrift
-enum Level {
-	EZ, HD, IN, AT
-}
-
-struct Summary {
-	1: required string saveUrl;//存档Url
-	2: required i8 saveVersion;//存档版本
-	3: required i16 challenge; //课题分
-	4: required double rks;    //总RKS
-	5: required i8 gameVersion;//客户端版本
-	6: required string avatar; //头像
-}
-
-struct SongLevel {
-	1: required string id;   //曲目id
-	2: required Level level;
-	3: required i32 s;       //分数
-	4: required double a;    //准确率
-	5: required bool c;      //是否Full Combo
-	6: required double difficulty;//定数
-	7: required double rks;  //单曲RKS
-}
-
-struct SongExpect {
-	1: required string id;    //曲目id
-	2: required Level level;
-	3: required double acc;   //现在ACC
-	4: required double expect;//目标ACC
-}
-
-//sessionToken为25位字符串，saveUrl为存档URL，需要通过getSaveUrl方法获取
-service Phigros {
-	Summary getSaveUrl(1:string sessionToken);        //获取saveUrl和其他
-	list<SongLevel> best19(1:string saveUrl);         //最佳phi和最佳前19个
-	list<SongLevel> bestn(1:string saveUrl, 2:i8 num);//最佳phi和最佳前N个
-	list<SongExpect> songExpects(1:string saveUrl);   //所有可推分歌曲及其目标ACC
-}
+/saveUrl/{sessionToken}
+```json
+{"saveUrl":"https://a.a.a/*","存档版本":3,"课题分":536,"RKS":15.534,"游戏版本":78,"头像":"Glaciation","EZ":[100,100,100],"HD":[100,100,100],"IN":[100,100,100],"AT":[100,100,100]}
+```
+/b19/{saveUrl}
+```json
+[
+  {"songId":"996.李化禹","level":"IN","acc":99.8,"fc":false,"定数":14.4,"单曲rks":13.6},
+  ...
+  {}
+]
+```
+/expects/{saveUrl}
+注：expect指目标ACC，即与B19最后一名的差距。
+```json
+[
+  {"songId":"996.李化禹","level":"IN","acc":96.8,"expect":99.5},
+  ...
+  {}
+]
 ```
 
 # PhigrosLibrary

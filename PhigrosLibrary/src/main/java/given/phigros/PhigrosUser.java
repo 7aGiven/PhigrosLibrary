@@ -49,6 +49,10 @@ public class PhigrosUser {
         return songInfo;
     }
 
+    public JSONObject getSaveInfo() throws IOException, InterruptedException {
+        return SaveManager.save(session);
+    }
+
     public String getPlayerId() throws IOException, InterruptedException {
         return SaveManager.getPlayerId(session);
     }
@@ -58,7 +62,7 @@ public class PhigrosUser {
         saveUrl = URI.create(json.getJSONObject("gameFile").getString("url"));
         Logger.getGlobal().info(saveUrl.toString());
         Summary summary = new Summary(json.getString("summary"));
-        summary.updatedAt = Instant.parse(json.getString("updatedAt"));
+        summary.updatedAt = json.getInstant("updatedAt");
         Logger.getGlobal().info(summary.toString());
         return summary;
     }
@@ -85,8 +89,17 @@ public class PhigrosUser {
         }
     }
     public <T extends SaveModule> void modify(Class<T> clazz, ModifyStrategy<T> strategy) throws IOException, InterruptedException {
-        SaveManager.modify(this, (short) 3, clazz, strategy);
+        SaveManager saveManagement = new SaveManager(this);
+        saveManagement.modify(clazz, strategy);
+        saveManagement.uploadZip((short) 3);
     }
+
+    public <T extends SaveModule> void modify(Class<T> clazz, ModifyStrategy<T> strategy, JSONObject saveInfo) throws IOException, InterruptedException {
+        SaveManager saveManagement = new SaveManager(this, saveInfo);
+        saveManagement.modify(clazz, strategy);
+        saveManagement.uploadZip((short) 3);
+    }
+
     public void downloadSave(Path path) throws IOException, InterruptedException {
         Files.write(path,getData(), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
     }

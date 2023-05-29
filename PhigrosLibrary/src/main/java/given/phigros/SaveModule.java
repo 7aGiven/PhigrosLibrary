@@ -38,7 +38,7 @@ abstract class MapSaveModule<T> extends LinkedHashMap<String, T> implements Save
     }
 }
 
-interface SaveModule {
+public interface SaveModule {
     default void loadFromBinary(byte[] data) {
         try {
             byte index = 0;
