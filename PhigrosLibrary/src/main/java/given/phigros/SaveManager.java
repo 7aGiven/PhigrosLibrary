@@ -16,17 +16,16 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.security.MessageDigest;
-import java.text.SimpleDateFormat;
+import java.security.NoSuchAlgorithmException;
+import java.time.Instant;
 import java.util.Base64;
-import java.util.Date;
-import java.util.TimeZone;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 class SaveManager {
-    private static final String baseUrl = "https://phigrosserver.pigeongames.cn/1.1";
+    private static final String baseUrl = "https://rak3ffdi.cloud.tds1.tapapis.cn/1.1";
     public static final HttpClient client = HttpClient.newHttpClient();
     private static final HttpRequest.Builder globalRequest = HttpRequest.newBuilder().header("X-LC-Id","rAK3FfdieFob2Nn8Am").header("X-LC-Key","Qr9AEqtuoSVS3zeD6iVbM4ZC0AtkJcQ89tywVyi0").header("User-Agent","LeanCloud-CSharp-SDK/1.0.3").header("Accept","application/json");
     private static final HttpResponse.BodyHandler<String> handler = HttpResponse.BodyHandlers.ofString();
@@ -34,32 +33,31 @@ class SaveManager {
     private static final String fileCallback = baseUrl + "/fileCallback";
     private static final String save = baseUrl + "/classes/_GameSave";
     private static final String userInfo = baseUrl + "/users/me";
-    private static final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
-    private static final MessageDigest md5;
     public final SaveModel saveModel;
+    private final MessageDigest md5;
     private final PhigrosUser user;
     public byte[] data;
 
-    static {
-        format.setTimeZone(TimeZone.getTimeZone("GMT"));
+    SaveManager(PhigrosUser user) throws IOException, InterruptedException {
+        this(user, SaveManager.save(user.session));
+    }
+
+    SaveManager(PhigrosUser user, JSONObject saveInfo) {
         try {
             md5 = MessageDigest.getInstance("MD5");
-        } catch (Exception e) {
+        } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
-    }
-    SaveManager(PhigrosUser user) throws IOException, InterruptedException {
         this.user = user;
-        JSONObject json = SaveManager.save(user.session);
         SaveModel saveModel = new SaveModel();
-        saveModel.summary = json.getString("summary");
-        saveModel.objectId = json.getString("objectId");
-        saveModel.userObjectId = json.getJSONObject("user").getString("objectId");
-        json = json.getJSONObject("gameFile");
-        saveModel.gameObjectId = json.getString("objectId");
-        saveModel.updatedTime = json.getString("updatedAt");
-        saveModel.checksum = json.getJSONObject("metaData").getString("_checksum");
-        user.saveUrl = URI.create(json.getString("url"));
+        saveModel.summary = saveInfo.getString("summary");
+        saveModel.objectId = saveInfo.getString("objectId");
+        saveModel.userObjectId = saveInfo.getJSONObject("user").getString("objectId");
+        saveInfo = saveInfo.getJSONObject("gameFile");
+        saveModel.gameObjectId = saveInfo.getString("objectId");
+        saveModel.updatedTime = saveInfo.getString("updatedAt");
+        saveModel.checksum = saveInfo.getJSONObject("metaData").getString("_checksum");
+        user.saveUrl = URI.create(saveInfo.getString("url"));
         this.saveModel = saveModel;
     }
 
@@ -70,54 +68,37 @@ class SaveManager {
         return JSON.parseObject(response).getString("nickname");
     }
 
-    static String update(PhigrosUser user) throws IOException, InterruptedException {
-        JSONObject json = save(user.session);
-        user.saveUrl = URI.create(json.getJSONObject("gameFile").getString("url"));
-        Logger.getGlobal().info(user.saveUrl.toString());
-        return json.getString("summary") + '\n' + json.getString("updatedAt");
-    }
-
-    static String[] b19(PhigrosUser user) throws IOException, InterruptedException {
-        JSONObject json = save(user.session);
-        user.saveUrl = URI.create(json.getJSONObject("gameFile").getString("url"));
-        Logger.getGlobal().info(user.saveUrl.toString());
-        return new String[] {json.getString("summary"), json.getString("updatedAt")};
-    }
-    static JSONObject save(String session) throws IOException, InterruptedException {
+    static JSONArray saveArray(String session) throws IOException, InterruptedException {
         HttpRequest request = globalRequest.copy().header("X-LC-Session",session).uri(URI.create(save)).build();
         String response = client.send(request,handler).body();
         Logger.getGlobal().info(response);
-        JSONArray array = JSON.parseObject(response).getJSONArray("results");
+        return JSON.parseObject(response).getJSONArray("results");
+    }
+
+    static JSONObject save(String session) throws IOException, InterruptedException {
+        final var array = saveArray(session);
         if (array.size() != 1) {
-            throw new RuntimeException("存档有误，请修复存档");
+            StringBuilder builder = new StringBuilder("存档有误，请修复存档\n");
+            for (int i = 0; i < array.size();) {
+                JSONObject object = array.getJSONObject(i);
+                String str = String.format("存档%d：\nobjectId：%s\n创建时间：%s\n更新时间：%s\nURL：%s\n", ++i, object.getString("objectId"), object.getString("createdAt"), object.getString("updatedAt"), object.getJSONObject("gameFile").getString("url"));
+                builder.append(str);
+            }
+            throw new RuntimeException(builder.toString());
         }
         return array.getJSONObject(0);
     }
-    static void delete(String session, String objectId) throws IOException, InterruptedException {
+    static String delete(String session, String objectId) throws IOException, InterruptedException {
         HttpRequest.Builder builder = globalRequest.copy();
         builder.DELETE();
         builder.uri(URI.create(baseUrl + "/classes/_GameSave/" + objectId));
         builder.header("X-LC-Session",session);
-        String response = client.send(builder.build(),handler).body();
-        Logger.getGlobal().info(response);
+        return client.send(builder.build(),handler).body();
     }
-    static void deleteFile(String session, String objectId) throws IOException, InterruptedException {
-        HttpRequest.Builder builder = globalRequest.copy();
-        builder.DELETE();
-        builder.uri(URI.create(baseUrl + "/files/" + objectId));
-        builder.header("X-LC-Session",session);
-        String response = client.send(builder.build(),handler).body();
-        Logger.getGlobal().info(response);
-    }
-    static <T extends SaveModule> void modify(PhigrosUser user, short challengeScore, Class<T> type, ModifyStrategy<T> callback) throws IOException, InterruptedException {
-        SaveManager saveManagement = new SaveManager(user);
-        saveManagement.modify(type,callback);
-        saveManagement.uploadZip(challengeScore);
-    }
-    private <T extends SaveModule> void modify(Class<T> clazz, ModifyStrategy<T> callback) throws IOException, InterruptedException {
+
+    <T extends SaveModule> void modify(Class<T> clazz, ModifyStrategy<T> callback) throws IOException, InterruptedException {
         HttpRequest request = HttpRequest.newBuilder(user.saveUrl).build();
         data = client.send(request,HttpResponse.BodyHandlers.ofByteArray()).body();
-        md5.reset();
         if (!md5(data).equals(saveModel.checksum)) throw new RuntimeException("文件校验不一致");
         try (ByteArrayInputStream inputStream = new ByteArrayInputStream(data)) {
             try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream(inputStream.available())) {
@@ -157,14 +138,14 @@ class SaveManager {
         String response;
         final HttpRequest.Builder template = globalRequest.copy().header("X-LC-Session",user.session);
 
-        final var reader = new ByteReader(Base64.getDecoder().decode(saveModel.summary));
-        reader.putShort(score);
-        saveModel.summary = Base64.getEncoder().encodeToString(reader.data);
+        final var summary = Base64.getDecoder().decode(saveModel.summary);
+        summary[1] = (byte) (score & 0xff);
+        summary[2] = (byte) (score >>> 8 & 0xff);
+        saveModel.summary = Base64.getEncoder().encodeToString(summary);
         Logger.getGlobal().info(new Summary(saveModel.summary).toString());
 
 
 
-        md5.reset();
         HttpRequest.Builder builder = template.copy();
         builder.uri(URI.create(fileTokens));
         builder.POST(HttpRequest.BodyPublishers.ofString(String.format("{\"name\":\".save\",\"__type\":\"File\",\"ACL\":{\"%s\":{\"read\":true,\"write\":true}},\"prefix\":\"gamesaves\",\"metaData\":{\"size\":%d,\"_checksum\":\"%s\",\"prefix\":\"gamesaves\"}}",saveModel.userObjectId,data.length, md5(data))));
@@ -216,7 +197,7 @@ class SaveManager {
         builder = template.copy();
         builder.uri(URI.create(String.format(baseUrl + "/classes/_GameSave/%s?",saveModel.objectId)));
         builder.header("Content-Type","application/json");
-        builder.PUT(HttpRequest.BodyPublishers.ofString(String.format("{\"summary\":\"%s\",\"modifiedAt\":{\"__type\":\"Date\",\"iso\":\"%sZ\"},\"gameFile\":{\"__type\":\"Pointer\",\"className\":\"_File\",\"objectId\":\"%s\"},\"ACL\":{\"%s\":{\"read\":true,\"write\":true}},\"user\":{\"__type\":\"Pointer\",\"className\":\"_User\",\"objectId\":\"%s\"}}",saveModel.summary,format.format(new Date()),newGameObjectId,saveModel.userObjectId,saveModel.userObjectId)));
+        builder.PUT(HttpRequest.BodyPublishers.ofString(String.format("{\"summary\":\"%s\",\"modifiedAt\":{\"__type\":\"Date\",\"iso\":\"%s\"},\"gameFile\":{\"__type\":\"Pointer\",\"className\":\"_File\",\"objectId\":\"%s\"},\"ACL\":{\"%s\":{\"read\":true,\"write\":true}},\"user\":{\"__type\":\"Pointer\",\"className\":\"_User\",\"objectId\":\"%s\"}}",saveModel.summary, Instant.ofEpochMilli(System.currentTimeMillis()), newGameObjectId,saveModel.userObjectId,saveModel.userObjectId)));
         response = client.send(builder.build(),handler).body();
         Logger.getGlobal().fine(response);
 
