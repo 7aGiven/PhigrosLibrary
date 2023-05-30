@@ -55,7 +55,7 @@ public final class Summary {
 
     public String toString(String saveUrl) {
         return String.format("{\"saveUrl\":\"%s\",\"存档版本\":%d,\"课题分\":%d,\"RKS\":%.4f,\"游戏版本\":%d,\"头像\":\"%s\",\"EZ\":[%d,%d,%d],\"HD\":[%d,%d,%d],\"IN\":[%d,%d,%d],\"AT\":[%d,%d,%d]}",
-                saveUrl.replace('/', '|'),
+                saveUrl,
                 saveVersion, challengeModeRank, rankingScore, gameVersion, avatar,
                 cleared[0], fullCombo[0], phi[0],
                 cleared[1], fullCombo[1], phi[1],
