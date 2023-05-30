@@ -1,14 +1,12 @@
-from thrift.transport import TSocket
-from thrift.transport import TTransport
-from thrift.protocol import TBinaryProtocol
+from requests import Session
 
+s = Session()
+result = s.get("http://localhost:9090/saveUrl/h0kg9ba19ulrlz408o22g44pq")
+json = result.json()
+print(json)
+print(json["saveUrl"])
 
-from phigrosLibrary import Phigros
-
-transport = TTransport.TBufferedTransport(TSocket.TSocket())
-protocol = TBinaryProtocol.TBinaryProtocol(transport)
-client = Phigros.Client(protocol)
-transport.open()
-result = client.best19("https://rak3ffdi.tds1.tapfiles.cn/gamesaves/y3rcfBiAGNNW7S6wMRbmP2Rd4qNHBP7u/.save")
-transport.close()
-print(result)
+url = "http://localhost:9090/b19/%s" % json["saveUrl"]
+print(url)
+result = s.get(url)
+print(result.json())

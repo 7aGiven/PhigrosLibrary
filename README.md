@@ -17,7 +17,7 @@ PhigrosRpc是利用thrift对PhigrosLibrary的封装。
 1. [定数表](https://github.com/7aGiven/PhigrosLibrary/blob/master/difficulty.csv)
 2. [头像id](https://github.com/7aGiven/PhigrosLibrary/blob/master/avater.txt)
 3. [收藏品id](https://github.com/7aGiven/PhigrosLibrary/blob/master/collection.txt)
-4. [曲绘](https://github.com/7aGiven/PhigrosLibrary/tree/master/illustration)
+4. 曲绘请从Phigros安装包提取
 
 **注：3个文件都在项目根目录下，查看修改时间判断版本。**
 
@@ -47,7 +47,7 @@ PhigrosRpc是利用thrift对PhigrosLibrary的封装。
 
 解压后windows运行start.cmd，linux运行start.sh，默认监听127.0.0.1:9090
 
-未安装jre11的windows用户：
+未安装jre17的windows用户：
 
 下载Release内的 PhigrosRpc-jre17-windows.zip
 
@@ -59,13 +59,19 @@ PhigrosRpc是利用thrift对PhigrosLibrary的封装。
 
 #### 客户端编写
 
+[客户端示例](https://github.com/7aGiven/PhigrosLibrary/tree/master/clientExample)
+
 使用http api
 
+@GET
 /saveUrl/{sessionToken}
+返回saveUrl和summary
 ```json
-{"saveUrl":"https://a.a.a/*","存档版本":3,"课题分":536,"RKS":15.534,"游戏版本":78,"头像":"Glaciation","EZ":[100,100,100],"HD":[100,100,100],"IN":[100,100,100],"AT":[100,100,100]}
+{"saveUrl":"https://rak3ffdi.tds1.tapfiles.cn/gamesaves/0123456789abcde0123456789abcde/.save","存档版本":3,"课题分":536,"RKS":15.534,"游戏版本":78,"头像":"Glaciation","EZ":[100,100,100],"HD":[100,100,100],"IN":[100,100,100],"AT":[100,100,100]}
 ```
+@GET
 /b19/{saveUrl}
+返回：共20个元素，其中第一个元素为Best Phi
 ```json
 [
   {"songId":"996.李化禹","level":"IN","acc":99.8,"fc":false,"定数":14.4,"单曲rks":13.6},
@@ -73,8 +79,10 @@ PhigrosRpc是利用thrift对PhigrosLibrary的封装。
   {}
 ]
 ```
+@GET
 /expects/{saveUrl}
-注：expect指目标ACC，即与B19最后一名的差距。
+返回：所有已打过的可能达到B19最后一名单曲rks的歌曲
+注：expect指目标ACC，即打到该ACC，单曲rks可达到B19最后一名
 ```json
 [
   {"songId":"996.李化禹","level":"IN","acc":96.8,"expect":99.5},
@@ -95,7 +103,7 @@ PhigrosRpc是利用thrift对PhigrosLibrary的封装。
 
 ### Java开发者使用PhigrosLibrary
 
-必须以JDK11开发
+必须以JDK17开发
 
 方法1：
 
