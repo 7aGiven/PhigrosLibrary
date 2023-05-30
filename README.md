@@ -2,7 +2,7 @@
 
 PhigrosLibrary是Java实现的Phigros云存档解析库。
 
-PhigrosRpc是利用thrift对PhigrosLibrary的封装。
+PhigrosRpc是利用http对PhigrosLibrary的封装。
 
 本项目强制使用java 17
 
@@ -64,13 +64,17 @@ PhigrosRpc是利用thrift对PhigrosLibrary的封装。
 使用http api
 
 @GET
+
 /saveUrl/{sessionToken}
+
 返回saveUrl和summary
 ```json
 {"saveUrl":"https://rak3ffdi.tds1.tapfiles.cn/gamesaves/0123456789abcde0123456789abcde/.save","存档版本":3,"课题分":536,"RKS":15.534,"游戏版本":78,"头像":"Glaciation","EZ":[100,100,100],"HD":[100,100,100],"IN":[100,100,100],"AT":[100,100,100]}
 ```
 @GET
+
 /b19/{saveUrl}
+
 返回：共20个元素，其中第一个元素为Best Phi
 ```json
 [
@@ -80,8 +84,11 @@ PhigrosRpc是利用thrift对PhigrosLibrary的封装。
 ]
 ```
 @GET
+
 /expects/{saveUrl}
+
 返回：所有已打过的可能达到B19最后一名单曲rks的歌曲
+
 注：expect指目标ACC，即打到该ACC，单曲rks可达到B19最后一名
 ```json
 [
