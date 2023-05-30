@@ -4,14 +4,14 @@ plugins {
 }
 
 group = 'given'
-version = '3.0.1'
+version = '3.0.1.1'
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    implementation 'io.javalin:javalin:5.5.0'
+    implementation 'io.netty:netty-all:4.1.93.Final'
     implementation project(':PhigrosLibrary')
 }
 

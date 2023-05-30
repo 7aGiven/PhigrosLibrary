@@ -31,7 +31,7 @@ PhigrosRpc是利用http对PhigrosLibrary的封装。
 
 # PhigrosRpc
 
-基于Javalin 5.5.0，PhigrosLibrary 3.0
+基于netty 4.1.93，PhigrosLibrary 3.0
 
 ### 功能
 
