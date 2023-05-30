@@ -21,6 +21,6 @@ public class SongLevel implements Comparable<SongLevel>{
 
     @Override
     public String toString() {
-        return String.format("{\"songId\":\"%s\",\"level\":\"%s\",\"acc\":%f,\"fc\":%b,\"定数\":%.1f,\"单曲rks\":%f}",id , level, s, a, c, difficulty, rks);
+        return String.format("{\"songId\":\"%s\",\"level\":\"%s\",\"score\":%d,\"acc\":%f,\"fc\":%b,\"定数\":%.1f,\"单曲rks\":%f}",id , level, s, a, c, difficulty, rks);
     }
 }
