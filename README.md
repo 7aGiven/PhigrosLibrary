@@ -35,7 +35,7 @@ PhigrosRpc是利用http对PhigrosLibrary的封装。
 
 ### 功能
 
-查询Best N数据和可推分的目标ACC数据
+查询Best 19数据和可推分的目标ACC数据
 
 ### 快速使用
 
@@ -71,6 +71,12 @@ PhigrosRpc是利用http对PhigrosLibrary的封装。
 ```json
 {"saveUrl":"https://rak3ffdi.tds1.tapfiles.cn/gamesaves/0123456789abcde0123456789abcde/.save","存档版本":3,"课题分":536,"RKS":15.534,"游戏版本":78,"头像":"Glaciation","EZ":[100,100,100],"HD":[100,100,100],"IN":[100,100,100],"AT":[100,100,100]}
 ```
+@GET
+
+/playerId/{sessionToken}
+
+返回playerId
+`嗨嗨嗨`
 @GET
 
 /b19/{saveUrl}
