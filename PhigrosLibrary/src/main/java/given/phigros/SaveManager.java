@@ -77,7 +77,10 @@ class SaveManager {
 
     static JSONObject save(String session) throws IOException, InterruptedException {
         final var array = saveArray(session);
-        if (array.size() != 1) {
+        final var size = array.size();
+        if (size == 0)
+            throw new RuntimeException("存档不存在");
+        else if (array.size() > 1) {
             StringBuilder builder = new StringBuilder("存档有误，请修复存档\n");
             for (int i = 0; i < array.size();) {
                 JSONObject object = array.getJSONObject(i);
