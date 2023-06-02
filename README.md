@@ -14,10 +14,9 @@ PhigrosRpc是利用http对PhigrosLibrary的封装。
 
 # 更新资源
 
-1. [定数表](https://github.com/7aGiven/PhigrosLibrary/blob/master/difficulty.csv)
-2. [头像id](https://github.com/7aGiven/PhigrosLibrary/blob/master/avater.txt)
-3. [收藏品id](https://github.com/7aGiven/PhigrosLibrary/blob/master/collection.txt)
-4. 曲绘请从Phigros安装包提取
+1. [头像id](https://github.com/7aGiven/PhigrosLibrary/blob/master/avater.txt)
+2. [收藏品id](https://github.com/7aGiven/PhigrosLibrary/blob/master/collection.txt)
+3. [定数表](https://github.com/7aGiven/PhigrosLibrary_Resource/blob/master/difficulty.csv) 和 [曲绘](https://github.com/7aGiven/PhigrosLibrary_Resource/tree/master/illustrationLowRes) 均已放置于项目 [PhigrosLibrary_Resource](https://github.com/7aGiven/PhigrosLibrary_Resource/)
 
 **注：3个文件都在项目根目录下，查看修改时间判断版本。**
 
