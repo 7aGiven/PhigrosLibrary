@@ -39,7 +39,7 @@ class SaveManager {
     public byte[] data;
 
     SaveManager(PhigrosUser user) throws IOException, InterruptedException {
-        this(user, SaveManager.save(user.session));
+        this(user, SaveManager.saveCheck(user.session));
     }
 
     SaveManager(PhigrosUser user, JSONObject saveInfo) {
@@ -75,7 +75,7 @@ class SaveManager {
         return JSON.parseObject(response).getJSONArray("results");
     }
 
-    static JSONObject save(String session) throws IOException, InterruptedException {
+    static JSONObject saveCheck(String session) throws IOException, InterruptedException {
         final var array = saveArray(session);
         final var size = array.size();
         if (size == 0)
@@ -89,6 +89,14 @@ class SaveManager {
             }
             throw new RuntimeException(builder.toString());
         }
+        return array.getJSONObject(0);
+    }
+
+    static JSONObject save(String session) throws IOException, InterruptedException {
+        final var array = saveArray(session);
+        final var size = array.size();
+        if (size == 0)
+            throw new RuntimeException("存档不存在");
         return array.getJSONObject(0);
     }
     static String delete(String session, String objectId) throws IOException, InterruptedException {
