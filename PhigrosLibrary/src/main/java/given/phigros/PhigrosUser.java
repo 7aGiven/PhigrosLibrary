@@ -50,7 +50,7 @@ public class PhigrosUser {
     }
 
     public JSONObject getSaveInfo() throws IOException, InterruptedException {
-        return SaveManager.save(session);
+        return SaveManager.saveCheck(session);
     }
 
     public String getPlayerId() throws IOException, InterruptedException {
