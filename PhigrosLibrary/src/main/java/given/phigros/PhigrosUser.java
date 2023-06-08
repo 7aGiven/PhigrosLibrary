@@ -110,24 +110,26 @@ public class PhigrosUser {
     }
     private <T extends SaveModule> byte[] extractZip(Class<T> clazz) throws IOException, InterruptedException {
         byte[] buffer;
-        byte[] data = getData();
-        try (ByteArrayInputStream reader = new ByteArrayInputStream(data)) {
+        try (ByteArrayInputStream reader = new ByteArrayInputStream(getData())) {
             try (ZipInputStream zipReader = new ZipInputStream(reader)) {
+                String name;
+                byte version;
+                try {
+                    name = (String) clazz.getDeclaredField("name").get(null);
+                    version = (byte) clazz.getDeclaredField("version").get(null);
+                } catch (NoSuchFieldException | IllegalAccessException e) {
+                    throw new RuntimeException(e);
+                }
                 while (true) {
                     ZipEntry entry = zipReader.getNextEntry();
-                    String tmp;
-                    try {
-                        tmp = (String) clazz.getDeclaredField("name").get(null);
-                    } catch (NoSuchFieldException | IllegalAccessException e) {
-                        throw new RuntimeException(e);
-                    }
-                    if (entry.getName().equals(tmp)) {
+                    if (entry.getName().equals(name))
                         break;
-                    }
                 }
-                zipReader.skip(1);
-                buffer = zipReader.readAllBytes();
-                zipReader.closeEntry();
+                if (zipReader.read() == version) {
+                    buffer = zipReader.readAllBytes();
+                    zipReader.closeEntry();
+                } else
+                    throw new RuntimeException("版本号已更新，请更新PhigrosLibrary。");
             }
         }
         return SaveManager.decrypt(buffer);
