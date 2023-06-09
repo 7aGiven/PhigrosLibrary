@@ -67,9 +67,6 @@ public class PhigrosUser {
         return summary;
     }
 
-    public SongLevel[] getB19() throws IOException, InterruptedException {
-        return new B19(extractZip(GameRecord.class)).getB19(19);
-    }
     public SongLevel[] getBestN(int num) throws IOException, InterruptedException {
         return new B19(extractZip(GameRecord.class)).getB19(num);
     }
