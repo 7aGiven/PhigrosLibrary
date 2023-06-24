@@ -14,19 +14,23 @@ PhigrosRpc是利用http对PhigrosLibrary的封装。
 
 # 更新资源
 
-1. [头像id](https://github.com/7aGiven/PhigrosLibrary/blob/master/avater.txt)
+1. [头像id](https://github.com/7aGiven/PhigrosLibrary/blob/master/avatar.txt)
 2. [收藏品id](https://github.com/7aGiven/PhigrosLibrary/blob/master/collection.txt)
 3. [定数表](https://github.com/7aGiven/PhigrosLibrary_Resource/blob/master/difficulty.csv) 和 [曲绘](https://github.com/7aGiven/PhigrosLibrary_Resource/tree/master/illustrationLowRes) 均已放置于项目 [PhigrosLibrary_Resource](https://github.com/7aGiven/PhigrosLibrary_Resource/)
 
 **注：3个文件都在项目根目录下，查看修改时间判断版本。**
 
 # 目录
-
+- [其他语言的实现](#python实现的查分)
 - [PhigrosRpc](#phigrosrpc)
 - [PhigrosLibrary](#phigroslibrary)
   - [PhigrosLibrary简单应用](#phigroslibrary-简单应用)
   - [PhigrosLibrary高级应用](#phigroslibrary的高级应用)
 - [Phigros QQ群](#phigros-qq群)
+
+# Python实现的查分
+
+位于py文件夹，由python原生实现，未调用PhigrosRpc
 
 # PhigrosRpc
 

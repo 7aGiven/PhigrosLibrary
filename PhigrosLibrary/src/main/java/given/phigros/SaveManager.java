@@ -220,8 +220,8 @@ class SaveManager {
         response = client.send(builder.build(),handler).body();
         Logger.getGlobal().fine(response);
     }
-    private static final SecretKeySpec key = new SecretKeySpec(new byte[] {-24,-106,-102,-46,-91,64,37,-101,-105,-111,-112,-117,-120,-26,-65,3,30,109,33,-107,110,-6,-42,-118,80,-35,85,-42,122,-80,-110,75}, "AES");
-    private static final IvParameterSpec iv = new IvParameterSpec(new byte[] {42,79,-16,-118,-56,13,99,7,0,87,-59,-107,24,-56,50,83});
+    private static final SecretKeySpec key = new SecretKeySpec(Base64.getDecoder().decode("6Jaa0qVAJZuXkZCLiOa/Ax5tIZVu+taKUN1V1nqwkks="), "AES");
+    private static final IvParameterSpec iv = new IvParameterSpec(Base64.getDecoder().decode("Kk/wisgNYwcAV8WVGMgyUw=="));
     static byte[] decrypt(byte[] data) {
         try {
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
