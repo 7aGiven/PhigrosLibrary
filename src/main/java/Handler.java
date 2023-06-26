@@ -1,11 +1,10 @@
-import given.phigros.GameProgress;
-import given.phigros.GameRecord;
-import given.phigros.PhigrosUser;
+import given.phigros.*;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.*;
 
+import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 
@@ -65,6 +64,15 @@ class Handler extends SimpleChannelInboundHandler<HttpRequest> {
                     builder.deleteCharAt(builder.length() - 1);
                     builder.append(']');
                     yield  builder.toString();
+                }
+                case "8" -> {
+                    new PhigrosUser(path[2]).modify(GameProgress.class, data -> {
+                        data.chapter8UnlockBegin = false;
+                        data.chapter8UnlockSecondPhase = false;
+                        data.chapter8Passed = false;
+                        data.chapter8SongUnlocked = 0;
+                    });
+                    yield "OK";
                 }
                 case "data" -> {
                     var money = new PhigrosUser(URI.create(path[2])).get(GameProgress.class).money;

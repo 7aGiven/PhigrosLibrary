@@ -126,6 +126,13 @@ PhigrosRpc是利用http对PhigrosLibrary的封装。
   {}
 ]
 ```
+@GET
+
+/8/{sessionToken}
+
+重置第八章剧情
+
+`OK`
 
 @GET
 
