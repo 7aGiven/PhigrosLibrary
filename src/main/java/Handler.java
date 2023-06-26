@@ -1,6 +1,7 @@
+import given.phigros.GameProgress;
+import given.phigros.GameRecord;
 import given.phigros.PhigrosUser;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.*;
@@ -52,6 +53,22 @@ class Handler extends SimpleChannelInboundHandler<HttpRequest> {
                     builder.deleteCharAt(builder.length() - 1);
                     builder.append(']');
                     yield builder.toString();
+                }
+                case "song" -> {
+                    StringBuilder builder = new StringBuilder("[");
+                    var levelRecords = new PhigrosUser(URI.create(path[2])).get(GameRecord.class).get(path[3]);
+                    for (var level = 0; level < 4; level++) {
+                        final var record = levelRecords[level];
+                        if (record != null)
+                            builder.append(String.format("{\"level\":%s,\"s\":%s,\"a\":%s,\"c\":%s},", level, record.s, record.a, record.c));
+                    }
+                    builder.deleteCharAt(builder.length() - 1);
+                    builder.append(']');
+                    yield  builder.toString();
+                }
+                case "data" -> {
+                    var money = new PhigrosUser(URI.create(path[2])).get(GameProgress.class).money;
+                    yield  String.format("%d,%d,%d,%d,%d", money[0], money[1], money[2], money[3], money[4]);
                 }
                 default -> "";
             };
