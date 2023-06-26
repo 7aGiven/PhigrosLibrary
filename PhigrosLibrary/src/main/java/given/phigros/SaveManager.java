@@ -56,7 +56,7 @@ class SaveManager {
         saveInfo = saveInfo.getJSONObject("gameFile");
         saveModel.gameObjectId = saveInfo.getString("objectId");
         saveModel.updatedTime = saveInfo.getString("updatedAt");
-        saveModel.checksum = saveInfo.getJSONObject("metaData").getString("_checksum");
+//        saveModel.checksum = saveInfo.getJSONObject("metaData").getString("_checksum");
         user.saveUrl = URI.create(saveInfo.getString("url"));
         this.saveModel = saveModel;
     }
@@ -99,6 +99,13 @@ class SaveManager {
             throw new RuntimeException("存档不存在");
         return array.getJSONObject(0);
     }
+
+//    static String fileId(String session, String id) throws IOException, InterruptedException {
+//        HttpRequest request = globalRequest.copy().header("X-LC-Session",session).uri(URI.create(baseUrl + "/files/" + id)).build();
+//        String response = client.send(request,handler).body();
+//        Logger.getGlobal().info(response);
+//        return JSON.parseObject(response).getString("url");
+//    }
     static String delete(String session, String objectId) throws IOException, InterruptedException {
         HttpRequest.Builder builder = globalRequest.copy();
         builder.DELETE();
@@ -110,7 +117,6 @@ class SaveManager {
     <T extends SaveModule> void modify(Class<T> clazz, ModifyStrategy<T> callback) throws IOException, InterruptedException {
         HttpRequest request = HttpRequest.newBuilder(user.saveUrl).build();
         data = client.send(request,HttpResponse.BodyHandlers.ofByteArray()).body();
-        if (!md5(data).equals(saveModel.checksum)) throw new RuntimeException("文件校验不一致");
         try (ByteArrayInputStream inputStream = new ByteArrayInputStream(data)) {
             try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream(inputStream.available())) {
                 try (ZipOutputStream zipWriter = new ZipOutputStream(outputStream)) {
