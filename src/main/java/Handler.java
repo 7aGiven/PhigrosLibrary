@@ -54,12 +54,15 @@ class Handler extends SimpleChannelInboundHandler<HttpRequest> {
                     yield builder.toString();
                 }
                 case "song" -> {
+                    path = path[2].split("/", 2);
                     StringBuilder builder = new StringBuilder("[");
-                    var levelRecords = new PhigrosUser(URI.create(path[2])).get(GameRecord.class).get(path[3]);
+                    var levelRecords = new PhigrosUser(URI.create(path[1])).get(GameRecord.class).get(path[0]);
                     for (var level = 0; level < 4; level++) {
                         final var record = levelRecords[level];
                         if (record != null)
                             builder.append(String.format("{\"level\":%s,\"s\":%s,\"a\":%s,\"c\":%s},", level, record.s, record.a, record.c));
+                        else
+                            builder.append("{},");
                     }
                     builder.deleteCharAt(builder.length() - 1);
                     builder.append(']');
