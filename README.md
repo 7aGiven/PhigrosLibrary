@@ -110,14 +110,13 @@ PhigrosRpc是利用http对PhigrosLibrary的封装。
 ```
 @GET
 
-/song/{saveUrl}/{songId}
+/song/{songId}/{saveUrl}
 
 返回单曲分数acc fc
 
 ```json
 [
   {
-    "level": 2,
     "s": 1000000,
     "a": 98.57,
     "c": true
