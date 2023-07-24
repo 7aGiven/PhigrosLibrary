@@ -16,7 +16,7 @@ PhigrosRpc是利用http对PhigrosLibrary的封装。
 
 1. [头像id](https://github.com/7aGiven/PhigrosLibrary/blob/master/avatar.txt)
 2. [收藏品id](https://github.com/7aGiven/PhigrosLibrary/blob/master/collection.csv)
-3. 定数表和曲绘请使用项目[Phigros_Resource](https://github.com/7aGiven/_Resource/)从apk文件中提取(apk可从616.sb下载)
+3. 定数表和曲绘请使用项目[Phigros_Resource](https://github.com/7aGiven/Phigros_Resource/)从apk文件中提取(apk可从616.sb下载)
 
 **注：3个文件都在项目根目录下，查看修改时间判断版本。**
 
