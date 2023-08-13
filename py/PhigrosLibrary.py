@@ -101,7 +101,7 @@ class B19Class:
         with open(path) as f:
             lines = f.readlines()
         for line in lines:
-            line = line[:-1].split(",")
+            line = line[:-1].split("\\")
             diff = []
             for i in range(1, len(line)):
                 diff.append(float(line[i]))

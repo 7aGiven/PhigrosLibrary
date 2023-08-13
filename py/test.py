@@ -12,8 +12,11 @@ async def main(sessionToken):
         summary = await b19Class.get_summary(sessionToken)
         print(summary)
         b19 = await b19Class.get_b19(summary["url"])
+    rks = 0
     for song in b19:
+        rks += song["rks"]
         print(song)
+    print(rks/20)
 
 s = "h0kg9ba19ulrlz408o22g44pq"
 if len(sys.argv) == 2:

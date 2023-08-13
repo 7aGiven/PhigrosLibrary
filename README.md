@@ -21,16 +21,21 @@ PhigrosRpc是利用http对PhigrosLibrary的封装。
 **注：3个文件都在项目根目录下，查看修改时间判断版本。**
 
 # 目录
-- [其他语言的实现](#python实现的查分)
+- [其他语言的实现](#其他语言实现查分)
 - [PhigrosRpc](#phigrosrpc)
 - [PhigrosLibrary](#phigroslibrary)
   - [PhigrosLibrary简单应用](#phigroslibrary-简单应用)
   - [PhigrosLibrary高级应用](#phigroslibrary的高级应用)
+- [Phigros曲目更新](#phigros-曲目更新) 
 - [Phigros QQ群](#phigros-qq群)
 
-# Python实现的查分
-
+# 其他语言实现查分
+### python查分
 位于py文件夹，由python原生实现，未调用PhigrosRpc
+### C++查分
+位于cpp文件夹，由C++原生实现，未调用PhigrosRpc
+### Nodejs查分
+位于nodejs文件夹，由nodejs通过nodejs C++ addon调用C++查分实现
 
 # PhigrosRpc
 
@@ -427,6 +432,14 @@ class Main {
     }
 }
 ```
+## Phigros 曲目更新
+[Phigros_Resource](https://github.com/7aGiven/Phigros_Resource/)可从apk文件中提取定数表(apk可从616.sb下载)
 
-### Phigros QQ群
+运行以下代码将会在运行目录生成difficulty.csv
+```python
+pip install UnityPy
+python3 gameInformation.py Phigros.apk
+```
+将生成的difficulty.csv替换项目内的difficulty.csv即可
+## Phigros QQ群
 加入 282781491 闲聊
