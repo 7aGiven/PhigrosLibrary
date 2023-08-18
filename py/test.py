@@ -18,7 +18,7 @@ async def main(sessionToken):
         print(song)
     print(rks/20)
 
-s = "h0kg9ba19ulrlz408o22g44pq"
+s = "m7n8t8jhu5sekp6kdyble4yba"
 if len(sys.argv) == 2:
     s = sys.argv[1]
 asyncio.run(main(s))

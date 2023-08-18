@@ -1,6 +1,247 @@
 #include <node_api.h>
 #include "../cpp/phigros.cpp"
 
+static void js_read_nodes(void* vbuf, Node nodes[], char size, napi_value& result, napi_env& env) {
+	napi_create_object(env, &result);
+	napi_value array;
+	napi_value value;
+	char* buf = (char*) vbuf;
+	bool b = false;
+	for (char i = 0; i < size; i++) {
+		char index = 0;
+		if (nodes[i].type == "bool") {
+			napi_get_boolean(env, getbit(*buf, index), &value);
+			napi_set_named_property(env, result, nodes[i].name.data(), value);
+			b = true;
+			index++;
+			continue;
+		}
+		if (b) {
+			b = false;
+			buf++;
+			index = 0;
+		}
+		if (nodes[i].type == "char") {
+			napi_create_int32(env, *buf, &value);
+			napi_set_named_property(env, result, nodes[i].name.data(), value);
+			buf++;
+		} else if (nodes[i].type == "short") {
+			napi_create_int32(env, *(short*) buf, &value);
+			napi_set_named_property(env, result, nodes[i].name.data(), value);
+			buf += 2;
+		} else if (nodes[i].type == "float") {
+			napi_create_double(env, *(float*) buf, &value);
+			napi_set_named_property(env, result, nodes[i].name.data(), value);
+			buf += 4;
+		} else if (nodes[i].type == "string") {
+			std::string str = read_string(buf, 0);
+			napi_create_string_utf8(env, str.data(), str.length(), &value);
+			napi_set_named_property(env, result, nodes[i].name.data(), value);
+		} else if  (nodes[i].type == "short5") {
+			napi_create_array_with_length(env, 5, &array);
+			for (char i = 0; i < 5; i++) {
+				napi_create_int32(env, read_varshort(buf), &value);
+				napi_set_element(env, array, i, value);
+			}
+		} else if  (nodes[i].type == "short12") {
+			napi_create_array_with_length(env, 12, &array);
+			short* sbuf = (short*) buf;
+			for (char i = 0; i < 12; i++) {
+				napi_create_int32(env, sbuf[i], &value);
+				napi_set_element(env, array, i, value);
+			}
+			buf += 12 * 2;
+		}
+	}
+}
+
+static void js_write_nodes(napi_value& obj, Node nodes[], char size, char* buf, napi_env& env) {
+	napi_value array;
+	napi_value value;
+	bool b = false;
+	for (char i = 0; i < size; i++) {
+		char index = 0;
+		if (nodes[i].type == "bool") {
+			bool bb;
+			napi_get_named_property(env, obj, nodes[i].name.data(), &value);
+			napi_get_value_bool(env, value, &bb);
+			setbit(buf, index, bb);
+			b = true;
+			index++;
+			continue;
+		}
+		if (b) {
+			b = false;
+			buf++;
+			index = 0;
+		}
+		int32_t in;
+		double d;
+		size_t s;
+		if (nodes[i].type == "char") {
+			napi_get_named_property(env, obj, nodes[i].name.data(), &value);
+			napi_get_value_int32(env, value, &in);
+			*buf = in;
+			buf++;
+		} else if (nodes[i].type == "short") {
+			napi_get_named_property(env, obj, nodes[i].name.data(), &value);
+			napi_get_value_int32(env, value, &in);
+			*(short*) buf = in;
+			buf += 2;
+		} else if (nodes[i].type == "float") {
+			napi_get_named_property(env, obj, nodes[i].name.data(), &value);
+			napi_get_value_double(env, value, &d);
+			*(double*) buf = d;
+			buf += 4;
+		} else if (nodes[i].type == "string") {
+			napi_get_named_property(env, obj, nodes[i].name.data(), &value);
+			buf++;
+			napi_get_value_string_utf8(env, value, buf, 163, &s);
+			*(buf - 1) = s;
+			if (s > 128) {
+				memmove(buf + 1, buf, s);
+				*buf = 1;
+				buf++;
+			}
+			buf += s;
+		} else if  (nodes[i].type == "short5") {
+			napi_get_named_property(env, obj, nodes[i].name.data(), &array);
+			for (char i = 0; i < 5; i++) {
+				napi_get_element(env, array, i, &value);
+				napi_get_value_int32(env, value, &in);
+				write_varshort(buf, in);
+				napi_set_element(env, array, i, value);
+			}
+		} else if  (nodes[i].type == "short12") {
+			napi_get_named_property(env, obj, nodes[i].name.data(), &array);
+			short* sbuf = (short*) buf;
+			for (char i = 0; i < 12; i++) {
+				napi_get_element(env, array, i, &value);
+				napi_get_value_int32(env, value, &in);
+				sbuf[i] = in;
+			}
+			buf += 12 * 2;
+		}
+	}
+}
+
+static void js_read_record(void* vbuf, napi_value& result, napi_env& env) {
+	napi_value song;
+	napi_value array;
+	napi_value songlevel;
+	napi_value value;
+	char* buf = (char*) vbuf;
+	unsigned char song_len = read_varshort(buf);
+	napi_create_array_with_length(env, song_len, &result);
+	for (unsigned char index = 0; index < song_len; index++) {
+		char* end = buf + *buf + 1;
+		end = end + *end + 1;
+		std::string id = read_string(buf, 2);
+		buf++;
+		char len = *buf;
+		buf++;
+		char fc = *buf;
+		buf++;
+		napi_create_array_with_length(env, 4, &array);
+		for (char level = 0; level < 4; level++) {
+			napi_create_object(env, &songlevel);
+			if (getbit(len, level)) {
+				napi_create_int32(env, *(int*) buf, &value);
+				napi_set_named_property(env, songlevel, "score", value);
+				napi_create_double(env, *(float*) buf, &value);
+				napi_set_named_property(env, songlevel, "acc", value);
+				napi_get_boolean(env, getbit(fc, level), &value);
+				napi_set_named_property(env, songlevel, "fc", value);
+				napi_set_element(env, array, level, songlevel);
+			}
+		}
+		napi_create_object(env, &song);
+		napi_create_string_utf8(env, id.data(), id.length(), &value);
+		napi_set_named_property(env, song, "id", value);
+		napi_set_named_property(env, song, "levels", array);
+		napi_set_element(env, result, index, song);
+		buf = end;
+	}
+}
+
+static void js_read_key(void* vbuf, napi_value& wrap, napi_env& env) {
+	napi_value result;
+	napi_value obj;
+	napi_value value;
+	char* buf = (char*) vbuf;
+	unsigned char song_len = read_varshort(buf);
+	napi_create_array_with_length(env, song_len, &result);
+	for (unsigned char index = 0; index < song_len; index++) {
+		char* end = buf + *buf + 1;
+		end = end + *end + 1;
+		std::string key = read_string(buf, 0);
+		buf++;
+		char len = *buf;
+		buf++;
+		napi_create_object(env, &obj);
+		napi_create_string_utf8(env, key.data(), key.length(), &value);
+		napi_set_named_property(env, obj, "key", value);
+		for (char i = 0; i < sizeof(nodeKey) / sizeof(Node); i++) {
+			if (!getbit(len, i)) continue;
+			if (nodeKey[i].type == "char") {
+				napi_create_int32(env, *buf, &value);
+				napi_set_named_property(env, obj, nodeKey[i].name.data(), value);
+			} else if (nodeKey[i].type == "bool") {
+				napi_get_boolean(env, *buf, &value);
+				napi_set_named_property(env, obj, nodeKey[i].name.data(), value);
+			}
+			buf++;
+		}	
+		napi_set_element(env, result, index, obj);
+	}
+	napi_create_object(env, &wrap);
+	napi_set_named_property(env, wrap, "keys", result);
+	napi_create_int32(env, *buf, &value);
+	napi_set_named_property(env, wrap, "lanotaReadKeys", value);
+}
+/*
+static void js_write_key(napi_value& wrap, char* buf, napi_env& env) {
+	napi_value result;
+	napi_value obj;
+	napi_value value;
+	int32_t in;
+	napi_get_named_property(env, wrap, "keys", &result);
+	napi_get_named_property(env, results, "length", &value);
+	napi_get_value_int32(env, value, &in);
+	unsigned char song_len = in;
+	write_varshort(buf, song_len);
+	for (unsigned char index = 0; index < song_len; index++) {
+		napi_get_element(env, result, index, &obj);
+		napi_get_named_property(env, obj, "key", &value);
+		buf++;
+		napi_get_value_string_utf8(env, value, buf, 163, in);
+		*(buf - 1) = in;
+		buf += in;
+		buf++;
+		char len = *buf;
+		buf++;
+		napi_create_object(env, &obj);
+		napi_create_string_utf8(env, key.data(), key.length(), &value);
+		napi_set_named_property(env, obj, "key", value);
+		for (char i = 0; i < sizeof(nodeKey) / sizeof(Node); i++) {
+			if (!getbit(len, i)) continue;
+			if (nodeKey[i].type == "char") {
+				napi_create_int32(env, *buf, &value);
+				napi_set_named_property(env, obj, nodeKey[i].name.data(), value);
+			} else if (nodeKey[i].type == "bool") {
+				napi_get_boolean(env, *buf, &value);
+				napi_set_named_property(env, obj, nodeKey[i].name.data(), value);
+			}
+			buf++;
+		}	
+		napi_set_element(env, result, index, obj);
+	}
+	napi_create_object(env, &wrap);
+	napi_set_named_property(env, wrap, "keys", result);
+	napi_create_int32(env, *buf, &value);
+	napi_set_named_property(env, wrap, "lanotaReadKeys", value);
+}
+*/
 static napi_value MethodDifficulty(napi_env env, napi_callback_info info) {
 	read_difficulty();
 	napi_value value;
@@ -38,7 +279,92 @@ static napi_value MethodInfo(napi_env env, napi_callback_info callback_info) {
 	napi_set_named_property(env, result, "progress", array);
 	napi_create_string_utf8(env, summary.url.data(), summary.url.length(), &value);
 	napi_set_named_property(env, result, "url", value);
+	napi_create_string_utf8(env, summary.update.data(), summary.update.length(), &value);
+	napi_set_named_property(env, result, "update", value);
 	return result;
+}
+
+static napi_value MethodSave(napi_env env, napi_callback_info info) {
+	printf("save enter\n");
+	size_t argc = 1;
+	napi_value value;
+	napi_get_cb_info(env, info, &argc, &value, 0, 0);
+	char url[75];
+	size_t result_len;
+	napi_get_value_string_utf8(env, value, url, 75, &result_len);
+	printf("%s\n", url);
+	napi_value result;
+	napi_create_object(env, &result);
+	unsigned char bufout[12 * 1024];
+	int outlen;
+EVP_CIPHER_CTX* cipher_ctx = EVP_CIPHER_CTX_new();
+	EVP_CIPHER_CTX_reset(cipher_ctx);
+	EVP_DecryptInit(cipher_ctx, EVP_aes_256_cbc(), key, iv);
+
+	char res[14 * 1024];
+	zip_t* zip = download_save(url, res);
+	zip_file_t* zip_file;
+	unsigned char buf[12 * 1024];
+	int len;
+
+	zip_file = zip_fopen(zip, "gameProgress", 0);
+	zip_fread(zip_file, buf, 1);
+	len = zip_fread(zip_file, buf, 12 * 1024);
+	EVP_DecryptUpdate(cipher_ctx, bufout, &outlen, buf, len);
+	EVP_CIPHER_CTX_reset(cipher_ctx);
+	EVP_DecryptInit(cipher_ctx, EVP_aes_256_cbc(), key, iv);
+	js_read_nodes(bufout, nodeGameProgress, sizeof(nodeGameProgress) / sizeof(Node), value, env);
+	napi_set_named_property(env, result, "gameProgress", value);
+	
+	zip_file = zip_fopen(zip, "user", 0);
+	zip_fread(zip_file, buf, 1);
+	len = zip_fread(zip_file, buf, 12 * 1024);
+	EVP_DecryptUpdate(cipher_ctx, bufout, &outlen, buf, len);
+	print_struct(bufout, len);
+	EVP_CIPHER_CTX_reset(cipher_ctx);
+	EVP_DecryptInit(cipher_ctx, EVP_aes_256_cbc(), key, iv);
+	js_read_nodes(bufout, nodeUser, sizeof(nodeUser) / sizeof(Node), value, env);
+	napi_set_named_property(env, result, "user", value);
+
+	zip_file = zip_fopen(zip, "settings", 0);
+	zip_fread(zip_file, buf, 1);
+	len = zip_fread(zip_file, buf, 12 * 1024);
+	EVP_DecryptUpdate(cipher_ctx, bufout, &outlen, buf, len);
+	EVP_CIPHER_CTX_reset(cipher_ctx);
+	EVP_DecryptInit(cipher_ctx, EVP_aes_256_cbc(), key, iv);
+	js_read_nodes(bufout, nodeSettings, sizeof(nodeSettings) / sizeof(Node), value, env);
+	napi_set_named_property(env, result, "settings", value);
+
+	zip_file = zip_fopen(zip, "gameRecord", 0);
+	zip_fread(zip_file, buf, 1);
+	len = zip_fread(zip_file, buf, 12 * 1024);
+	EVP_DecryptUpdate(cipher_ctx, bufout, &outlen, buf, len);
+	EVP_CIPHER_CTX_reset(cipher_ctx);
+	EVP_DecryptInit(cipher_ctx, EVP_aes_256_cbc(), key, iv);
+	js_read_record(bufout, value, env);
+	napi_set_named_property(env, result, "gameRecord", value);
+
+	zip_file = zip_fopen(zip, "gameKey", 0);
+	zip_fread(zip_file, buf, 1);
+	len = zip_fread(zip_file, buf, 12 * 1024);
+	EVP_DecryptUpdate(cipher_ctx, bufout, &outlen, buf, len);
+	EVP_CIPHER_CTX_reset(cipher_ctx);
+	EVP_DecryptInit(cipher_ctx, EVP_aes_256_cbc(), key, iv);
+	js_read_key(bufout, value, env);
+	napi_set_named_property(env, result, "gameKey", value);
+
+	return result;
+}
+
+static napi_value MethodUpload(napi_env env, napi_callback_info info) {
+	size_t argc = 1;
+	napi_value value;
+	napi_get_cb_info(env, info, &argc, &value, 0, 0);
+	char buf[26];
+	size_t result_len;
+	napi_get_value_string_utf8(env, value, buf, 26, &result_len);
+	upload_save(buf, 13 * 1024);
+	return value;
 }
 
 static napi_value MethodB19(napi_env env, napi_callback_info info) {
@@ -49,7 +375,8 @@ static napi_value MethodB19(napi_env env, napi_callback_info info) {
 	size_t result_len;
 	napi_get_value_string_utf8(env, argv, url, 75, &result_len);
 	printf("%s\n", url);
-	zip_t* zip = download_save(url);
+	char res[14 * 1024];
+	zip_t* zip = download_save(url, res);
 	SongLevel* songs = parseGameRecord(zip, difficulty);
 	napi_value array;
 	napi_create_array_with_length(env, 20, &array);
@@ -77,10 +404,15 @@ static napi_value MethodB19(napi_env env, napi_callback_info info) {
 }
 
 static napi_value Init(napi_env env, napi_value exports) {
+	init();
 	napi_property_descriptor desc = {"read_difficulty", 0, MethodDifficulty, 0, 0, 0, napi_default, 0};
 	napi_define_properties(env, exports, 1, &desc);
 	desc = {"info", 0, MethodInfo, 0, 0, 0, napi_default, 0};
 	napi_define_properties(env, exports, 1, &desc);
+	desc = {"get_save", 0, MethodSave, 0, 0, 0, napi_default, 0};
+	napi_define_properties(env, exports, 1, &desc);
+	//desc = {"upload_save", 0, MethodUpload, 0, 0, 0, napi_default, 0};
+	//napi_define_properties(env, exports, 1, &desc);
 	desc = {"b19", 0, MethodB19, 0, 0, 0, napi_default, 0};
 	napi_define_properties(env, exports, 1, &desc);
 	return exports;
