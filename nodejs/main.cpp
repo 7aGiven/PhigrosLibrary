@@ -34,8 +34,8 @@ static void js_read_nodes(void* vbuf, Node nodes[], char size, napi_value& resul
 			napi_set_named_property(env, result, nodes[i].name.data(), value);
 			buf += 4;
 		} else if (nodes[i].type == "string") {
-			std::string str = read_string(buf, 0);
-			napi_create_string_utf8(env, str.data(), str.length(), &value);
+			unsigned char len = read_cstring(buf);
+			napi_create_string_utf8(env, buf - len, len, &value);
 			napi_set_named_property(env, result, nodes[i].name.data(), value);
 		} else if  (nodes[i].type == "short5") {
 			napi_create_array_with_length(env, 5, &array);
@@ -136,12 +136,15 @@ static void js_read_record(void* vbuf, napi_value& result, napi_env& env) {
 	for (unsigned char index = 0; index < song_len; index++) {
 		char* end = buf + *buf + 1;
 		end = end + *end + 1;
-		std::string id = read_string(buf, 2);
+		char len = read_cstring(buf);
+		napi_create_string_utf8(env, buf - len, len - 2, &value);
 		buf++;
-		char len = *buf;
+		len = *buf;
 		buf++;
 		char fc = *buf;
 		buf++;
+		napi_create_object(env, &song);
+		napi_set_named_property(env, song, "id", value);
 		napi_create_array_with_length(env, 4, &array);
 		for (char level = 0; level < 4; level++) {
 			napi_create_object(env, &songlevel);
@@ -155,9 +158,6 @@ static void js_read_record(void* vbuf, napi_value& result, napi_env& env) {
 				napi_set_element(env, array, level, songlevel);
 			}
 		}
-		napi_create_object(env, &song);
-		napi_create_string_utf8(env, id.data(), id.length(), &value);
-		napi_set_named_property(env, song, "id", value);
 		napi_set_named_property(env, song, "levels", array);
 		napi_set_element(env, result, index, song);
 		buf = end;
@@ -174,12 +174,12 @@ static void js_read_key(void* vbuf, napi_value& wrap, napi_env& env) {
 	for (unsigned char index = 0; index < song_len; index++) {
 		char* end = buf + *buf + 1;
 		end = end + *end + 1;
-		std::string key = read_string(buf, 0);
+		char len = read_cstring(buf);
+		napi_create_string_utf8(env, buf - len, len, &value);
 		buf++;
-		char len = *buf;
+		len = *buf;
 		buf++;
 		napi_create_object(env, &obj);
-		napi_create_string_utf8(env, key.data(), key.length(), &value);
 		napi_set_named_property(env, obj, "key", value);
 		for (char i = 0; i < sizeof(nodeKey) / sizeof(Node); i++) {
 			if (!getbit(len, i)) continue;
@@ -248,6 +248,17 @@ static napi_value MethodDifficulty(napi_env env, napi_callback_info info) {
 	return value;
 }
 
+static napi_value MethodPlayer(napi_env env, napi_callback_info info) {
+	size_t len = 1;
+	napi_value value;
+	napi_get_cb_info(env, info, &len, &value, 0, 0);
+	char buf[26];
+	napi_get_value_string_utf8(env, value, buf, 26, &len);
+	std::string id = get_player(buf);
+	napi_create_string_utf8(env, id.data(), id.length(), &value);
+	return value;
+}
+
 static napi_value MethodInfo(napi_env env, napi_callback_info callback_info) {
 	size_t argc = 1;
 	napi_value argv;
@@ -285,73 +296,77 @@ static napi_value MethodInfo(napi_env env, napi_callback_info callback_info) {
 }
 
 static napi_value MethodSave(napi_env env, napi_callback_info info) {
-	printf("save enter\n");
-	size_t argc = 1;
+	size_t size = 1;
 	napi_value value;
-	napi_get_cb_info(env, info, &argc, &value, 0, 0);
-	char url[75];
-	size_t result_len;
-	napi_get_value_string_utf8(env, value, url, 75, &result_len);
+	napi_get_cb_info(env, info, &size, &value, 0, 0);
+	unsigned char bufout[12 * 1024];
+	char* url = (char*) bufout;
+	napi_get_value_string_utf8(env, value, url, 75, &size);
 	printf("%s\n", url);
 	napi_value result;
 	napi_create_object(env, &result);
-	unsigned char bufout[12 * 1024];
 	int outlen;
 EVP_CIPHER_CTX* cipher_ctx = EVP_CIPHER_CTX_new();
-	EVP_CIPHER_CTX_reset(cipher_ctx);
-	EVP_DecryptInit(cipher_ctx, EVP_aes_256_cbc(), key, iv);
 
 	char res[14 * 1024];
 	zip_t* zip = download_save(url, res);
 	zip_file_t* zip_file;
-	unsigned char buf[12 * 1024];
+	unsigned char bufin[12 * 1024];
 	int len;
 
 	zip_file = zip_fopen(zip, "gameProgress", 0);
-	zip_fread(zip_file, buf, 1);
-	len = zip_fread(zip_file, buf, 12 * 1024);
-	EVP_DecryptUpdate(cipher_ctx, bufout, &outlen, buf, len);
+	zip_fread(zip_file, bufin, 1);
+	len = zip_fread(zip_file, bufin, 12 * 1024);
+	zip_fclose(zip_file);
 	EVP_CIPHER_CTX_reset(cipher_ctx);
-	EVP_DecryptInit(cipher_ctx, EVP_aes_256_cbc(), key, iv);
+	EVP_DecryptInit(cipher_ctx, cipher, key, iv);
+	EVP_DecryptUpdate(cipher_ctx, bufout, &outlen, bufin, len);
 	js_read_nodes(bufout, nodeGameProgress, sizeof(nodeGameProgress) / sizeof(Node), value, env);
 	napi_set_named_property(env, result, "gameProgress", value);
 	
 	zip_file = zip_fopen(zip, "user", 0);
-	zip_fread(zip_file, buf, 1);
-	len = zip_fread(zip_file, buf, 12 * 1024);
-	EVP_DecryptUpdate(cipher_ctx, bufout, &outlen, buf, len);
-	print_struct(bufout, len);
+	zip_fread(zip_file, bufin, 1);
+	len = zip_fread(zip_file, bufin, 12 * 1024);
+	zip_fclose(zip_file);
 	EVP_CIPHER_CTX_reset(cipher_ctx);
-	EVP_DecryptInit(cipher_ctx, EVP_aes_256_cbc(), key, iv);
+	EVP_DecryptInit(cipher_ctx, cipher, key, iv);
+	EVP_DecryptUpdate(cipher_ctx, bufout, &outlen, bufin, len);
 	js_read_nodes(bufout, nodeUser, sizeof(nodeUser) / sizeof(Node), value, env);
 	napi_set_named_property(env, result, "user", value);
 
 	zip_file = zip_fopen(zip, "settings", 0);
-	zip_fread(zip_file, buf, 1);
-	len = zip_fread(zip_file, buf, 12 * 1024);
-	EVP_DecryptUpdate(cipher_ctx, bufout, &outlen, buf, len);
+	zip_fread(zip_file, bufin, 1);
+	len = zip_fread(zip_file, bufin, 12 * 1024);
+	zip_fclose(zip_file);
 	EVP_CIPHER_CTX_reset(cipher_ctx);
-	EVP_DecryptInit(cipher_ctx, EVP_aes_256_cbc(), key, iv);
+	EVP_DecryptInit(cipher_ctx, cipher, key, iv);
+	EVP_DecryptUpdate(cipher_ctx, bufout, &outlen, bufin, len);
 	js_read_nodes(bufout, nodeSettings, sizeof(nodeSettings) / sizeof(Node), value, env);
 	napi_set_named_property(env, result, "settings", value);
 
 	zip_file = zip_fopen(zip, "gameRecord", 0);
-	zip_fread(zip_file, buf, 1);
-	len = zip_fread(zip_file, buf, 12 * 1024);
-	EVP_DecryptUpdate(cipher_ctx, bufout, &outlen, buf, len);
+	zip_fread(zip_file, bufin, 1);
+	len = zip_fread(zip_file, bufin, 12 * 1024);
+	zip_fclose(zip_file);
 	EVP_CIPHER_CTX_reset(cipher_ctx);
-	EVP_DecryptInit(cipher_ctx, EVP_aes_256_cbc(), key, iv);
+	EVP_DecryptInit(cipher_ctx, cipher, key, iv);
+	EVP_DecryptUpdate(cipher_ctx, bufout, &outlen, bufin, len);
 	js_read_record(bufout, value, env);
 	napi_set_named_property(env, result, "gameRecord", value);
 
 	zip_file = zip_fopen(zip, "gameKey", 0);
-	zip_fread(zip_file, buf, 1);
-	len = zip_fread(zip_file, buf, 12 * 1024);
-	EVP_DecryptUpdate(cipher_ctx, bufout, &outlen, buf, len);
+	zip_fread(zip_file, bufin, 1);
+	len = zip_fread(zip_file, bufin, 12 * 1024);
+	zip_fclose(zip_file);
 	EVP_CIPHER_CTX_reset(cipher_ctx);
-	EVP_DecryptInit(cipher_ctx, EVP_aes_256_cbc(), key, iv);
+	EVP_DecryptInit(cipher_ctx, cipher, key, iv);
+	EVP_DecryptUpdate(cipher_ctx, bufout, &outlen, bufin, len);
 	js_read_key(bufout, value, env);
 	napi_set_named_property(env, result, "gameKey", value);
+
+	zip_discard(zip);
+
+	EVP_CIPHER_CTX_free(cipher_ctx);
 
 	return result;
 }
@@ -377,7 +392,7 @@ static napi_value MethodB19(napi_env env, napi_callback_info info) {
 	printf("%s\n", url);
 	char res[14 * 1024];
 	zip_t* zip = download_save(url, res);
-	SongLevel* songs = parseGameRecord(zip, difficulty);
+	SongLevel* songs = parseGameRecord(zip);
 	napi_value array;
 	napi_create_array_with_length(env, 20, &array);
 	napi_value element;
@@ -406,6 +421,8 @@ static napi_value MethodB19(napi_env env, napi_callback_info info) {
 static napi_value Init(napi_env env, napi_value exports) {
 	init();
 	napi_property_descriptor desc = {"read_difficulty", 0, MethodDifficulty, 0, 0, 0, napi_default, 0};
+	napi_define_properties(env, exports, 1, &desc);
+	desc = {"get_player", 0, MethodPlayer, 0, 0, 0, napi_default, 0};
 	napi_define_properties(env, exports, 1, &desc);
 	desc = {"info", 0, MethodInfo, 0, 0, 0, napi_default, 0};
 	napi_define_properties(env, exports, 1, &desc);

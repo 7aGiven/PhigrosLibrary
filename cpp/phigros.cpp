@@ -16,14 +16,14 @@
 void print_struct(void* vptr, int size) {
 	unsigned char* ptr = (unsigned char*) vptr;
 	for (short i = 0; i < size; i++)
-		printf("%02X", ptr[i]);
+		printf("%02X ", ptr[i]);
 	printf("\n");
 }
 
+const EVP_CIPHER* cipher = EVP_aes_256_cbc();
 const unsigned char key[] = {0xe8,0x96,0x9a,0xd2,0xa5,0x40,0x25,0x9b,0x97,0x91,0x90,0x8b,0x88,0xe6,0xbf,0x03,0x1e,0x6d,0x21,0x95,0x6e,0xfa,0xd6,0x8a,0x50,0xdd,0x55,0xd6,0x7a,0xb0,0x92,0x4b};
 const unsigned char iv[] = {0x2a,0x4f,0xf0,0x8a,0xc8,0x0d,0x63,0x07,0x00,0x57,0xc5,0x95,0x18,0xc8,0x32,0x53};
-const char global_req1[] = "GET /1.1/classes/_GameSave HTTP/1.1\r\nX-LC-Key: Qr9AEqtuoSVS3zeD6iVbM4ZC0AtkJcQ89tywVyi0\r\nX-LC-Session: ";
-const char global_req2[] = "\r\nX-LC-Id: rAK3FfdieFob2Nn8Am\r\nHost: rak3ffdi.cloud.tds1.tapapis.cn\r\nConnection: close\r\n\r\n";
+const char global_req[] = "GET /1.1/%s HTTP/1.1\r\nX-LC-Key: Qr9AEqtuoSVS3zeD6iVbM4ZC0AtkJcQ89tywVyi0\r\nX-LC-Session: %s\r\nX-LC-Id: rAK3FfdieFob2Nn8Am\r\nHost: rak3ffdi.cloud.tds1.tapapis.cn\r\nConnection: close\r\n\r\n";
 const std::string base64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
 SSL_CTX *ctx = SSL_CTX_new(TLS_client_method());
 
@@ -75,6 +75,12 @@ std::string read_string(char*& pos, char offset) {
 	int len = read_varshort(pos);
 	pos += len;
 	return std::string(pos -len, len - offset);
+}
+
+unsigned char read_cstring(char* pos) {
+	unsigned char len = read_varshort(pos);
+	pos += len;
+	return len;
 }
 
 struct Level {
@@ -336,6 +342,38 @@ void append(char*& dest, const char* src, unsigned char size) {
 	dest += size;
 }
 
+std::regex replayer("e\":\"([^\"]+)");
+std::string get_player(char* sessionToken) {
+	SSL *ssl = SSL_new(ctx);
+	printf("ssl = %p\n", ssl);
+    int sock = socket(PF_INET, SOCK_STREAM, 0);
+    printf("sock = %d\n", sock);
+    int err = SSL_set_fd(ssl, sock);
+    printf("SSL_set_fd err = %d\n", err);
+    char buf[2 * 1024];
+    err = connect(sock, &info_addr, sizeof(info_addr));
+    printf("connect err = %d\n", err);
+    err = SSL_connect(ssl);
+    printf("SSL_connect err = %d\n", err);
+    char path[] = "users/me";
+    sprintf(buf, global_req, path, sessionToken);
+    int num = SSL_write(ssl, buf, sizeof global_req + sizeof path + 19);
+    printf("SSL_write %d\n", num);
+    num = SSL_read(ssl, buf, sizeof buf);
+    SSL_free(ssl);
+#ifdef __linux__
+	close(sock);
+#elif defined _WIN32
+	closesocket(sock);
+#endif
+    printf("SSL_read %d\n", num);
+    buf[num] = 0;
+	//char* ptr = strstr(buf, "\r\n\r\n") + 4; printf("%s\n", ptr);
+    std::cmatch results;
+    std::regex_search(buf, results, replayer);
+    return results.str(1);
+}
+
 std::regex reurl("//([^\"]+)");
 std::regex resummary("ry\":\"([^\"]+)");
 std::regex reupdate("datedAt\":\"([^\"]+)");
@@ -346,18 +384,17 @@ void info(char* sessionToken, Summary& summary) {
     printf("sock = %d\n", sock);
     int err = SSL_set_fd(ssl, sock);
     printf("SSL_set_fd err = %d\n", err);
-    char buf[1536];
+    char buf[1024 + 512];
     err = connect(sock, &info_addr, sizeof(info_addr));
     printf("connect err = %d\n", err);
     err = SSL_connect(ssl);
     printf("SSL_connect err = %d\n", err);
-    char* ptr = buf;
-    append(ptr, global_req1, sizeof global_req1 - 1);
-    append(ptr, sessionToken, 25);
-    append(ptr, global_req2, sizeof global_req2 - 1);
-    int num = SSL_write(ssl, buf, sizeof global_req1 + sizeof global_req2 + 23);
+    char path[] = "classes/_GameSave";
+    sprintf(buf, global_req, path, sessionToken);
+    int num = SSL_write(ssl, buf, sizeof global_req + sizeof path + 19);
     printf("SSL_write %d\n", num);
     num = SSL_read(ssl, buf, sizeof buf);
+    SSL_free(ssl);
 #ifdef __linux__
 	close(sock);
 #elif defined _WIN32
@@ -365,7 +402,7 @@ void info(char* sessionToken, Summary& summary) {
 #endif
     printf("SSL_read %d\n", num);
     buf[num] = 0;
-    printf("%s\n", buf);
+	char* ptr = strstr(buf, "\r\n\r\n") + 4; printf("%s\n", ptr);
     std::cmatch results;
     std::regex_search(buf, results, reurl);
     summary.url = results.str(1);
@@ -402,12 +439,9 @@ zip_t* download_save(char* domain, char* res) {
         length = recv(sock, res + end, 14 * 1024 - end, 0);
 	end += length;
         printf("recv end = %d\n", end);
-    } while(length);
+    } while (length);
     char *start = strstr(res, "\r\n\r\n") + 4;
-    for (int i = 0; i < 2720; i++)
-        printf("%c", res[i]);
-    printf("\n");
-    zip_source_t *source = zip_source_buffer_create(start, res + end - start, 0, 0);
+    zip_source_t *source = zip_source_buffer_create(start, res - start + end, 0, 0);
     zip_t* zip = zip_open_from_source(source, 0, 0);
     return zip;
 }
@@ -463,17 +497,15 @@ void upload_save(char* sessionToken, short size) {
     printf("connect err = %d\n", err);
     err = SSL_connect(ssl);
     printf("SSL_connect err = %d\n", err);
-    char* ptr = buf;
-    append(ptr, global_req1, sizeof global_req1 - 1);
-    append(ptr, sessionToken, 25);
-    append(ptr, global_req2, sizeof global_req2 - 1);
-    int num = SSL_write(ssl, buf, sizeof global_req1 + sizeof global_req2 + 23);
+    char path[] = "classes/_GameSave";
+    sprintf(buf, global_req, path, sessionToken);
+    int num = SSL_write(ssl, buf, sizeof global_req + sizeof path + 19);
     printf("SSL_write %d\n", num);
     num = SSL_read(ssl, buf, sizeof buf);
     printf("SSL_read %d\n", num);
     buf[num] = 0; printf("%s\n", buf);
 
-    ptr = buf;
+    char* ptr = buf;
     std::cmatch match;
     std::cregex_iterator iter(buf, buf + num, reid);
     std::string fileId = (*iter).str(1);
@@ -526,27 +558,27 @@ void upload_save(char* sessionToken, short size) {
 
 }
 
-SongLevel* parseGameRecord(zip_t* zip, std::unordered_map<std::string, float*>& difficulty) {
-EVP_CIPHER_CTX* cipher_ctx = EVP_CIPHER_CTX_new();
+SongLevel* parseGameRecord(zip_t* zip) {
     zip_file_t* zip_file = zip_fopen(zip, "gameRecord", 0);
     unsigned char gameRecord[8 * 1024];
     zip_fread(zip_file, gameRecord, 1);
     char version = gameRecord[0];
     int length = zip_fread(zip_file, gameRecord, 8 * 1024);
+    zip_fclose(zip_file);
+    zip_discard(zip);
     printf("zip_read length = %d\n", length);
-    EVP_DecryptInit(cipher_ctx, EVP_aes_256_cbc(), key, iv);
+	EVP_CIPHER_CTX* cipher_ctx = EVP_CIPHER_CTX_new();
+	EVP_DecryptInit(cipher_ctx, cipher, key, iv);
     unsigned char result[8 * 1024];
     int outlen;
     int err = EVP_DecryptUpdate(cipher_ctx, result, &outlen, gameRecord, length);
+	EVP_CIPHER_CTX_free(cipher_ctx);
     printf("decrypt err = %d\n", err);
     printf("decrypt length = %d\n", outlen);
-    for (int i = 0; i < 512; i++)
-	printf("%c", result[i]);
-    printf("\n");
     char* pos = (char*) result;
-    int song_length = read_varshort(pos);
-    printf("length = %d\n", length);
-    std::vector<SongLevel> songlevels;
+    unsigned char song_length = read_varshort(pos);
+    printf("song length = %d\n", song_length);
+    std::vector<SongLevel> songlevels(170);
     for (int i = 0; i < song_length; i++) {
 	char* end = pos + *pos + 1;
 	end = end + *end + 1;
@@ -556,7 +588,8 @@ EVP_CIPHER_CTX* cipher_ctx = EVP_CIPHER_CTX_new();
 	pos++;
 	char fc = *pos;
 	pos++;
-	for (int level = 0; level < 4; level++) {
+	float* song_difficulty = difficulty.at(id);
+	for (char level = 0; level < 4; level++) {
 	    if (getbit(len, level)) {
 		SongLevel songlevel;
 		songlevel.score = *(int*) pos;
@@ -567,17 +600,17 @@ EVP_CIPHER_CTX* cipher_ctx = EVP_CIPHER_CTX_new();
 		    continue;
 		songlevel.id = id;
 		songlevel.level = level;
-		songlevel.difficulty = difficulty[id][level];
+		songlevel.difficulty = song_difficulty[level];
 		songlevel.fc = getbit(fc, level);
 		songlevel.rks = (songlevel.acc - 55) / 45;
-		songlevel.rks = songlevel.rks * songlevel.rks * songlevel.difficulty;
+		songlevel.rks *= songlevel.rks * songlevel.difficulty;
 		songlevels.push_back(songlevel);
 	    }
 	}
 	pos = end;
     }
     SongLevel* song_result = new SongLevel[20];
-    song_result[0] = {};
+    //song_result[0] = {};
     std::partial_sort_copy(songlevels.begin(), songlevels.end(), song_result + 1, song_result + 20, comp);
     for (int i = 0; i < songlevels.size(); i++) {
 	if (songlevels[i].score == 1000000 && songlevels[i].difficulty > song_result[0].difficulty)

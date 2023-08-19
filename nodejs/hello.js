@@ -1,9 +1,24 @@
 const addon = require("./build/Release/PhigrosLibrary.node")
 
-addon.read_difficulty()
+for (var i = 0; ; i++) {
+	console.log("第" + i + "个")
+const player = addon.get_player("m7n8t8jhu5sekp6kdyble4yba")
+console.log(player)
+}
 
-const summary = addon.info("h0kg9ba19ulrlz408o22g44pq")
-console.log(summary)
+//addon.read_difficulty()
 
-const b19 = addon.b19(summary.url)
-console.log(b19)
+//const summary = addon.info("m7n8t8jhu5sekp6kdyble4yba")
+//console.log(summary)
+
+//for (var i = 0; ; i++) {
+//	console.log("第" + i + "个")
+
+//const save = addon.get_save(summary.url)
+//console.log(save)
+
+
+//const b19 = addon.b19(summary.url)
+//console.log(b19)
+
+//}
