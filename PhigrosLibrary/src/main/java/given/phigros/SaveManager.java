@@ -199,7 +199,7 @@ class SaveManager {
      *
      * {"bucket":"rAK3Ffdi","createdAt":"2023-07-23T02:32:50.254Z","key":"gamesaves/jDbHjViJBtg6UtbY74Gk7wQyIv2ee2Kh/.save","metaData":{"_checksum":"61afd574ba4d653fba5e468410283403","prefix":"gamesaves","size":877},"mime_type":"application/octet-stream","name":".save","objectId":"64bc91523d92abed0553a36d","provider":"qiniu","token":"bOJAZVDET_Z11xes0ufp39ao_Tie7mrGqecKRkUf:7Aln2dH3KaVw2Ogfs3wvAeBY1d4=:eyJzY29wZSI6InJBSzNGZmRpOmdhbWVzYXZlcy9qRGJIalZpSkJ0ZzZVdGJZNzRHazd3UXlJdjJlZTJLaC8uc2F2ZSIsImRlYWRsaW5lIjoxNjkwMDgzMTcwLCJpbnNlcnRPbmx5IjoxfQ==","upload_url":"https://upload.qiniup.com","url":"https://rak3ffdi.tds1.tapfiles.cn/gamesaves/jDbHjViJBtg6UtbY74Gk7wQyIv2ee2Kh/.save"}
      *
-     *POST /buckets/rAK3Ffdi/objects/Z2FtZXNhdmVzL2pEYkhqVmlKQnRnNlV0Ylk3NEdrN3dReUl2MmVlMktoLy5zYXZl/uploads HTTP/1.1
+     * POST /buckets/rAK3Ffdi/objects/Z2FtZXNhdmVzL2pEYkhqVmlKQnRnNlV0Ylk3NEdrN3dReUl2MmVlMktoLy5zYXZl/uploads HTTP/1.1
      * Authorization: UpToken bOJAZVDET_Z11xes0ufp39ao_Tie7mrGqecKRkUf:7Aln2dH3KaVw2Ogfs3wvAeBY1d4=:eyJzY29wZSI6InJBSzNGZmRpOmdhbWVzYXZlcy9qRGJIalZpSkJ0ZzZVdGJZNzRHazd3UXlJdjJlZTJLaC8uc2F2ZSIsImRlYWRsaW5lIjoxNjkwMDgzMTcwLCJpbnNlcnRPbmx5IjoxfQ==
      * Content-Length: 0
      * Connection: close

@@ -8,9 +8,15 @@
 #ifdef __linux__
   #include <netdb.h>
   #include <unistd.h>
+void close_socket(int sock) {
+	close(sock);
+}
 #elif defined _WIN32
   #include <ws2tcpip.h>
   #pragma comment(lib, "ws2_32")
+void close_socket(int sock) {
+	closesocket(sock);
+}
 #endif
 
 void print_struct(void* vptr, int size) {
@@ -20,24 +26,72 @@ void print_struct(void* vptr, int size) {
 	printf("\n");
 }
 
+const EVP_MD* md = EVP_md5();
 const EVP_CIPHER* cipher = EVP_aes_256_cbc();
 const unsigned char key[] = {0xe8,0x96,0x9a,0xd2,0xa5,0x40,0x25,0x9b,0x97,0x91,0x90,0x8b,0x88,0xe6,0xbf,0x03,0x1e,0x6d,0x21,0x95,0x6e,0xfa,0xd6,0x8a,0x50,0xdd,0x55,0xd6,0x7a,0xb0,0x92,0x4b};
 const unsigned char iv[] = {0x2a,0x4f,0xf0,0x8a,0xc8,0x0d,0x63,0x07,0x00,0x57,0xc5,0x95,0x18,0xc8,0x32,0x53};
 const char global_req[] = "GET /1.1/%s HTTP/1.1\r\nX-LC-Key: Qr9AEqtuoSVS3zeD6iVbM4ZC0AtkJcQ89tywVyi0\r\nX-LC-Session: %s\r\nX-LC-Id: rAK3FfdieFob2Nn8Am\r\nHost: rak3ffdi.cloud.tds1.tapapis.cn\r\nConnection: close\r\n\r\n";
-const std::string base64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+const char base64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 SSL_CTX *ctx = SSL_CTX_new(TLS_client_method());
 
-void base64decode(const char* ptr, char size, char* result) {
-	int** presult = (int**) &result;
+char base64decode(const char* ptr, char size, char* result) {
+	int*& iresult = (int*&) result;
 	char tmp;
-	for (int i = 0; i < size / 4; i++) {
-		**presult = base64.find(*ptr) << 18 ^ base64.find(*(ptr+1)) << 12 ^ base64.find(*(ptr+2)) << 6 ^ base64.find(*(ptr+3));
+	for (short i = 0; i < size / 4 - 1; i++) {
+		*iresult = strchr(base64, *ptr) - base64 << 18 ^ strchr(base64, *(ptr+1)) - base64 << 12 ^ strchr(base64, *(ptr+2)) - base64 << 6 ^ strchr(base64, *(ptr+3)) - base64;
 		tmp = *result;
 		*result = *(result+2);
 		*(result+2) = tmp;
 		ptr += 4;
 		result += 3;
 	}
+	if (ptr[2] == '=') {
+		*iresult = strchr(base64, *ptr) - base64 << 10 ^ strchr(base64, *(ptr + 1)) - base64 << 4;
+		result[0] = result[1];
+		return size / 4 * 3 - 2;
+	} else if (ptr[3] == '=') {
+		*iresult = strchr(base64, *ptr) - base64 << 18 ^ strchr(base64, *(ptr+1)) - base64 << 12 ^ strchr(base64, *(ptr+2)) - base64 << 6;
+		result[0] = result[2];
+		return size / 4 * 3 - 1;
+	} else {
+		*iresult = strchr(base64, *ptr) - base64 << 18 ^ strchr(base64, *(ptr+1)) - base64 << 12 ^ strchr(base64, *(ptr+2)) - base64 << 6 ^ strchr(base64, *(ptr+3)) - base64;
+		tmp = *result;
+		*result = *(result+2);
+		*(result+2) = tmp;
+		return size / 4 * 3;
+	}
+}
+
+std::string base64encode(std::string src) {
+	short len = src.length();
+	short end = len % 3;
+	short t = len / 3;
+	if (end)
+		t++;
+	std::string result(t * 4, '\0');
+	for (char i = 0; i < len / 3; i++) {
+		int a = (unsigned char) src.at(3 * i) << 16 ^ (unsigned char) src.at(3 * i + 1) << 8 ^ (unsigned char) src.at(3 * i + 2);
+		result.at(4 * i) = base64[a >> 18];
+		result.at(4 * i + 1) = base64[a >> 12 & 0b00111111];
+		result.at(4 * i + 2) = base64[a >> 6 & 0b00111111];
+		result.at(4 * i + 3) = base64[a & 0b00111111];
+	}
+	if (end == 1) {
+		t = len / 3;
+		end = src.at(3 * t) << 8;
+		result.at(4 * t) = base64[end >> 10 & 0b00111111];
+		result.at(4 * t + 1) = base64[end >> 4 & 0b00111111];
+		result.at(4 * t + 2) = '=';
+		result.at(4 * t + 3) = '=';
+	} else if (end == 2) {
+		t = len / 3;
+		end = (unsigned char) src.at(3 * t) << 16 ^ (unsigned char) src.at(3 * t + 1) << 8;
+		result.at(4 * t) = base64[end >> 18];
+		result.at(4 * t + 1) = base64[end >> 12 & 0b00111111];
+		result.at(4 * t + 2) = base64[end >> 6 & 0b00111111];
+		result.at(4 * t + 3) = '=';
+	}
+	return result;
 }
 
 char getbit(char b, int i) {
@@ -52,13 +106,13 @@ void setbit(char* b, char index, bool v) {
 	}
 }
 
-unsigned char read_varshort(char*& pos) {
+short read_varshort(char*& pos) {
     if (pos[0] > 0) {
         pos++;
 	return *(pos - 1);
     } else {
         pos += 2;
-	return *(pos -2);
+	return *(pos -2) & 0b01111111 ^ *(pos - 1) << 7;
     }
 }
 
@@ -291,6 +345,7 @@ bool comp(SongLevel& o1, SongLevel& o2) {
 
 std::unordered_map<std::string, float*> difficulty;
 void read_difficulty() {
+	difficulty.clear();
     std::ifstream f("difficulty.csv");
     std::string line;
     while (std::getline(f, line)) {
@@ -314,6 +369,7 @@ void read_difficulty() {
     f.close();
 }
 
+sockaddr save_addr;
 struct sockaddr* dns(char* domain, short port) {
     struct addrinfo hint = {0, AF_INET, SOCK_STREAM};
     struct addrinfo* addrs;
@@ -335,9 +391,11 @@ void init() {
 	info_addr = *addr;
 	addr = dns("upload.qiniup.com", 80);
 	upload_addr = *addr;
+	addr = dns("rak3ffdi.tds1.tapfiles.cn", 80);
+	save_addr = *addr;
 }
 
-void append(char*& dest, const char* src, unsigned char size) {
+void append(char*& dest, const char* src, short size) {
 	memcpy(dest, src, size);
 	dest += size;
 }
@@ -395,11 +453,7 @@ void info(char* sessionToken, Summary& summary) {
     printf("SSL_write %d\n", num);
     num = SSL_read(ssl, buf, sizeof buf);
     SSL_free(ssl);
-#ifdef __linux__
-	close(sock);
-#elif defined _WIN32
-	closesocket(sock);
-#endif
+    close_socket(sock);
     printf("SSL_read %d\n", num);
     buf[num] = 0;
 	char* ptr = strstr(buf, "\r\n\r\n") + 4; printf("%s\n", ptr);
@@ -414,7 +468,7 @@ void info(char* sessionToken, Summary& summary) {
     read_nodes(buf, nodeSummary, sizeof(nodeSummary) / sizeof(Node), (char*) &summary);
 }
 
-zip_t* download_save(char* domain, char* res) {
+zip_t* download_save(char* domain, char* res, zip_source_t** source_argv = 0) {
     char r[] = "GET /%s HTTP/1.1\r\nHost: %s\r\nConnection: close\r\n\r\n";
     int index;
     for (index = 0;; index++) {
@@ -425,7 +479,12 @@ zip_t* download_save(char* domain, char* res) {
     printf("domain = %s\n", domain);
     char *path = domain + index;
     printf("path = %s\n", path);
-    sockaddr* addr = dns(domain, 80);
+    sockaddr* addr;
+	if (!strcmp(domain, "rak3ffdi.tds1.tapfiles.cn")) addr = &save_addr;
+	else {
+		addr = dns(domain, 80);
+		printf("警告：鸽游file domain已替换，建议修改源码。");
+	}
     int sock = socket(PF_INET, SOCK_STREAM, 0);
     printf("sock = %d\n", sock);
     int err = connect(sock, addr, sizeof(*addr));
@@ -434,14 +493,19 @@ zip_t* download_save(char* domain, char* res) {
     int length = sprintf(req, r, path, domain);
     length = send(sock, req, length, 0);
     printf("send length = %d\n", length);
-    int end = 0;
+    short end = 0;
     do {
         length = recv(sock, res + end, 14 * 1024 - end, 0);
 	end += length;
         printf("recv end = %d\n", end);
     } while (length);
-    char *start = strstr(res, "\r\n\r\n") + 4;
-    zip_source_t *source = zip_source_buffer_create(start, res - start + end, 0, 0);
+	path = strstr(res, "\r\n\r\n") + 4;
+    zip_source_t* source = zip_source_buffer_create(path, res - path + end, 0, 0);
+    if (source_argv) {
+	    printf("keep\n");
+	zip_source_keep(source);
+    }
+    *source_argv = source;
     zip_t* zip = zip_open_from_source(source, 0, 0);
     return zip;
 }
@@ -483,79 +547,233 @@ EVP_CIPHER_CTX* cipher_ctx = EVP_CIPHER_CTX_new();
 	read_nodes(result, nodeSettings, sizeof(nodeSettings) / sizeof(Node), (char*) &save.settings);
 }
 
+void re8(zip_t* zip) {
+	int outlen;
+	unsigned char bufin[8 * 1024];
+	unsigned char bufout[8 * 1024];
+	EVP_CIPHER_CTX* cipher_ctx = EVP_CIPHER_CTX_new();
+	zip_int64_t index = zip_name_locate(zip, "gameProgress", 0);
+	zip_file_t* zip_file = zip_fopen_index(zip, index, 0);
+	int len = zip_fread(zip_file, bufin, 8 * 1024);
+	print_struct(bufin, len);
+	zip_fclose(zip_file);
+	EVP_DecryptInit(cipher_ctx, cipher, key, iv);
+	EVP_DecryptUpdate(cipher_ctx, bufout, &outlen, bufin + 1, len - 1);
+	char* ptr = (char*) bufout + 1;
+	ptr += *ptr + 4;
+	for (char i = 0; i < 5; i++)
+		read_varshort(ptr);
+	ptr[5] = 0;
+	ptr[6] = 0;
+	EVP_CIPHER_CTX_reset(cipher_ctx);
+	EVP_EncryptInit(cipher_ctx, cipher, key, iv);
+	EVP_EncryptUpdate(cipher_ctx, bufin + 1, &outlen, bufout, len - 1);
+	print_struct(bufin, len);
+	zip_source_t* source = zip_source_buffer(zip, bufin, len, 0);
+	printf("replace start\n");
+	zip_file_replace(zip, index, source, 0);
+	printf("replace end\n");
+	EVP_CIPHER_CTX_free(cipher_ctx);
+}
 
 std::regex reid("d\":\"([^\"]+)");
-void upload_save(char* sessionToken, short size) {
+std::regex recreate("At\":\"([^\"]+)");
+std::regex rekey("y\":\"([^\"]+)");
+std::regex retoken("n\":\"([^\"]+)");
+std::regex reetag("g\":\"([^\"]+)");
+void upload_save(char* sessionToken) {
+	char save[14 * 1024];
 	char buf[14 * 1024];
+	std::cmatch match;
+
+
+
 	SSL *ssl = SSL_new(ctx);
 	printf("ssl = %p\n", ssl);
-    int sock = socket(PF_INET, SOCK_STREAM, 0);
-    printf("sock = %d\n", sock);
-    int err = SSL_set_fd(ssl, sock);
-    printf("SSL_set_fd err = %d\n", err);
-    err = connect(sock, &info_addr, sizeof(info_addr));
-    printf("connect err = %d\n", err);
-    err = SSL_connect(ssl);
-    printf("SSL_connect err = %d\n", err);
-    char path[] = "classes/_GameSave";
-    sprintf(buf, global_req, path, sessionToken);
-    int num = SSL_write(ssl, buf, sizeof global_req + sizeof path + 19);
-    printf("SSL_write %d\n", num);
-    num = SSL_read(ssl, buf, sizeof buf);
-    printf("SSL_read %d\n", num);
-    buf[num] = 0; printf("%s\n", buf);
+	int sock = socket(PF_INET, SOCK_STREAM, 0);
+	printf("sock = %d\n", sock);
+	int err = SSL_set_fd(ssl, sock);
+	printf("SSL_set_fd err = %d\n", err);
+	err = connect(sock, &info_addr, sizeof(info_addr));
+	printf("connect err = %d\n", err);
+	err = SSL_connect(ssl);
+	printf("SSL_connect err = %d\n", err);
 
-    char* ptr = buf;
-    std::cmatch match;
-    std::cregex_iterator iter(buf, buf + num, reid);
-    std::string fileId = (*iter).str(1);
-    iter++;
-    std::string id = (*iter).str(1);
-    iter++;
-    std::string userId = (*iter).str(1);
-    std::cout << "fileId = " << fileId << ", id = " << id << ", userId = " << userId << '\n';
 
-    std::string size_str = std::to_string(size);
-	char pigeon_host[] = "rak3ffdi.cloud.tds1.tapapis.cn";
-	char header1[] = "X-LC-Key: Qr9AEqtuoSVS3zeD6iVbM4ZC0AtkJcQ89tywVyi0\r\nX-LC-Session: ";
-	char header2[] = "\r\nUser-Agent: LeanCloud-CSharp-SDK/1.0.3\r\nAccept: application/json\r\nX-LC-Id: rAK3FfdieFob2Nn8Am\r\n";
-	char header3[] = "Content-Type: application/json\r\n";
-	char header4[] = "\r\nConnection: close\r\n\r\n";
-	char fileTokens_body1[] = "{\"name\":\".save\",\"__type\":\"File\",\"ACL\":{\"";
-	char fileTokens_body2[] = "\":{\"read\":true,\"write\":true}},\"prefix\":\"gamesaves\",\"metaData\":{\"size\":";
-	char fileTokens_body3[] = ",\"_checksum\":\"";
-	char fileTokens_body4[] = "\",\"prefix\":\"gamesaves\"}}";
-	char md5[] = "12345678901234567890123456789012";
-	char body_len = sizeof fileTokens_body1 + sizeof fileTokens_body2 + sizeof fileTokens_body3 + sizeof fileTokens_body4 + userId.length() + size_str.length() + 32 - 4;
-	std::string body_len_str = std::to_string(body_len);
-	ptr = buf;
-	char* body = buf + 1024;
-	append(ptr, "POST", 4);
-	append(ptr, " /1.1/", 6);
-	append(ptr, "fileTokens", 10);
-	append(ptr, " HTTP/1.1\r\n", 11);
-	append(ptr, header1, sizeof(header1) - 1);
-	append(ptr, sessionToken, 25);
-	append(ptr, header2, sizeof(header2) - 1);
-	append(ptr, header3, sizeof(header3) - 1);
-	append(ptr, "Content-Length: ", 16);
-	append(ptr, body_len_str.data(), body_len_str.length());
-	append(ptr, "\r\nHost: ", 8);
-	append(ptr, pigeon_host, sizeof pigeon_host - 1);
-	append(ptr, header4, sizeof header4 - 1);
-	append(ptr, fileTokens_body1, sizeof fileTokens_body1 - 1);
-	append(ptr, userId.data(), userId.length());
-	append(ptr, fileTokens_body2, sizeof fileTokens_body2 - 1);
-	append(ptr, size_str.data(), size_str.length());
-	append(ptr, fileTokens_body3, sizeof fileTokens_body3 - 1);
-	append(ptr, md5, sizeof md5 - 1);
-	append(ptr, fileTokens_body4, sizeof fileTokens_body4 - 1);
-	*ptr = 0;
-	printf("%s\n", buf);
 
-	char upload11[] = "";
-	ptr = buf;
+	char gameSave[] = "GET /1.1/classes/_GameSave HTTP/1.1\r\nX-LC-Key: Qr9AEqtuoSVS3zeD6iVbM4ZC0AtkJcQ89tywVyi0\r\nX-LC-Session: %s\r\nX-LC-Id: rAK3FfdieFob2Nn8Am\r\nHost: rak3ffdi.cloud.tds1.tapapis.cn\r\n\r\n";
+	int num = sprintf(buf, gameSave, sessionToken);
+	num = SSL_write(ssl, buf, num);
+	printf("SSL_write %d\n", num);
+	buf[num] = 0; printf("%s\n", buf);
+	num = SSL_read(ssl, buf, sizeof buf);
+	printf("SSL_read %d\n", num);
+	buf[num] = 0; printf("%s\n", buf);
+	char* ptr = strstr(buf, "\r\n\r\n") + 4;
+	std::cregex_iterator iter(ptr, buf + num, reid);
+	std::string oldfileId = (*iter).str(1);
+	iter++;
+	std::string id = (*iter).str(1);
+	iter++;
+	std::string userId = (*iter).str(1);
+	std::cout << "fileId = " << oldfileId << ", id = " << id << ", userId = " << userId << '\n';
+	std::regex_search(ptr, match, resummary);
+	std::string summary = match.str(1);
+	std::cout << "summary" << summary << '\n';
+	num = base64decode(summary.data(), summary.length(), buf);
+	buf[7] = 0;
+	summary = base64encode(std::string(buf, num));
 
+
+
+	std::regex_search(ptr, match, reurl);
+	zip_source_t* source;
+	zip_t* zip = download_save((char*) match.str(1).data(), buf, &source);
+	re8(zip);
+	zip_close(zip);
+	err = zip_source_open(source);
+	printf("zip source open err = %d\n", err);
+	short size = zip_source_read(source, save, 14 * 1024);
+	zip_source_close(source);
+	printf("zip source read len = %d\n", size);
+
+
+
+	unsigned char* ubuf = (unsigned char*) buf;
+	EVP_MD_CTX* md_ctx = EVP_MD_CTX_new();
+	EVP_DigestInit(md_ctx, md);
+	EVP_DigestUpdate(md_ctx, save, size);
+	EVP_DigestFinal(md_ctx, ubuf + 1024, (unsigned int*) &num);
+	EVP_MD_CTX_free(md_ctx);
+	printf("md5 size = %d", num);
+	std::string md5_base64(buf + 1024, 16);
+	md5_base64 = base64encode(md5_base64);
+	std::cout << "md5_base64 = " << md5_base64 << '\n';
+	sprintf(buf, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x", ubuf[1024], ubuf[1024 + 1], ubuf[1024 + 2], ubuf[1024 + 3], ubuf[1024 + 4], ubuf[1024 + 5], ubuf[1024 + 6], ubuf[1024 + 7], ubuf[1024 + 8], ubuf[1024 + 9], ubuf[1024 + 10], ubuf[1024 + 11], ubuf[1024 + 12], ubuf[1024 + 13], ubuf[1024 + 14], ubuf[1024 + 15]);
+
+
+
+	char fileTokens[] = "POST /1.1/fileTokens HTTP/1.1\r\nX-LC-Key: Qr9AEqtuoSVS3zeD6iVbM4ZC0AtkJcQ89tywVyi0\r\nX-LC-Session: %s\r\nX-LC-Id: rAK3FfdieFob2Nn8Am\r\nContent-Length: %d\r\nHost: rak3ffdi.cloud.tds1.tapapis.cn\r\n\r\n";
+	char fileTokens_body[] = "{\"name\":\".save\",\"__type\":\"File\",\"ACL\":{\"%s\":{\"read\":true,\"write\":true}},\"prefix\":\"gamesaves\",\"metaData\":{\"size\":%d,\"_checksum\":\"%s\",\"prefix\":\"gamesaves\"}}";
+	num = sprintf(buf + 1024, fileTokens_body, userId.data(), size, buf);
+	ptr = buf + sprintf(buf, fileTokens, sessionToken, num);
+	append(ptr, buf + 1024, num);
+	num = SSL_write(ssl, buf, ptr - buf);
+	printf("SSL_write %d\n", num);
+	buf[num] = 0; printf("%s\n", buf);
+	num = SSL_read(ssl, buf, sizeof buf);
+	printf("SSL_read %d\n", num);
+	buf[num] = 0; printf("%s\n", buf);
+	ptr = strstr(buf, "\r\n\r\n");
+	std::regex_search(ptr, match, recreate);
+	std::string create = match.str(1);
+	std::regex_search(ptr, match, reid);
+	std::string newfileId = match.str(1);
+	std::regex_search(ptr, match, rekey);
+	std::string key = match.str(1);
+	std::regex_search(ptr, match, retoken);
+	std::string token = match.str(1);
+	std::cout << "createAt = " << create << ", key = " << key << ", fileId = " << newfileId << ", token = " << token << '\n';
+	key = base64encode(key);
+	std::cout << "base64 key = " << key << '\n';
+
+	
+
+	int upload_sock = socket(PF_INET, SOCK_STREAM, 0);
+	printf("upload_sock = %d\n", upload_sock);
+	err = connect(upload_sock, &upload_addr, sizeof(upload_addr));
+	printf("connect err = %d\n", err);
+
+
+
+	char upload1[] = "POST /buckets/rAK3Ffdi/objects/%s/uploads HTTP/1.1\r\nAuthorization: UpToken %s\r\nHost: upload.qiniup.com\r\n\r\n";
+	num = sprintf(buf, upload1, key.data(), token.data());
+	num = send(upload_sock, buf, num, 0);
+	printf("send %d\n", num);
+	buf[num] = 0; printf("%s\n", buf);
+	num = recv(upload_sock, buf, sizeof buf, 0);
+	printf("recv %d\n", num);
+	buf[num] = 0; printf("%s\n", buf);
+	std::regex_search(buf, match, reid);
+	std::string uploadId = match.str(1);
+	std::cout << "uploadId = " << uploadId << '\n';
+
+
+
+	char upload2[] = "PUT /buckets/rAK3Ffdi/objects/%s/uploads/%s/1 HTTP/1.1\r\nHost: upload.qiniup.com\r\nAuthorization: UpToken %s\r\nContent-Md5: %s\r\nContent-Length: %d\r\n\r\n";
+	ptr = buf + sprintf(buf, upload2, key.data(), uploadId.data(), token.data(), md5_base64.data(), size);
+	append(ptr, save, size);
+	num = send(upload_sock, buf, ptr - buf, 0);
+	printf("send %d\n", num);
+	buf[num] = 0; printf("%s\n", buf);
+	num = recv(upload_sock, buf, sizeof buf, 0);
+	printf("recv %d\n", num);
+	buf[num] = 0; printf("%s\n", buf);
+	std::regex_search(buf, match, reetag);
+	std::string etag = match.str(1);
+	std::cout << "etag = " << etag << '\n';
+
+
+
+	char upload3[] = "POST /buckets/rAK3Ffdi/objects/%s/uploads/%s HTTP/1.1\r\nHost: upload.qiniup.com\r\nAuthorization: UpToken %s\r\nContent-Length: %d\r\nConnection: close\r\n\r\n";
+	char upload3_body[] = "{\"parts\":[{\"partNumber\":1,\"etag\":\"%s\"}]}";
+	num = sprintf(buf + 1024, upload3_body, etag.data());
+	ptr = buf + sprintf(buf, upload3, key.data(), uploadId.data(), token.data(), num);
+	append(ptr, buf + 1024, num);
+	num = send(upload_sock, buf, ptr - buf, 0);
+	printf("send %d\n", num);
+	buf[num] = 0; printf("%s\n", buf);
+	num = recv(upload_sock, buf, sizeof buf, 0);
+	printf("recv %d\n", num);
+	buf[num] = 0; printf("%s\n", buf);
+
+
+	close_socket(upload_sock);
+
+
+
+
+	char fileCallback[] = "POST /1.1/fileCallback HTTP/1.1\r\nX-LC-Key: Qr9AEqtuoSVS3zeD6iVbM4ZC0AtkJcQ89tywVyi0\r\nX-LC-Session: %s\r\nX-LC-Id: rAK3FfdieFob2Nn8Am\r\nContent-Length: %d\r\nHost: rak3ffdi.cloud.tds1.tapapis.cn\r\n\r\n";
+	char fileCallback_body[] = "{\"result\":true,\"token\":\"%s\"}";
+	num = sprintf(buf + 1024, fileCallback_body, token.data());
+	ptr = buf + sprintf(buf, fileCallback, sessionToken, num);
+	append(ptr, buf + 1024, num);
+	num = SSL_write(ssl, buf, ptr - buf);
+	printf("SSL_write %d\n", num);
+	buf[num] = 0; printf("%s\n", buf);
+	num = SSL_read(ssl, buf, sizeof buf);
+	printf("SSL_read %d\n", num);
+	buf[num] = 0; printf("%s\n", buf);
+
+
+
+	char putsave[] = "PUT /1.1/classes/_GameSave/%s? HTTP/1.1\r\nX-LC-Key: Qr9AEqtuoSVS3zeD6iVbM4ZC0AtkJcQ89tywVyi0\r\nX-LC-Session: %s\r\nX-LC-Id: rAK3FfdieFob2Nn8Am\r\nContent-Length: %d\r\nHost: rak3ffdi.cloud.tds1.tapapis.cn\r\n\r\n";
+	char putsave_body[] = "{\"summary\":\"%s\",\"modifiedAt\":{\"__type\":\"Date\",\"iso\":\"%s\"},\"gameFile\":{\"__type\":\"Pointer\",\"className\":\"_File\",\"objectId\":\"%s\"},\"ACL\":{\"%s\":{\"read\":true,\"write\":true}},\"user\":{\"__type\":\"Pointer\",\"className\":\"_User\",\"objectId\":\"%s\"}}";
+	num = sprintf(buf + 1024, putsave_body, summary.data(), create.data(), newfileId.data(), userId.data(), userId.data());
+	ptr = buf + sprintf(buf, putsave, id.data(), sessionToken, num);
+	append(ptr, buf + 1024, num);
+	num = SSL_write(ssl, buf, ptr - buf);
+	printf("SSL_write %d\n", num);
+	buf[num] = 0; printf("%s\n", buf);
+	num = SSL_read(ssl, buf, sizeof buf);
+	printf("SSL_read %d\n", num);
+	buf[num] = 0; printf("%s\n", buf);
+
+
+
+	char deletefile[] = "DELETE /1.1/files/%s HTTP/1.1\r\nX-LC-Key: Qr9AEqtuoSVS3zeD6iVbM4ZC0AtkJcQ89tywVyi0\r\nX-LC-Session: %s\r\nX-LC-Id: rAK3FfdieFob2Nn8Am\r\nHost: rak3ffdi.cloud.tds1.tapapis.cn\r\nConnection: close\r\n\r\n";
+	num = sprintf(buf, deletefile, oldfileId.data(), sessionToken);
+	num = SSL_write(ssl, buf, num);
+	printf("SSL_write %d\n", num);
+	buf[num] = 0; printf("%s\n", buf);
+	num = SSL_read(ssl, buf, sizeof buf);
+	printf("SSL_read %d\n", num);
+	buf[num] = 0; printf("%s\n", buf);
+
+
+
+	SSL_free(ssl);
+	close_socket(sock);
 }
 
 SongLevel* parseGameRecord(zip_t* zip) {

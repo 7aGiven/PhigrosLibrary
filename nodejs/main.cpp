@@ -378,7 +378,8 @@ static napi_value MethodUpload(napi_env env, napi_callback_info info) {
 	char buf[26];
 	size_t result_len;
 	napi_get_value_string_utf8(env, value, buf, 26, &result_len);
-	upload_save(buf, 13 * 1024);
+	//char save[13 * 1024];
+	upload_save(buf);
 	return value;
 }
 
@@ -428,8 +429,8 @@ static napi_value Init(napi_env env, napi_value exports) {
 	napi_define_properties(env, exports, 1, &desc);
 	desc = {"get_save", 0, MethodSave, 0, 0, 0, napi_default, 0};
 	napi_define_properties(env, exports, 1, &desc);
-	//desc = {"upload_save", 0, MethodUpload, 0, 0, 0, napi_default, 0};
-	//napi_define_properties(env, exports, 1, &desc);
+	desc = {"re8", 0, MethodUpload, 0, 0, 0, napi_default, 0};
+	napi_define_properties(env, exports, 1, &desc);
 	desc = {"b19", 0, MethodB19, 0, 0, 0, napi_default, 0};
 	napi_define_properties(env, exports, 1, &desc);
 	return exports;
