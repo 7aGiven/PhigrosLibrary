@@ -2,7 +2,6 @@
 #include <iostream>
 #include <openssl/ssl.h>
 #include <regex>
-#include <typeinfo>
 #include <unordered_map>
 #include <zip.h>
 #ifdef __linux__
@@ -12,6 +11,7 @@ void close_socket(int sock) {
 	close(sock);
 }
 #elif defined _WIN32
+  #include <array>
   #include <ws2tcpip.h>
   #pragma comment(lib, "ws2_32")
 void close_socket(int sock) {
@@ -131,7 +131,7 @@ std::string read_string(char*& pos, char offset) {
 	return std::string(pos -len, len - offset);
 }
 
-unsigned char read_cstring(char* pos) {
+unsigned char read_cstring(char*& pos) {
 	unsigned char len = read_varshort(pos);
 	pos += len;
 	return len;
@@ -343,7 +343,7 @@ bool comp(SongLevel& o1, SongLevel& o2) {
     return o1.rks > o2.rks;
 }
 
-std::unordered_map<std::string, float*> difficulty;
+std::unordered_map<std::string, std::array<float, 4>> difficulty;
 void read_difficulty() {
 	difficulty.clear();
     std::ifstream f("difficulty.csv");
@@ -359,7 +359,7 @@ void read_difficulty() {
 	int len = 3;
 	if (indexs[3] == -1)
 	    len--;
-	float* floats = new float[4];
+	std::array<float, 4> floats;
 	floats[3] = 0;
 	for (int i = 0; i < len; i++)
 	    floats[i] = std::stof(line.substr(indexs[i] + 1, indexs[i + 1] - indexs[i] - 1), 0);
@@ -481,16 +481,13 @@ zip_t* download_save(char* domain, char* res, zip_source_t** source_argv = 0) {
     printf("path = %s\n", path);
     sockaddr* addr;
 	if (!strcmp(domain, "rak3ffdi.tds1.tapfiles.cn")) addr = &save_addr;
-	else {
-		addr = dns(domain, 80);
-		printf("警告：鸽游file domain已替换，建议修改源码。");
-	}
+	else addr = dns(domain, 80);
     int sock = socket(PF_INET, SOCK_STREAM, 0);
     printf("sock = %d\n", sock);
     int err = connect(sock, addr, sizeof(*addr));
     printf("connect err = %d\n", err);
     char req[128];
-    int length = sprintf(req, r, path, domain);
+    short length = sprintf(req, r, path, domain);
     length = send(sock, req, length, 0);
     printf("send length = %d\n", length);
     short end = 0;
@@ -504,8 +501,8 @@ zip_t* download_save(char* domain, char* res, zip_source_t** source_argv = 0) {
     if (source_argv) {
 	    printf("keep\n");
 	zip_source_keep(source);
+	*source_argv = source;
     }
-    *source_argv = source;
     zip_t* zip = zip_open_from_source(source, 0, 0);
     return zip;
 }
@@ -806,7 +803,7 @@ SongLevel* parseGameRecord(zip_t* zip) {
 	pos++;
 	char fc = *pos;
 	pos++;
-	float* song_difficulty = difficulty.at(id);
+	std::array<float, 4> song_difficulty = difficulty.at(id);
 	for (char level = 0; level < 4; level++) {
 	    if (getbit(len, level)) {
 		SongLevel songlevel;

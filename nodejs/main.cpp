@@ -315,52 +315,46 @@ EVP_CIPHER_CTX* cipher_ctx = EVP_CIPHER_CTX_new();
 	int len;
 
 	zip_file = zip_fopen(zip, "gameProgress", 0);
-	zip_fread(zip_file, bufin, 1);
-	len = zip_fread(zip_file, bufin, 12 * 1024);
+	len = zip_fread(zip_file, bufin, sizeof bufin);
 	zip_fclose(zip_file);
-	EVP_CIPHER_CTX_reset(cipher_ctx);
 	EVP_DecryptInit(cipher_ctx, cipher, key, iv);
-	EVP_DecryptUpdate(cipher_ctx, bufout, &outlen, bufin, len);
+	EVP_DecryptUpdate(cipher_ctx, bufout, &outlen, bufin + 1, len - 1);
 	js_read_nodes(bufout, nodeGameProgress, sizeof(nodeGameProgress) / sizeof(Node), value, env);
 	napi_set_named_property(env, result, "gameProgress", value);
 	
 	zip_file = zip_fopen(zip, "user", 0);
-	zip_fread(zip_file, bufin, 1);
-	len = zip_fread(zip_file, bufin, 12 * 1024);
+	len = zip_fread(zip_file, bufin, sizeof bufin);
 	zip_fclose(zip_file);
 	EVP_CIPHER_CTX_reset(cipher_ctx);
 	EVP_DecryptInit(cipher_ctx, cipher, key, iv);
-	EVP_DecryptUpdate(cipher_ctx, bufout, &outlen, bufin, len);
+	EVP_DecryptUpdate(cipher_ctx, bufout, &outlen, bufin + 1, len - 1);
 	js_read_nodes(bufout, nodeUser, sizeof(nodeUser) / sizeof(Node), value, env);
 	napi_set_named_property(env, result, "user", value);
 
 	zip_file = zip_fopen(zip, "settings", 0);
-	zip_fread(zip_file, bufin, 1);
-	len = zip_fread(zip_file, bufin, 12 * 1024);
+	len = zip_fread(zip_file, bufin, sizeof bufin);
 	zip_fclose(zip_file);
 	EVP_CIPHER_CTX_reset(cipher_ctx);
 	EVP_DecryptInit(cipher_ctx, cipher, key, iv);
-	EVP_DecryptUpdate(cipher_ctx, bufout, &outlen, bufin, len);
+	EVP_DecryptUpdate(cipher_ctx, bufout, &outlen, bufin + 1, len - 1);
 	js_read_nodes(bufout, nodeSettings, sizeof(nodeSettings) / sizeof(Node), value, env);
 	napi_set_named_property(env, result, "settings", value);
 
 	zip_file = zip_fopen(zip, "gameRecord", 0);
-	zip_fread(zip_file, bufin, 1);
-	len = zip_fread(zip_file, bufin, 12 * 1024);
+	len = zip_fread(zip_file, bufin, sizeof bufin);
 	zip_fclose(zip_file);
 	EVP_CIPHER_CTX_reset(cipher_ctx);
 	EVP_DecryptInit(cipher_ctx, cipher, key, iv);
-	EVP_DecryptUpdate(cipher_ctx, bufout, &outlen, bufin, len);
+	EVP_DecryptUpdate(cipher_ctx, bufout, &outlen, bufin + 1, len - 1);
 	js_read_record(bufout, value, env);
 	napi_set_named_property(env, result, "gameRecord", value);
 
 	zip_file = zip_fopen(zip, "gameKey", 0);
-	zip_fread(zip_file, bufin, 1);
-	len = zip_fread(zip_file, bufin, 12 * 1024);
+	len = zip_fread(zip_file, bufin, sizeof bufin);
 	zip_fclose(zip_file);
 	EVP_CIPHER_CTX_reset(cipher_ctx);
 	EVP_DecryptInit(cipher_ctx, cipher, key, iv);
-	EVP_DecryptUpdate(cipher_ctx, bufout, &outlen, bufin, len);
+	EVP_DecryptUpdate(cipher_ctx, bufout, &outlen, bufin + 1, len - 1);
 	js_read_key(bufout, value, env);
 	napi_set_named_property(env, result, "gameKey", value);
 
