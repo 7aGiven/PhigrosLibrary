@@ -107,7 +107,7 @@ void setbit(char* b, char index, bool v) {
 }
 
 short read_varshort(char*& pos) {
-    if (pos[0] > 0) {
+    if (pos[0] >= 0) {
         pos++;
 	return *(pos - 1);
     } else {
@@ -552,20 +552,19 @@ void re8(zip_t* zip) {
 	zip_int64_t index = zip_name_locate(zip, "gameProgress", 0);
 	zip_file_t* zip_file = zip_fopen_index(zip, index, 0);
 	int len = zip_fread(zip_file, bufin, 8 * 1024);
-	print_struct(bufin, len);
 	zip_fclose(zip_file);
 	EVP_DecryptInit(cipher_ctx, cipher, key, iv);
 	EVP_DecryptUpdate(cipher_ctx, bufout, &outlen, bufin + 1, len - 1);
-	char* ptr = (char*) bufout + 1;
-	ptr += *ptr + 4;
+	print_struct(bufout, len);
+	char* ptr = (char*) bufout + 8;
 	for (char i = 0; i < 5; i++)
 		read_varshort(ptr);
 	ptr[5] = 0;
 	ptr[6] = 0;
+	print_struct(bufout, len);
 	EVP_CIPHER_CTX_reset(cipher_ctx);
 	EVP_EncryptInit(cipher_ctx, cipher, key, iv);
 	EVP_EncryptUpdate(cipher_ctx, bufin + 1, &outlen, bufout, len - 1);
-	print_struct(bufin, len);
 	zip_source_t* source = zip_source_buffer(zip, bufin, len, 0);
 	printf("replace start\n");
 	zip_file_replace(zip, index, source, 0);
@@ -773,7 +772,7 @@ void upload_save(char* sessionToken) {
 	close_socket(sock);
 }
 
-SongLevel* parseGameRecord(zip_t* zip) {
+void parseGameRecord(zip_t* zip, SongLevel* song_result) {
     zip_file_t* zip_file = zip_fopen(zip, "gameRecord", 0);
     unsigned char gameRecord[8 * 1024];
     zip_fread(zip_file, gameRecord, 1);
@@ -824,12 +823,10 @@ SongLevel* parseGameRecord(zip_t* zip) {
 	}
 	pos = end;
     }
-    SongLevel* song_result = new SongLevel[20];
     //song_result[0] = {};
     std::partial_sort_copy(songlevels.begin(), songlevels.end(), song_result + 1, song_result + 20, comp);
     for (int i = 0; i < songlevels.size(); i++) {
 	if (songlevels[i].score == 1000000 && songlevels[i].difficulty > song_result[0].difficulty)
 	    song_result[0] = songlevels[i];
     }
-    return song_result;
 }
