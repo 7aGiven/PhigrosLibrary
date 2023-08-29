@@ -35,62 +35,57 @@ const char global_req[] = "GET /1.1/%s HTTP/1.1\r\nX-LC-Key: Qr9AEqtuoSVS3zeD6iV
 const char base64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 SSL_CTX *ctx = SSL_CTX_new(TLS_client_method());
 
-char base64decode(const char* ptr, char size, char* result) {
+char base64decode(char* ptr, char len, char* result) {
+	char end;
+	if (ptr[len - 2] == '=')
+		end = 2;
+	else if (ptr[len - 1] == '=')
+		end = 3;
+	else
+		end = 0;
 	int*& iresult = (int*&) result;
 	char tmp;
-	for (short i = 0; i < size / 4 - 1; i++) {
+	for (short i = 0; i < len / 4 - (bool) end; i++) {
 		*iresult = strchr(base64, *ptr) - base64 << 18 ^ strchr(base64, *(ptr+1)) - base64 << 12 ^ strchr(base64, *(ptr+2)) - base64 << 6 ^ strchr(base64, *(ptr+3)) - base64;
 		tmp = *result;
-		*result = *(result+2);
-		*(result+2) = tmp;
+		*result = *(result + 2);
+		*(result + 2) = tmp;
 		ptr += 4;
 		result += 3;
 	}
-	if (ptr[2] == '=') {
-		*iresult = strchr(base64, *ptr) - base64 << 10 ^ strchr(base64, *(ptr + 1)) - base64 << 4;
-		result[0] = result[1];
-		return size / 4 * 3 - 2;
-	} else if (ptr[3] == '=') {
-		*iresult = strchr(base64, *ptr) - base64 << 18 ^ strchr(base64, *(ptr+1)) - base64 << 12 ^ strchr(base64, *(ptr+2)) - base64 << 6;
-		result[0] = result[2];
-		return size / 4 * 3 - 1;
-	} else {
-		*iresult = strchr(base64, *ptr) - base64 << 18 ^ strchr(base64, *(ptr+1)) - base64 << 12 ^ strchr(base64, *(ptr+2)) - base64 << 6 ^ strchr(base64, *(ptr+3)) - base64;
-		tmp = *result;
-		*result = *(result+2);
-		*(result+2) = tmp;
-		return size / 4 * 3;
+	if (end) {
+		*iresult = 0;
+		for (char i = 0; i < end; i++)
+			*iresult ^= strchr(base64, *(ptr + i)) - base64 << 18 - 6 * i;
+		*result = *(result + 2);
+		end = 4 - end;
 	}
+	printf("len = %d, end = %d\n", len, end);
+	return len / 4 * 3 - end;
 }
 
-std::string base64encode(std::string src) {
-	short len = src.length();
-	short end = len % 3;
-	short t = len / 3;
-	if (end)
-		t++;
-	std::string result(t * 4, '\0');
-	for (char i = 0; i < len / 3; i++) {
-		int a = (unsigned char) src.at(3 * i) << 16 ^ (unsigned char) src.at(3 * i + 1) << 8 ^ (unsigned char) src.at(3 * i + 2);
-		result.at(4 * i) = base64[a >> 18];
-		result.at(4 * i + 1) = base64[a >> 12 & 0b00111111];
-		result.at(4 * i + 2) = base64[a >> 6 & 0b00111111];
-		result.at(4 * i + 3) = base64[a & 0b00111111];
+std::string base64encode(char* cptr, char len) {
+	unsigned char* ptr = (unsigned char*) cptr;
+	char end = len % 3;
+	len /= 3;
+	int num;
+	std::string result(4 * (len + (bool) end), '\0');
+	for (char i = 0; i < len; i++) {
+		num = ptr[3 * i] << 16 ^ ptr[3 * i + 1] << 8 ^ ptr[3 * i + 2];
+		result.at(4 * i) = base64[num >> 18];
+		result.at(4 * i + 1) = base64[num >> 12 & 0b00111111];
+		result.at(4 * i + 2) = base64[num >> 6 & 0b00111111];
+		result.at(4 * i + 3) = base64[num & 0b00111111];
 	}
-	if (end == 1) {
-		t = len / 3;
-		end = src.at(3 * t) << 8;
-		result.at(4 * t) = base64[end >> 10 & 0b00111111];
-		result.at(4 * t + 1) = base64[end >> 4 & 0b00111111];
-		result.at(4 * t + 2) = '=';
-		result.at(4 * t + 3) = '=';
-	} else if (end == 2) {
-		t = len / 3;
-		end = (unsigned char) src.at(3 * t) << 16 ^ (unsigned char) src.at(3 * t + 1) << 8;
-		result.at(4 * t) = base64[end >> 18];
-		result.at(4 * t + 1) = base64[end >> 12 & 0b00111111];
-		result.at(4 * t + 2) = base64[end >> 6 & 0b00111111];
-		result.at(4 * t + 3) = '=';
+	if (end) {
+		num = 0;
+		for (char i = 0; i < end; i++)
+			num ^= ptr[3 * len + i] << 8 - 8 * i;
+		end += 1;
+		for (char i = 0; i < end; i++)
+			result.at(4 * len + i) = base64[num >> 10 - 6 * i & 0b00111111];
+		for (; end < 4; end++)
+			result.at(4 * len + end) = '=';
 	}
 	return result;
 }
@@ -159,6 +154,10 @@ struct SongLevel {
     float rks;
 };
 
+bool comp(SongLevel& o1, SongLevel& o2) {
+    return o1.rks > o2.rks;
+}
+
 struct Node {
 	std::string type;
 	std::string name;
@@ -204,16 +203,6 @@ void read_nodes(void* vbuf, Node nodes[], char size, void* vobject) {
 				sobject[i] = sbuf[i];
 			buf += 24;
 		}
-	}
-}
-
-static void read_map(void* vbuf, void* vobject) {
-	char* buf = (char*) vbuf;
-	char* object = (char*) vobject;
-	unsigned char length = read_varshort(buf);
-	for (; length > 0; length--) {
-		read_string(buf, 2);
-		
 	}
 }
 
@@ -340,10 +329,6 @@ struct Save {
 	Settings settings;
 };
 
-bool comp(SongLevel& o1, SongLevel& o2) {
-    return o1.rks > o2.rks;
-}
-
 std::unordered_map<std::string, std::array<float, 4>> difficulty;
 void read_difficulty() {
 	difficulty.clear();
@@ -432,8 +417,8 @@ std::regex reupdate("datedAt\":\"([^\"]+)");
 void info(char* sessionToken, Summary& summary) {
 	SSL *ssl = SSL_new(ctx);
 	printf("ssl = %p\n", ssl);
-    int sock = socket(PF_INET, SOCK_STREAM, 0);
-    printf("sock = %d\n", sock);
+	int sock = socket(PF_INET, SOCK_STREAM, 0);
+	printf("sock = %d\n", sock);
     int err = SSL_set_fd(ssl, sock);
     printf("SSL_set_fd err = %d\n", err);
     char buf[1024 + 512];
@@ -451,27 +436,25 @@ void info(char* sessionToken, Summary& summary) {
     printf("SSL_read %d\n", num);
     buf[num] = 0;
 	char* ptr = strstr(buf, "\r\n\r\n") + 4; printf("%s\n", ptr);
-    std::cmatch results;
-    std::regex_search(buf, results, reurl);
-    summary.url = results.str(1);
-    std::regex_search(buf, results, reupdate);
-    summary.update = results.str(1);
-    std::regex_search(buf, results, resummary);
-    summary.avatar = results.str(1);
-    base64decode(summary.avatar.data(), summary.avatar.length(), buf);
-    read_nodes(buf, nodeSummary, sizeof(nodeSummary) / sizeof(Node), (char*) &summary);
+    std::cmatch match;
+    std::regex_search(buf, match, reurl);
+    summary.url = match.str(1);
+    std::regex_search(buf, match, reupdate);
+    summary.update = match.str(1);
+    std::regex_search(buf, match, resummary);
+    printf("%d\n", match.length(1));
+    num = base64decode(buf + match.position(1), match.length(1), buf);
+    printf("%d\n", num);
+    print_struct(buf, num);
+    read_nodes(buf, nodeSummary, sizeof nodeSummary / sizeof(Node), (char*) &summary);
 }
 
-zip_t* download_save(char* domain, char* res, zip_source_t** source_argv = 0) {
+zip_t* download_save(char* domain, char* buf, zip_source_t** source_argv = 0) {
     char r[] = "GET /%s HTTP/1.1\r\nHost: %s\r\nConnection: close\r\n\r\n";
-    int index;
-    for (index = 0;; index++) {
-        if (domain[index] == '/')
-            break;
-    }
-    domain[index++] = '\0';
+    char* path = strchr(domain, '/');
+    *path = '\0';
     printf("domain = %s\n", domain);
-    char *path = domain + index;
+    path++;
     printf("path = %s\n", path);
     sockaddr* addr;
 	if (!strcmp(domain, "rak3ffdi.tds1.tapfiles.cn")) addr = &save_addr;
@@ -480,18 +463,20 @@ zip_t* download_save(char* domain, char* res, zip_source_t** source_argv = 0) {
     printf("sock = %d\n", sock);
     int err = connect(sock, addr, sizeof(*addr));
     printf("connect err = %d\n", err);
-    char req[128];
-    short length = sprintf(req, r, path, domain);
-    length = send(sock, req, length, 0);
+    short length = sprintf(buf, r, path, domain);
+    length = send(sock, buf, length, 0);
     printf("send length = %d\n", length);
     short end = 0;
-    do {
-        length = recv(sock, res + end, save_size - end, 0);
-	end += length;
-        printf("recv end = %d\n", end);
-    } while (length);
-	path = strstr(res, "\r\n\r\n") + 4;
-    zip_source_t* source = zip_source_buffer_create(path, res - path + end, 0, 0);
+	while (true) {
+		length = recv(sock, buf + end, save_size - end, 0);
+		if (length == 0)
+			break;
+		end += length;
+		printf("recv end = %d\n", end);
+	};
+	printf("%s\n", buf);
+	path = strstr(buf, "\r\n\r\n") + 4;
+	zip_source_t* source = zip_source_buffer_create(path, buf - path + end, 0, 0);
     if (source_argv) {
 	    printf("keep\n");
 	zip_source_keep(source);
@@ -500,68 +485,74 @@ zip_t* download_save(char* domain, char* res, zip_source_t** source_argv = 0) {
     zip_t* zip = zip_open_from_source(source, 0, 0);
     return zip;
 }
-
-void get_save(char* url, Save& save) {
-	EVP_CIPHER_CTX* cipher_ctx = EVP_CIPHER_CTX_new();
-	unsigned char result[12 * 1024];
+/*
+std::string MethodSave(char* url) {
+	unsigned char buf[12 * 1024];
+	printf("%s\n", url);
 	int outlen;
-	EVP_CIPHER_CTX_reset(cipher_ctx);
-	EVP_DecryptInit(cipher_ctx, EVP_aes_256_cbc(), key, iv);
+	EVP_CIPHER_CTX* cipher_ctx = EVP_CIPHER_CTX_new();
+
 	char res[save_size];
 	zip_t* zip = download_save(url, res);
 	zip_file_t* zip_file;
-	unsigned char buf[12 * 1024];
 	int len;
-	
+
 	zip_file = zip_fopen(zip, "gameProgress", 0);
-	zip_fread(zip_file, buf, 1);
-	len = zip_fread(zip_file, buf, 12 * 1024);
-	EVP_DecryptUpdate(cipher_ctx, result, &outlen, buf, len);
-	EVP_CIPHER_CTX_reset(cipher_ctx);
-	EVP_DecryptInit(cipher_ctx, EVP_aes_256_cbc(), key, iv);
-	read_nodes(result, nodeGameProgress, sizeof(nodeGameProgress) / sizeof(Node), &save.gameProgress);
+	len = zip_fread(zip_file, buf, sizeof buf);
+	zip_fclose(zip_file);
+	EVP_DecryptInit(cipher_ctx, cipher, key, iv);
+	EVP_DecryptUpdate(cipher_ctx, buf, &outlen, buf + 1, len - 1);
+	js_read_nodes(buf, nodeGameProgress, sizeof(nodeGameProgress) / sizeof(Node), value, env);
+	napi_set_named_property(env, result, "gameProgress", value);
 	
 	zip_file = zip_fopen(zip, "user", 0);
-	zip_fread(zip_file, buf, 1);
-	len = zip_fread(zip_file, buf, 12 * 1024);
-	EVP_DecryptUpdate(cipher_ctx, result, &outlen, buf, len);
-	EVP_CIPHER_CTX_reset(cipher_ctx);
-	EVP_DecryptInit(cipher_ctx, EVP_aes_256_cbc(), key, iv);
-	read_nodes(result, nodeUser, sizeof(nodeUser) / sizeof(Node), &save.user);
-
-	zip_file = zip_fopen(zip, "settings", 0);
-	zip_fread(zip_file, buf, 1);
-	len = zip_fread(zip_file, buf, 12 * 1024);
-	EVP_DecryptUpdate(cipher_ctx, result, &outlen, buf, len);
+	len = zip_fread(zip_file, buf, sizeof buf);
+	zip_fclose(zip_file);
 	EVP_CIPHER_CTX_reset(cipher_ctx);
 	EVP_DecryptInit(cipher_ctx, cipher, key, iv);
-	read_nodes(result, nodeSettings, sizeof(nodeSettings) / sizeof(Node), (char*) &save.settings);
-}
+	EVP_DecryptUpdate(cipher_ctx, buf, &outlen, buf + 1, len - 1);
+	js_read_nodes(buf, nodeUser, sizeof(nodeUser) / sizeof(Node), value, env);
+	napi_set_named_property(env, result, "user", value);
 
-void re8(zip_t* zip, unsigned char* bufin) {
+	zip_file = zip_fopen(zip, "settings", 0);
+	len = zip_fread(zip_file, buf, sizeof buf);
+	zip_fclose(zip_file);
+	EVP_CIPHER_CTX_reset(cipher_ctx);
+	EVP_DecryptInit(cipher_ctx, cipher, key, iv);
+	EVP_DecryptUpdate(cipher_ctx, buf, &outlen, buf + 1, len - 1);
+	js_read_nodes(buf, nodeSettings, sizeof(nodeSettings) / sizeof(Node), value, env);
+	napi_set_named_property(env, result, "settings", value);
+
+	zip_file = zip_fopen(zip, "gameRecord", 0);
+	len = zip_fread(zip_file, buf, sizeof buf);
+	zip_fclose(zip_file);
+	EVP_CIPHER_CTX_reset(cipher_ctx);
+	EVP_DecryptInit(cipher_ctx, cipher, key, iv);
+	EVP_DecryptUpdate(cipher_ctx, buf, &outlen, buf + 1, len - 1);
+}
+*/
+void re8(zip_t* zip, unsigned char* buf) {
 	int outlen;
-	unsigned char bufout[32];
 	EVP_CIPHER_CTX* cipher_ctx = EVP_CIPHER_CTX_new();
 	zip_int64_t index = zip_name_locate(zip, "gameProgress", 0);
 	zip_file_t* zip_file = zip_fopen_index(zip, index, 0);
-	int len = zip_fread(zip_file, bufin, 33);
+	int len = zip_fread(zip_file, buf, 33);
 	zip_fclose(zip_file);
 	EVP_DecryptInit(cipher_ctx, cipher, key, iv);
-	print_struct(bufin, len);
-	EVP_DecryptUpdate(cipher_ctx, bufout, &outlen, bufin + 1, len - 1);
-	print_struct(bufout, len - 1);
-	char* ptr = (char*) bufout + 8;
+	print_struct(buf, len);
+	EVP_DecryptUpdate(cipher_ctx, buf + 1, &outlen, buf + 1, len - 1);
+	print_struct(buf, len);
+	char* ptr = (char*) buf + 9;
 	for (char i = 0; i < 5; i++)
 		read_varshort(ptr);
 	ptr[5] = 0;
 	ptr[6] = 0;
-	print_struct(bufout, len - 1);
 	EVP_CIPHER_CTX_reset(cipher_ctx);
 	EVP_EncryptInit(cipher_ctx, cipher, key, iv);
-	print_struct(bufout, len - 1);
-	EVP_EncryptUpdate(cipher_ctx, bufin + 1, &outlen, bufout, len - 1);
-	print_struct(bufin, len);
-	zip_source_t* source = zip_source_buffer(zip, bufin, len, 0);
+	print_struct(buf, len);
+	EVP_EncryptUpdate(cipher_ctx, buf + 1, &outlen, buf + 1, len - 1);
+	print_struct(buf, len);
+	zip_source_t* source = zip_source_buffer(zip, buf, len, 0);
 	printf("replace start\n");
 	zip_file_replace(zip, index, source, 0);
 	printf("replace end\n");
@@ -610,19 +601,17 @@ void upload_save(char* sessionToken) {
 	std::string userId = (*iter).str(1);
 	std::cout << "fileId = " << oldfileId << ", id = " << id << ", userId = " << userId << '\n';
 	std::regex_search(ptr, match, resummary);
-	std::string summary = match.str(1);
-	std::cout << "summary" << summary << '\n';
-	num = base64decode(summary.data(), summary.length(), buf);
+	num = base64decode(ptr + match.position(1), match.length(1), buf);
 	buf[7] = 0;
-	summary = base64encode(std::string(buf, num));
+	std::string summary = base64encode(buf, num);
+	std::cout << "summary = " << summary << '\n';
 
 
 
 	std::regex_search(ptr, match, reurl);
 	zip_source_t* source;
 	zip_t* zip = download_save((char*) match.str(1).data(), buf, &source);
-	unsigned char buf_re8[33];
-	re8(zip, buf_re8);
+	re8(zip, (unsigned char*) save + sizeof save - 33);
 	zip_close(zip);
 	err = zip_source_open(source);
 	printf("zip source open err = %d\n", err);
@@ -639,8 +628,8 @@ void upload_save(char* sessionToken) {
 	EVP_DigestFinal(md_ctx, ubuf + 1024, (unsigned int*) &num);
 	EVP_MD_CTX_free(md_ctx);
 	printf("md5 size = %d", num);
-	std::string md5_base64(buf + 1024, 16);
-	md5_base64 = base64encode(md5_base64);
+	std::string md5_base64 = base64encode(buf + 1024, 16);
+	print_struct(buf + 1024, 16);
 	std::cout << "md5_base64 = " << md5_base64 << '\n';
 	sprintf(buf, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x", ubuf[1024], ubuf[1024 + 1], ubuf[1024 + 2], ubuf[1024 + 3], ubuf[1024 + 4], ubuf[1024 + 5], ubuf[1024 + 6], ubuf[1024 + 7], ubuf[1024 + 8], ubuf[1024 + 9], ubuf[1024 + 10], ubuf[1024 + 11], ubuf[1024 + 12], ubuf[1024 + 13], ubuf[1024 + 14], ubuf[1024 + 15]);
 
@@ -663,12 +652,11 @@ void upload_save(char* sessionToken) {
 	std::regex_search(ptr, match, reid);
 	std::string newfileId = match.str(1);
 	std::regex_search(ptr, match, rekey);
-	std::string key = match.str(1);
+	std::cout << "position = " << match.position(1) << " length = " << match.length(1) << '\n';
+	std::string key = base64encode(ptr + match.position(1), match.length(1));
 	std::regex_search(ptr, match, retoken);
 	std::string token = match.str(1);
-	std::cout << "createAt = " << create << ", key = " << key << ", fileId = " << newfileId << ", token = " << token << '\n';
-	key = base64encode(key);
-	std::cout << "base64 key = " << key << '\n';
+	std::cout << "createAt = " << create << ", base64 key = " << key << ", fileId = " << newfileId << ", token = " << token << '\n';
 
 	
 
@@ -770,22 +758,20 @@ void upload_save(char* sessionToken) {
 }
 
 void parseGameRecord(zip_t* zip, SongLevel* song_result) {
+    unsigned char buf[10 * 1024];
     zip_file_t* zip_file = zip_fopen(zip, "gameRecord", 0);
-    unsigned char gameRecord[10 * 1024];
-    unsigned char result[10 * 1024];
-    short length = zip_fread(zip_file, gameRecord, 8 * 1024);
+    int len = zip_fread(zip_file, buf, sizeof buf);
     zip_fclose(zip_file);
     zip_discard(zip);
-    printf("zip_read length = %d\n", length);
+    printf("zip_read length = %d\n", len);
 	EVP_CIPHER_CTX* cipher_ctx = EVP_CIPHER_CTX_new();
 	EVP_DecryptInit(cipher_ctx, cipher, key, iv);
-    int outlen;
-    int err = EVP_DecryptUpdate(cipher_ctx, result, &outlen, gameRecord + 1, length - 1);
+    int err = EVP_DecryptUpdate(cipher_ctx, buf + 1, &len, buf + 1, len - 1);
 	EVP_CIPHER_CTX_free(cipher_ctx);
     printf("decrypt err = %d\n", err);
-    printf("decrypt length = %d\n", outlen);
+    printf("decrypt length = %d\n", len);
     song_result[0].difficulty = 0;
-    char* pos = (char*) result;
+    char* pos = (char*) buf + 1;
     unsigned char song_len = read_varshort(pos);
     printf("song length = %d\n", song_len);
     std::vector<SongLevel> songlevels(song_len);
@@ -813,7 +799,7 @@ void parseGameRecord(zip_t* zip, SongLevel* song_result) {
 		songlevel.rks *= songlevel.rks * songlevel.difficulty;
 		songlevels.push_back(songlevel);
 		if (songlevel.score == 1000000 && songlevel.difficulty > song_result[0].difficulty)
-			song_result[0] = songlevels[i];
+			song_result[0] = songlevel;
 	    }
 	}
 	pos = end;
