@@ -26,7 +26,7 @@ void print_struct(void* vptr, int size) {
 	printf("\n");
 }
 
-const short save_size = 14 * 1024;
+const short save_size = 15 * 1024;
 const EVP_MD* md = EVP_md5();
 const EVP_CIPHER* cipher = EVP_aes_256_cbc();
 const unsigned char key[] = {0xe8,0x96,0x9a,0xd2,0xa5,0x40,0x25,0x9b,0x97,0x91,0x90,0x8b,0x88,0xe6,0xbf,0x03,0x1e,0x6d,0x21,0x95,0x6e,0xfa,0xd6,0x8a,0x50,0xdd,0x55,0xd6,0x7a,0xb0,0x92,0x4b};
@@ -103,13 +103,13 @@ void setbit(char* b, char index, bool v) {
 }
 
 short read_varshort(char*& pos) {
-    if (pos[0] >= 0) {
-        pos++;
-	return *(pos - 1);
-    } else {
-        pos += 2;
-	return *(pos -2) & 0b01111111 ^ *(pos - 1) << 7;
-    }
+	if (pos[0] >= 0) {
+		pos++;
+		return *(pos - 1);
+	} else {
+		pos += 2;
+		return *(pos -2) & 0b01111111 ^ *(pos - 1) << 7;
+	}
 }
 
 void write_varshort(char*& pos, unsigned char v) {
@@ -406,9 +406,9 @@ std::string get_player(char* sessionToken) {
     SSL_free(ssl);
     close_socket(sock);
 	buf[num] = 0; printf("%s\n", buf);
-    std::cmatch results;
-    std::regex_search(buf, results, replayer);
-    return results.str(1);
+    std::cmatch match;
+    std::regex_search(buf, match, replayer);
+    return match.str(1);
 }
 
 std::regex reurl("//([^\"]+)");
@@ -446,7 +446,7 @@ void info(char* sessionToken, Summary& summary) {
     num = base64decode(buf + match.position(1), match.length(1), buf);
     printf("%d\n", num);
     print_struct(buf, num);
-    read_nodes(buf, nodeSummary, sizeof nodeSummary / sizeof(Node), (char*) &summary);
+    read_nodes(buf, nodeSummary, sizeof nodeSummary / sizeof(Node), &summary);
 }
 
 zip_t* download_save(char* domain, char* buf, zip_source_t** source_argv = 0) {
@@ -467,13 +467,11 @@ zip_t* download_save(char* domain, char* buf, zip_source_t** source_argv = 0) {
     length = send(sock, buf, length, 0);
     printf("send length = %d\n", length);
     short end = 0;
-	while (true) {
+	do {
 		length = recv(sock, buf + end, save_size - end, 0);
-		if (length == 0)
-			break;
 		end += length;
 		printf("recv end = %d\n", end);
-	};
+	} while (length);
 	printf("%s\n", buf);
 	path = strstr(buf, "\r\n\r\n") + 4;
 	zip_source_t* source = zip_source_buffer_create(path, buf - path + end, 0, 0);
@@ -604,7 +602,7 @@ void upload_save(char* sessionToken) {
 	num = base64decode(ptr + match.position(1), match.length(1), buf);
 	buf[7] = 0;
 	std::string summary = base64encode(buf, num);
-	std::cout << "summary = " << summary << '\n';
+	std::cout << "summary = " << summary << "\n\n";
 
 
 
@@ -627,9 +625,8 @@ void upload_save(char* sessionToken) {
 	EVP_DigestUpdate(md_ctx, save, size);
 	EVP_DigestFinal(md_ctx, ubuf + 1024, (unsigned int*) &num);
 	EVP_MD_CTX_free(md_ctx);
-	printf("md5 size = %d", num);
+	printf("md5 length = %d\n", num);
 	std::string md5_base64 = base64encode(buf + 1024, 16);
-	print_struct(buf + 1024, 16);
 	std::cout << "md5_base64 = " << md5_base64 << '\n';
 	sprintf(buf, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x", ubuf[1024], ubuf[1024 + 1], ubuf[1024 + 2], ubuf[1024 + 3], ubuf[1024 + 4], ubuf[1024 + 5], ubuf[1024 + 6], ubuf[1024 + 7], ubuf[1024 + 8], ubuf[1024 + 9], ubuf[1024 + 10], ubuf[1024 + 11], ubuf[1024 + 12], ubuf[1024 + 13], ubuf[1024 + 14], ubuf[1024 + 15]);
 
@@ -656,7 +653,7 @@ void upload_save(char* sessionToken) {
 	std::string key = base64encode(ptr + match.position(1), match.length(1));
 	std::regex_search(ptr, match, retoken);
 	std::string token = match.str(1);
-	std::cout << "createAt = " << create << ", base64 key = " << key << ", fileId = " << newfileId << ", token = " << token << '\n';
+	std::cout << "createAt = " << create << ", base64 key = " << key << ", fileId = " << newfileId << ", token = " << token << "\n\n";
 
 	
 
@@ -677,7 +674,7 @@ void upload_save(char* sessionToken) {
 	buf[num] = 0; printf("%s\n", buf);
 	std::regex_search(buf, match, reid);
 	std::string uploadId = match.str(1);
-	std::cout << "uploadId = " << uploadId << '\n';
+	std::cout << "uploadId = " << uploadId << "\n\n";
 
 
 
@@ -692,7 +689,7 @@ void upload_save(char* sessionToken) {
 	buf[num] = 0; printf("%s\n", buf);
 	std::regex_search(buf, match, reetag);
 	std::string etag = match.str(1);
-	std::cout << "etag = " << etag << '\n';
+	std::cout << "etag = " << etag << "\n\n";
 
 
 
@@ -706,7 +703,7 @@ void upload_save(char* sessionToken) {
 	buf[num] = 0; printf("%s\n", buf);
 	num = recv(upload_sock, buf, sizeof buf, 0);
 	printf("recv %d\n", num);
-	buf[num] = 0; printf("%s\n", buf);
+	buf[num] = 0; printf("%s\n\n", buf);
 
 
 	close_socket(upload_sock);
@@ -724,7 +721,7 @@ void upload_save(char* sessionToken) {
 	buf[num] = 0; printf("%s\n", buf);
 	num = SSL_read(ssl, buf, sizeof buf);
 	printf("SSL_read %d\n", num);
-	buf[num] = 0; printf("%s\n", buf);
+	buf[num] = 0; printf("%s\n\n", buf);
 
 
 
@@ -738,7 +735,7 @@ void upload_save(char* sessionToken) {
 	buf[num] = 0; printf("%s\n", buf);
 	num = SSL_read(ssl, buf, sizeof buf);
 	printf("SSL_read %d\n", num);
-	buf[num] = 0; printf("%s\n", buf);
+	buf[num] = 0; printf("%s\n\n", buf);
 
 
 
@@ -749,7 +746,7 @@ void upload_save(char* sessionToken) {
 	buf[num] = 0; printf("%s\n", buf);
 	num = SSL_read(ssl, buf, sizeof buf);
 	printf("SSL_read %d\n", num);
-	buf[num] = 0; printf("%s\n", buf);
+	buf[num] = 0; printf("%s\n\n", buf);
 
 
 

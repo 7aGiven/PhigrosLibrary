@@ -339,6 +339,7 @@ EVP_CIPHER_CTX* cipher_ctx = EVP_CIPHER_CTX_new();
 
 	zip_file = zip_fopen(zip, "gameRecord", 0);
 	len = zip_fread(zip_file, buf, sizeof buf);
+	printf("gameRecord length = %d\n", len);
 	zip_fclose(zip_file);
 	EVP_CIPHER_CTX_reset(cipher_ctx);
 	EVP_DecryptInit(cipher_ctx, cipher, key, iv);
@@ -348,6 +349,7 @@ EVP_CIPHER_CTX* cipher_ctx = EVP_CIPHER_CTX_new();
 
 	zip_file = zip_fopen(zip, "gameKey", 0);
 	len = zip_fread(zip_file, buf, sizeof buf);
+	printf("gameKey length = %d\n", len);
 	zip_fclose(zip_file);
 	EVP_CIPHER_CTX_reset(cipher_ctx);
 	EVP_DecryptInit(cipher_ctx, cipher, key, iv);

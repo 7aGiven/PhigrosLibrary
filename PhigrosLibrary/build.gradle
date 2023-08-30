@@ -21,3 +21,4 @@ dependencies {
     // This dependency is used internally, and not exposed to consumers on their own compile classpath.
     implementation 'com.alibaba.fastjson2:fastjson2:2.0.33'
 }
+compileJava.options.encoding = "UTF-8"

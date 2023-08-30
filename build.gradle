@@ -16,3 +16,4 @@ dependencies {
 }
 
 jar.manifest.attributes 'Main-Class': 'PhigrosServer'
+compileJava.options.encoding = "UTF-8"
