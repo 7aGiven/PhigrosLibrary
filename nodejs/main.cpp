@@ -169,9 +169,9 @@ static void js_read_key(void* vbuf, napi_value& wrap, napi_env& env) {
 	napi_value obj;
 	napi_value value;
 	char* buf = (char*) vbuf;
-	unsigned char song_len = read_varshort(buf);
-	napi_create_array_with_length(env, song_len, &result);
-	for (unsigned char index = 0; index < song_len; index++) {
+	short key_len = read_varshort(buf);
+	napi_create_array_with_length(env, key_len, &result);
+	for (short index = 0; index < key_len; index++) {
 		char len = read_cstring(buf);
 		char* end = buf + *buf + 1;
 		napi_create_string_utf8(env, buf - len, len, &value);
@@ -339,7 +339,6 @@ EVP_CIPHER_CTX* cipher_ctx = EVP_CIPHER_CTX_new();
 
 	zip_file = zip_fopen(zip, "gameRecord", 0);
 	len = zip_fread(zip_file, buf, sizeof buf);
-	printf("gameRecord length = %d\n", len);
 	zip_fclose(zip_file);
 	EVP_CIPHER_CTX_reset(cipher_ctx);
 	EVP_DecryptInit(cipher_ctx, cipher, key, iv);
@@ -349,7 +348,6 @@ EVP_CIPHER_CTX* cipher_ctx = EVP_CIPHER_CTX_new();
 
 	zip_file = zip_fopen(zip, "gameKey", 0);
 	len = zip_fread(zip_file, buf, sizeof buf);
-	printf("gameKey length = %d\n", len);
 	zip_fclose(zip_file);
 	EVP_CIPHER_CTX_reset(cipher_ctx);
 	EVP_DecryptInit(cipher_ctx, cipher, key, iv);

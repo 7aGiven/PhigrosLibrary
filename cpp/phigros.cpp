@@ -60,7 +60,6 @@ char base64decode(char* ptr, char len, char* result) {
 		*result = *(result + 2);
 		end = 4 - end;
 	}
-	printf("len = %d, end = %d\n", len, end);
 	return len / 4 * 3 - end;
 }
 
@@ -108,7 +107,7 @@ short read_varshort(char*& pos) {
 		return *(pos - 1);
 	} else {
 		pos += 2;
-		return *(pos -2) & 0b01111111 ^ *(pos - 1) << 7;
+		return pos[-2] & 0b01111111 ^ pos[-1] << 7;
 	}
 }
 
@@ -442,10 +441,7 @@ void info(char* sessionToken, Summary& summary) {
     std::regex_search(buf, match, reupdate);
     summary.update = match.str(1);
     std::regex_search(buf, match, resummary);
-    printf("%d\n", match.length(1));
     num = base64decode(buf + match.position(1), match.length(1), buf);
-    printf("%d\n", num);
-    print_struct(buf, num);
     read_nodes(buf, nodeSummary, sizeof nodeSummary / sizeof(Node), &summary);
 }
 
