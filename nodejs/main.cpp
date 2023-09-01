@@ -1,14 +1,14 @@
 #include <node_api.h>
 #include "../cpp/phigros.cpp"
 
-static void js_read_nodes(void* vbuf, Node nodes[], char size, napi_value& result, napi_env& env) {
+static void js_read_nodes(napi_env& env, void* vbuf, Node nodes[], char size, napi_value& result) {
 	napi_create_object(env, &result);
 	napi_value array;
 	napi_value value;
 	char* buf = (char*) vbuf;
 	bool b = false;
+	char index = 0;
 	for (char i = 0; i < size; i++) {
-		char index = 0;
 		if (nodes[i].type == "bool") {
 			napi_get_boolean(env, getbit(*buf, index), &value);
 			napi_set_named_property(env, result, nodes[i].name.data(), value);
@@ -43,25 +43,21 @@ static void js_read_nodes(void* vbuf, Node nodes[], char size, napi_value& resul
 				napi_create_int32(env, read_varshort(buf), &value);
 				napi_set_element(env, array, i, value);
 			}
-		} else if  (nodes[i].type == "short12") {
-			napi_create_array_with_length(env, 12, &array);
-			short* sbuf = (short*) buf;
-			for (char i = 0; i < 12; i++) {
-				napi_create_int32(env, sbuf[i], &value);
-				napi_set_element(env, array, i, value);
-			}
-			buf += 12 * 2;
+			napi_set_named_property(env, result, nodes[i].name.data(), array);
 		}
 	}
 }
 
-static void js_write_nodes(napi_value& obj, Node nodes[], char size, char* buf, napi_env& env) {
+static short js_write_nodes(napi_env& env, napi_value& obj, Node nodes[], char size, char* buf) {
+	char* start = buf;
 	napi_value array;
 	napi_value value;
 	bool b = false;
+	char index = 0;
 	for (char i = 0; i < size; i++) {
-		char index = 0;
 		if (nodes[i].type == "bool") {
+			if (index == 0)
+				*buf = 0;
 			bool bb;
 			napi_get_named_property(env, obj, nodes[i].name.data(), &value);
 			napi_get_value_bool(env, value, &bb);
@@ -112,25 +108,17 @@ static void js_write_nodes(napi_value& obj, Node nodes[], char size, char* buf, 
 				write_varshort(buf, in);
 				napi_set_element(env, array, i, value);
 			}
-		} else if  (nodes[i].type == "short12") {
-			napi_get_named_property(env, obj, nodes[i].name.data(), &array);
-			short* sbuf = (short*) buf;
-			for (char i = 0; i < 12; i++) {
-				napi_get_element(env, array, i, &value);
-				napi_get_value_int32(env, value, &in);
-				sbuf[i] = in;
-			}
-			buf += 12 * 2;
 		}
 	}
+	return buf - start;
 }
 
-static void js_read_record(void* vbuf, napi_value& result, napi_env& env) {
+static void js_read_record(unsigned char* ubuf, napi_value& result, napi_env& env) {
 	napi_value song;
 	napi_value array;
 	napi_value songlevel;
 	napi_value value;
-	char* buf = (char*) vbuf;
+	char* buf = (char*) ubuf;
 	unsigned char song_len = read_varshort(buf);
 	napi_create_array_with_length(env, song_len, &result);
 	for (unsigned char index = 0; index < song_len; index++) {
@@ -164,11 +152,11 @@ static void js_read_record(void* vbuf, napi_value& result, napi_env& env) {
 	}
 }
 
-static void js_read_key(void* vbuf, napi_value& wrap, napi_env& env) {
+static void js_read_key(unsigned char* ubuf, napi_value& wrap, napi_env& env) {
 	napi_value result;
 	napi_value obj;
 	napi_value value;
-	char* buf = (char*) vbuf;
+	char* buf = (char*) ubuf;
 	short key_len = read_varshort(buf);
 	napi_create_array_with_length(env, key_len, &result);
 	for (short index = 0; index < key_len; index++) {
@@ -314,32 +302,36 @@ EVP_CIPHER_CTX* cipher_ctx = EVP_CIPHER_CTX_new();
 	zip_file = zip_fopen(zip, "gameProgress", 0);
 	len = zip_fread(zip_file, buf, sizeof buf);
 	zip_fclose(zip_file);
+	printf("version = %d\n", *buf);
 	EVP_DecryptInit(cipher_ctx, cipher, key, iv);
 	EVP_DecryptUpdate(cipher_ctx, buf + 1, &outlen, buf + 1, len - 1);
-	js_read_nodes(buf + 1, nodeGameProgress, sizeof nodeGameProgress / sizeof(Node), value, env);
+	js_read_nodes(env, buf + 1, nodeGameProgress, sizeof nodeGameProgress / sizeof(Node), value);
 	napi_set_named_property(env, result, "gameProgress", value);
 	
 	zip_file = zip_fopen(zip, "user", 0);
 	len = zip_fread(zip_file, buf, sizeof buf);
 	zip_fclose(zip_file);
+	printf("version = %d\n", *buf);
 	EVP_CIPHER_CTX_reset(cipher_ctx);
 	EVP_DecryptInit(cipher_ctx, cipher, key, iv);
 	EVP_DecryptUpdate(cipher_ctx, buf + 1, &outlen, buf + 1, len - 1);
-	js_read_nodes(buf + 1, nodeUser, sizeof nodeUser / sizeof(Node), value, env);
+	js_read_nodes(env, buf + 1, nodeUser, sizeof nodeUser / sizeof(Node), value);
 	napi_set_named_property(env, result, "user", value);
 
 	zip_file = zip_fopen(zip, "settings", 0);
 	len = zip_fread(zip_file, buf, sizeof buf);
 	zip_fclose(zip_file);
+	printf("version = %d\n", *buf);
 	EVP_CIPHER_CTX_reset(cipher_ctx);
 	EVP_DecryptInit(cipher_ctx, cipher, key, iv);
 	EVP_DecryptUpdate(cipher_ctx, buf + 1, &outlen, buf + 1, len - 1);
-	js_read_nodes(buf + 1, nodeSettings, sizeof nodeSettings / sizeof(Node), value, env);
+	js_read_nodes(env, buf + 1, nodeSettings, sizeof nodeSettings / sizeof(Node), value);
 	napi_set_named_property(env, result, "settings", value);
 
 	zip_file = zip_fopen(zip, "gameRecord", 0);
 	len = zip_fread(zip_file, buf, sizeof buf);
 	zip_fclose(zip_file);
+	printf("version = %d\n", *buf);
 	EVP_CIPHER_CTX_reset(cipher_ctx);
 	EVP_DecryptInit(cipher_ctx, cipher, key, iv);
 	EVP_DecryptUpdate(cipher_ctx, buf + 1, &outlen, buf + 1, len - 1);
@@ -349,6 +341,7 @@ EVP_CIPHER_CTX* cipher_ctx = EVP_CIPHER_CTX_new();
 	zip_file = zip_fopen(zip, "gameKey", 0);
 	len = zip_fread(zip_file, buf, sizeof buf);
 	zip_fclose(zip_file);
+	printf("version = %d\n", *buf);
 	EVP_CIPHER_CTX_reset(cipher_ctx);
 	EVP_DecryptInit(cipher_ctx, cipher, key, iv);
 	EVP_DecryptUpdate(cipher_ctx, buf + 1, &outlen, buf + 1, len - 1);
@@ -362,15 +355,33 @@ EVP_CIPHER_CTX* cipher_ctx = EVP_CIPHER_CTX_new();
 	return result;
 }
 
-static napi_value MethodUpload(napi_env env, napi_callback_info info) {
+static napi_value Methodre8(napi_env env, napi_callback_info info) {
 	size_t argc = 1;
 	napi_value value;
 	napi_get_cb_info(env, info, &argc, &value, 0, 0);
 	char buf[26];
 	size_t result_len;
 	napi_get_value_string_utf8(env, value, buf, 26, &result_len);
-	upload_save(buf);
+	re8(buf);
 	return value;
+}
+
+static napi_value MethodGameProgress(napi_env env, napi_callback_info info) {
+	size_t argc = 2;
+	napi_value value[2];
+	napi_get_cb_info(env, info, &argc, value, 0, 0);
+	char sessionToken[26];
+	size_t result_len;
+	napi_get_value_string_utf8(env, value[0], sessionToken, 26, &result_len);
+	modify_save(sessionToken, "gameProgress", [&env, value](char* buf, short len) -> short {
+		napi_value global;
+		napi_get_global(env, &global);
+		napi_value gameProgress;
+		js_read_nodes(env, buf, nodeGameProgress, sizeof nodeGameProgress / sizeof(Node), gameProgress);
+		napi_call_function(env, global, value[1], 1, &gameProgress, 0);
+		return js_write_nodes(env, gameProgress, nodeGameProgress, sizeof nodeGameProgress / sizeof(Node), buf);
+	});
+	return value[0];
 }
 
 static napi_value MethodB19(napi_env env, napi_callback_info info) {
@@ -412,18 +423,16 @@ static napi_value MethodB19(napi_env env, napi_callback_info info) {
 
 static napi_value Init(napi_env env, napi_value exports) {
 	init();
-	napi_property_descriptor desc = {"read_difficulty", 0, MethodDifficulty, 0, 0, 0, napi_default, 0};
-	napi_define_properties(env, exports, 1, &desc);
-	desc = {"get_player", 0, MethodPlayer, 0, 0, 0, napi_default, 0};
-	napi_define_properties(env, exports, 1, &desc);
-	desc = {"info", 0, MethodInfo, 0, 0, 0, napi_default, 0};
-	napi_define_properties(env, exports, 1, &desc);
-	desc = {"get_save", 0, MethodSave, 0, 0, 0, napi_default, 0};
-	napi_define_properties(env, exports, 1, &desc);
-	desc = {"re8", 0, MethodUpload, 0, 0, 0, napi_default, 0};
-	napi_define_properties(env, exports, 1, &desc);
-	desc = {"b19", 0, MethodB19, 0, 0, 0, napi_default, 0};
-	napi_define_properties(env, exports, 1, &desc);
+	napi_property_descriptor properties[] = {
+		{"read_difficulty", 0, MethodDifficulty, 0, 0, 0, napi_default, 0},
+		{"get_player", 0, MethodPlayer, 0, 0, 0, napi_default, 0},
+		{"info", 0, MethodInfo, 0, 0, 0, napi_default, 0},
+		{"get_save", 0, MethodSave, 0, 0, 0, napi_default, 0},
+		{"modify_gameProgress", 0, MethodGameProgress, 0, 0, 0, napi_default, 0},
+		{"re8", 0, Methodre8, 0, 0, 0, napi_default, 0},
+		{"b19", 0, MethodB19, 0, 0, 0, napi_default, 0},
+	};
+	napi_define_properties(env, exports, sizeof properties / sizeof(napi_property_descriptor), properties);
 	return exports;
 }
 

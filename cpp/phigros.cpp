@@ -111,11 +111,14 @@ short read_varshort(char*& pos) {
 	}
 }
 
-void write_varshort(char*& pos, unsigned char v) {
-	*pos = v;
-	pos++;
-	if (v > 127) {
-		*pos = 1;
+void write_varshort(char*& pos, short v) {
+	if (v < 128) {
+		*pos = v;
+		pos++;
+	} else if (v >= 128) {
+		*pos = v & 0xFF | 0b10000000;
+		pos++;
+		*pos = v >> 7;
 		pos++;
 	}
 }
@@ -167,8 +170,8 @@ void read_nodes(void* vbuf, Node nodes[], char size, void* vobject) {
 	char* buf = (char*) vbuf;
 	char* object = (char*) vobject;
 	bool b = false;
+	char index = 0;
 	for (char i = 0; i < size; i++) {
-		char index = 0;
 		if (nodes[i].type == "bool") {
 			*(object + nodes[i].offset) = getbit(*buf, index);
 			b = true;
@@ -255,6 +258,7 @@ struct GameProgress {
 	char unlockFlagOfIgallta;
 	char unlockFlagOfRrharil;
 	char flagOfSongRecordKey;
+	char randomVersionUnlocked;
 	bool chapter8UnlockBegin;
 	bool chapter8UnlockSecondPhase;
 	bool chapter8Passed;
@@ -274,6 +278,7 @@ Node nodeGameProgress[] {
 	{"char", "unlockFlagOfIgallta", offsetof(GameProgress, unlockFlagOfIgallta)},
 	{"char", "unlockFlagOfRrharil", offsetof(GameProgress, unlockFlagOfRrharil)},
 	{"char", "flagOfSongRecordKey", offsetof(GameProgress, flagOfSongRecordKey)},
+	{"char", "randomVersionUnlocked", offsetof(GameProgress, randomVersionUnlocked)},
 	{"bool", "chapter8UnlockBegin", offsetof(GameProgress, chapter8UnlockBegin)},
 	{"bool", "chapter8UnlockSecondPhase", offsetof(GameProgress, chapter8UnlockSecondPhase)},
 	{"bool", "chapter8Passed", offsetof(GameProgress, chapter8Passed)},
@@ -468,7 +473,7 @@ zip_t* download_save(char* domain, char* buf, zip_source_t** source_argv = 0) {
 		end += length;
 		printf("recv end = %d\n", end);
 	} while (length);
-	printf("%s\n", buf);
+	printf("%s\n\n", buf);
 	path = strstr(buf, "\r\n\r\n") + 4;
 	zip_source_t* source = zip_source_buffer_create(path, buf - path + end, 0, 0);
     if (source_argv) {
@@ -525,40 +530,13 @@ std::string MethodSave(char* url) {
 	EVP_DecryptUpdate(cipher_ctx, buf, &outlen, buf + 1, len - 1);
 }
 */
-void re8(zip_t* zip, unsigned char* buf) {
-	int outlen;
-	EVP_CIPHER_CTX* cipher_ctx = EVP_CIPHER_CTX_new();
-	zip_int64_t index = zip_name_locate(zip, "gameProgress", 0);
-	zip_file_t* zip_file = zip_fopen_index(zip, index, 0);
-	int len = zip_fread(zip_file, buf, 33);
-	zip_fclose(zip_file);
-	EVP_DecryptInit(cipher_ctx, cipher, key, iv);
-	print_struct(buf, len);
-	EVP_DecryptUpdate(cipher_ctx, buf + 1, &outlen, buf + 1, len - 1);
-	print_struct(buf, len);
-	char* ptr = (char*) buf + 9;
-	for (char i = 0; i < 5; i++)
-		read_varshort(ptr);
-	ptr[5] = 0;
-	ptr[6] = 0;
-	EVP_CIPHER_CTX_reset(cipher_ctx);
-	EVP_EncryptInit(cipher_ctx, cipher, key, iv);
-	print_struct(buf, len);
-	EVP_EncryptUpdate(cipher_ctx, buf + 1, &outlen, buf + 1, len - 1);
-	print_struct(buf, len);
-	zip_source_t* source = zip_source_buffer(zip, buf, len, 0);
-	printf("replace start\n");
-	zip_file_replace(zip, index, source, 0);
-	printf("replace end\n");
-	EVP_CIPHER_CTX_free(cipher_ctx);
-}
 
 std::regex reid("d\":\"([^\"]+)");
 std::regex recreate("At\":\"([^\"]+)");
 std::regex rekey("y\":\"([^\"]+)");
 std::regex retoken("n\":\"([^\"]+)");
 std::regex reetag("g\":\"([^\"]+)");
-void upload_save(char* sessionToken) {
+void upload_save(char* sessionToken, std::function<short (char*, char*)> callback) {
 	char save[save_size];
 	char buf[save_size];
 	std::cmatch match;
@@ -603,17 +581,12 @@ void upload_save(char* sessionToken) {
 
 
 	std::regex_search(ptr, match, reurl);
-	zip_source_t* source;
-	zip_t* zip = download_save((char*) match.str(1).data(), buf, &source);
-	re8(zip, (unsigned char*) save + sizeof save - 33);
-	zip_close(zip);
-	err = zip_source_open(source);
-	printf("zip source open err = %d\n", err);
-	short size = zip_source_read(source, save, save_size);
-	zip_source_close(source);
-	printf("zip source read len = %d\n", size);
+	num = match.length(1);
+	memmove(save, ptr + match.position(1), num);
+	save[num] = 0;
+	short size = callback(buf, save);
 
-
+/*
 
 	unsigned char* ubuf = (unsigned char*) buf;
 	EVP_MD_CTX* md_ctx = EVP_MD_CTX_new();
@@ -744,10 +717,51 @@ void upload_save(char* sessionToken) {
 	printf("SSL_read %d\n", num);
 	buf[num] = 0; printf("%s\n\n", buf);
 
-
+*/
 
 	SSL_free(ssl);
 	close_socket(sock);
+}
+
+void modify_save(char* sessionToken, char* type, std::function<short (char*, short)> callback) {
+	upload_save(sessionToken, [type, callback] (char* buf, char* save) -> short {
+		zip_source_t* source;
+		zip_t* zip = download_save(save, buf, &source);
+		unsigned char save_item[10 * 1024];
+		int outlen;
+		zip_int64_t index = zip_name_locate(zip, type, 0);
+		zip_file_t* zip_file = zip_fopen_index(zip, index, 0);
+		short num = zip_fread(zip_file, save_item, save_size);
+		zip_fclose(zip_file);
+		EVP_CIPHER_CTX* cipher_ctx = EVP_CIPHER_CTX_new();
+		EVP_DecryptInit(cipher_ctx, cipher, key, iv);
+		EVP_DecryptUpdate(cipher_ctx, save_item + 1, &outlen, save_item + 1, num - 1);
+		num = callback((char*) save_item + 1, num - 1);
+		EVP_CIPHER_CTX_reset(cipher_ctx);
+		EVP_EncryptInit(cipher_ctx, cipher, key, iv);
+		EVP_EncryptUpdate(cipher_ctx, save_item + 1, &outlen, save_item + 1, num);
+		num = outlen;
+		EVP_EncryptFinal(cipher_ctx, save_item + 1 + num, &outlen);
+		EVP_CIPHER_CTX_free(cipher_ctx);
+		zip_source_t* source_item = zip_source_buffer(zip, save_item, num + outlen + 1, 0);
+		zip_file_replace(zip, index, source_item, 0);
+		zip_close(zip);
+		int err = zip_source_open(source);
+		num = zip_source_read(source, save, save_size);
+		zip_source_close(source);
+		return num;
+	});
+}
+
+void re8(char* sessionToken) {
+	modify_save(sessionToken, "gameProgress", [](char* buf, short num) -> short {
+		buf += 8;
+		for (char i = 0; i < 5; i++)
+			read_varshort(buf);
+		buf[5] = 0;
+		buf[6] = 0;
+		return num;
+	});
 }
 
 void parseGameRecord(zip_t* zip, SongLevel* song_result) {

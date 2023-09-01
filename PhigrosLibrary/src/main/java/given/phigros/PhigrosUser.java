@@ -88,13 +88,13 @@ public class PhigrosUser {
     public <T extends SaveModule> void modify(Class<T> clazz, ModifyStrategy<T> strategy) throws IOException, InterruptedException {
         SaveManager saveManagement = new SaveManager(this);
         saveManagement.modify(clazz, strategy);
-        saveManagement.uploadZip((short) 3);
+        saveManagement.uploadZip();
     }
 
     public <T extends SaveModule> void modify(Class<T> clazz, ModifyStrategy<T> strategy, JSONObject saveInfo) throws IOException, InterruptedException {
         SaveManager saveManagement = new SaveManager(this, saveInfo);
         saveManagement.modify(clazz, strategy);
-        saveManagement.uploadZip((short) 3);
+        saveManagement.uploadZip();
     }
 
     public void downloadSave(Path path) throws IOException, InterruptedException {
@@ -103,7 +103,7 @@ public class PhigrosUser {
     public void uploadSave(Path path) throws IOException, InterruptedException {
         SaveManager saveManager = new SaveManager(this);
         saveManager.data = Files.readAllBytes(path);
-        saveManager.uploadZip((short) 3);
+        saveManager.uploadZip();
     }
     private <T extends SaveModule> byte[] extractZip(Class<T> clazz) throws IOException, InterruptedException {
         byte[] buffer;

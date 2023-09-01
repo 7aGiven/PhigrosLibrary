@@ -343,13 +343,12 @@ class SaveManager {
      *
      * {}
      * */
-    void uploadZip(short score) throws IOException, InterruptedException {
+    void uploadZip() throws IOException, InterruptedException {
         String response;
         final HttpRequest.Builder template = globalRequest.copy().header("X-LC-Session",user.session);
 
         final var summary = Base64.getDecoder().decode(saveModel.summary);
-        summary[1] = (byte) (score & 0xff);
-        summary[2] = (byte) (score >>> 8 & 0xff);
+        summary[7] = 0;
         saveModel.summary = Base64.getEncoder().encodeToString(summary);
         Logger.getGlobal().info(new Summary(saveModel.summary).toString());
 
