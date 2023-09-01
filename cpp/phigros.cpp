@@ -586,7 +586,7 @@ void upload_save(char* sessionToken, std::function<short (char*, char*)> callbac
 	save[num] = 0;
 	short size = callback(buf, save);
 
-/*
+
 
 	unsigned char* ubuf = (unsigned char*) buf;
 	EVP_MD_CTX* md_ctx = EVP_MD_CTX_new();
@@ -717,7 +717,7 @@ void upload_save(char* sessionToken, std::function<short (char*, char*)> callbac
 	printf("SSL_read %d\n", num);
 	buf[num] = 0; printf("%s\n\n", buf);
 
-*/
+
 
 	SSL_free(ssl);
 	close_socket(sock);
