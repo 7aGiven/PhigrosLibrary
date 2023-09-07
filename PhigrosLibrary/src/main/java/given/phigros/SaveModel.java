@@ -5,6 +5,5 @@ class SaveModel {
     String gameObjectId;
     String userObjectId;
     String summary;
-    String updatedTime;
     String checksum;
 }

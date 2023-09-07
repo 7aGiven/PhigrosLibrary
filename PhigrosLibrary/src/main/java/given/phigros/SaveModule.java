@@ -2,37 +2,43 @@ package given.phigros;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 abstract class MapSaveModule<T> extends LinkedHashMap<String, T> implements SaveModule {
-    abstract void getBytes(ByteArrayOutputStream outputStream, Map.Entry<String, T> entry);
+    abstract void getBytes(ByteWriter writer, Map.Entry<String, T> entry) throws IOException;
 
-    abstract void putBytes(byte[] data, int position);
+    abstract void putBytes(ByteReader reader);
 
     @Override
     public void loadFromBinary(byte[] data) {
         clear();
-        var length = SaveModule.getVarShort(data, 0);
-        var position = data[0] < 0 ? 2 : 1;
-        byte keyLength;
-        for (; length > 0; length--) {
-            putBytes(data, position);
-            keyLength = data[position];
-            position += keyLength + data[position + keyLength + 1] + 2;
+        ByteReader reader = new ByteReader(data);
+        short len = reader.getVarshort();
+        for (; len > 0; len--) {
+            short mark = (short) (reader.position + reader.data[reader.position] + 1);
+            mark += reader.data[mark] + 1;
+            putBytes(reader);
+            reader.position = mark;
         }
-        if (this instanceof GameKey)
-            ((GameKey) this).lanotaReadKeys = data[position];
+        if (this instanceof GameKey) {
+            ((GameKey) this).lanotaReadKeys = reader.getByte();
+            ((GameKey) this).camelliaReadKey = reader.getByte() != 0;
+        }
     }
 
     @Override
     public byte[] serialize() throws IOException {
-        try (var outputStream = new ByteArrayOutputStream()) {
-            outputStream.writeBytes(SaveModule.varShort2bytes((short) size()));
-            for (final var entry : entrySet())
-                getBytes(outputStream, entry);
-            if (this instanceof GameKey)
-                outputStream.write(((GameKey) this).lanotaReadKeys);
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            ByteWriter writer = new ByteWriter(outputStream);
+            writer.putVarshort((short) size());
+            for (final Map.Entry entry : entrySet())
+                getBytes(writer, entry);
+            if (this instanceof GameKey) {
+                writer.putByte(((GameKey) this).lanotaReadKeys);
+                writer.putByte(((GameKey) this).camelliaReadKey ? 1:0);
+            }
             return outputStream.toByteArray();
         }
     }
@@ -40,36 +46,30 @@ abstract class MapSaveModule<T> extends LinkedHashMap<String, T> implements Save
 
 public interface SaveModule {
     default void loadFromBinary(byte[] data) {
+        ByteReader reader = new ByteReader(data);
         try {
             byte index = 0;
-            var position = 0;
-            for (final var field : getClass().getFields()) {
+            for (final Field field : getClass().getFields()) {
                 if (field.getType() == boolean.class) {
-                    field.setBoolean(this, Util.getBit(data[position], index++));
+                    field.setBoolean(this, Util.getBit(data[reader.position], index++));
                     continue;
                 }
                 if (index != 0) {
                     index = 0;
-                    position++;
+                    reader.position++;
                 }
-                if (field.getType() == String.class) {
-                    final byte length = data[position++];
-                    field.set(this, new String(data, position, length));
-                    position += length;
-                } else if (field.getType() == float.class) {
-                    field.setFloat(this, Float.intBitsToFloat(getInt(data, position)));
-                    position += 4;
-                } else if (field.getType() == short.class) {
-                    field.setShort(this, getShort(data, position));
-                    position += 2;
-                } else if (field.getType() == short[].class) {
-                    final var array = (short[]) field.get(this);
-                    for (var i = 0; i < array.length; i++) {
-                        array[i] = getVarShort(data, position);
-                        position += data[position] >= 0 ? 1 : 2;
-                    }
+                if (field.getType() == String.class)
+                    field.set(this, reader.getString(0));
+                else if (field.getType() == float.class)
+                    field.setFloat(this, reader.getFloat());
+                else if (field.getType() == short.class)
+                    field.setShort(this, reader.getShort());
+                else if (field.getType() == short[].class) {
+                    final short[] array = (short[]) field.get(this);
+                    for (byte i = 0; i < array.length; i++)
+                        array[i] = reader.getVarshort();
                 } else if (field.getType() == byte.class)
-                    field.setByte(this, data[position++]);
+                    field.setByte(this, reader.getByte());
                 else throw new RuntimeException("出现新类型。");
             }
         } catch (IllegalAccessException e) {
@@ -78,10 +78,11 @@ public interface SaveModule {
     }
 
     default byte[] serialize() throws IOException {
-        try (var outputStream = new ByteArrayOutputStream()) {
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            ByteWriter writer = new ByteWriter(outputStream);
             byte b = 0;
             byte index = 0;
-            for (final var field : getClass().getFields()) {
+            for (final Field field : getClass().getFields()) {
                 if (field.getType() == boolean.class) {
                     b = Util.modifyBit(b, index++, field.getBoolean(this));
                     continue;
@@ -90,17 +91,15 @@ public interface SaveModule {
                     outputStream.write(b);
                     b = index = 0;
                 }
-                if (field.getType() == String.class) {
-                    final var bytes = ((String) field.get(this)).getBytes();
-                    outputStream.write(bytes.length);
-                    outputStream.writeBytes(bytes);
-                } else if (field.getType() == float.class)
-                    outputStream.writeBytes(int2bytes(Float.floatToIntBits(field.getFloat(this))));
+                if (field.getType() == String.class)
+                    writer.putString((String) field.get(this));
+                else if (field.getType() == float.class)
+                    writer.putFloat(field.getFloat(this));
                 else if (field.getType() == short.class)
-                    outputStream.writeBytes(short2bytes(field.getShort(this)));
+                    writer.putShort(field.getShort(this));
                 else if (field.getType() == short[].class)
-                    for (final var h : (short[]) field.get(this))
-                        outputStream.writeBytes(varShort2bytes(h));
+                    for (final short h : (short[]) field.get(this))
+                        writer.putVarshort(h);
                 else if (field.getType() == byte.class)
                     outputStream.write(field.getByte(this));
                 else
@@ -110,43 +109,5 @@ public interface SaveModule {
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    static int getInt(byte[] data, int position) {
-        return data[position + 3] << 24 ^ (data[position + 2] & 0xff) << 16 ^ (data[position + 1] & 0xff) << 8 ^ (data[position] & 0xff);
-    }
-
-    static byte[] int2bytes(int num) {
-        final var bytes = new byte[4];
-        bytes[0] = (byte) num;
-        bytes[1] = (byte) (num >>> 8 & 0xff);
-        bytes[2] = (byte) (num >>> 16 & 0xff);
-        bytes[3] = (byte) (num >>> 24);
-        return bytes;
-    }
-
-    static short getShort(byte[] data, int position) {
-        return (short) ((data[position + 1] & 0xff) << 8 ^ (data[position] & 0xff));
-    }
-
-    static byte[] short2bytes(short num) {
-        final var bytes = new byte[2];
-        bytes[0] = (byte) num;
-        bytes[1] = (byte) (num >>> 8);
-        return bytes;
-    }
-
-    static short getVarShort(byte[] data, int position) {
-        if (data[position] >= 0)
-            return data[position];
-        else
-            return (short) (data[position + 1] << 7 ^ data[position] & 0x7f);
-    }
-
-    static byte[] varShort2bytes(short num) {
-        if (num < 128)
-            return new byte[] {(byte) num};
-        else
-            return new byte[] {(byte) (num & 0x7f | 0b10000000), (byte) (num >>> 7)};
     }
 }

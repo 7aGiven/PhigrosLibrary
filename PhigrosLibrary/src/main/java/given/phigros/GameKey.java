@@ -1,43 +1,46 @@
 package given.phigros;
 
-import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.Map;
 
 public class GameKey extends MapSaveModule<GameKeyValue> {
     final static String name = "gameKey";
     final static byte version = 1;
     public byte lanotaReadKeys;
+    public boolean camelliaReadKey;
+    GameKey(byte[] data) {
+        loadFromBinary(data);
+    }
 
-    void getBytes(ByteArrayOutputStream outputStream, Map.Entry<String, GameKeyValue> entry) {
-        final var strBytes = entry.getKey().getBytes();
-        outputStream.write(strBytes.length);
-        outputStream.writeBytes(strBytes);
-        final var value = entry.getValue();
+    void getBytes(ByteWriter writer, Map.Entry<String, GameKeyValue> entry) throws IOException {
+        final byte[] strBytes = entry.getKey().getBytes();
+        writer.putByte(strBytes.length);
+        writer.outputStream.write(strBytes);
+        final GameKeyValue value = entry.getValue();
         byte length = 0;
-        var num = 1;
-        for (var index = 0; index < 5; index++) {
+        byte num = 1;
+        for (byte index = 0; index < 5; index++) {
             if (value.get(index) != 0) {
                 length = Util.modifyBit(length, index, true);
                 num++;
             }
         }
-        outputStream.write(num);
-        outputStream.write(length);
-        for (var index = 0; index < 5; index++) {
-            if (value.get(index) != 0) {
-                outputStream.write(value.get(index));
-            }
+        writer.putByte(num);
+        writer.putByte(length);
+        for (byte index = 0; index < 5; index++) {
+            if (value.get(index) != 0)
+                writer.putByte(value.get(index));
         }
     }
 
-    void putBytes(byte[] data, int position) {
-        final var key = new String(data, position + 1, data[position]);
-        position += data[position] + 2;
-        final var length = data[position++];
-        final var value = new GameKeyValue();
-        for (var index = 0; index < 5; index++) {
-            if (Util.getBit(length, index))
-                value.set(index, data[position++]);
+    void putBytes(ByteReader reader) {
+        String key = reader.getString(0);
+        reader.position++;
+        byte len = reader.getByte();
+        final GameKeyValue value = new GameKeyValue();
+        for (byte index = 0; index < 5; index++) {
+            if (Util.getBit(len, index))
+                value.set(index, reader.getByte());
         }
         put(key, value);
     }

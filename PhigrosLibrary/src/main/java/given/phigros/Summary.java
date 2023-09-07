@@ -14,13 +14,13 @@ public final class Summary {
     public short[] fullCombo = new short[4];
     public short[] phi = new short[4];
     Summary(String summary) {
-        final var reader = new ByteReader(Base64.getDecoder().decode(summary));
+        final ByteReader reader = new ByteReader(Base64.getDecoder().decode(summary));
         saveVersion = reader.getByte();
         challengeModeRank = reader.getShort();
         rankingScore = reader.getFloat();
         gameVersion = reader.getByte();
-        avatar = reader.getString();
-        for (var level = 0; level < 4; level++) {
+        avatar = reader.getString(0);
+        for (byte level = 0; level < 4; level++) {
             cleared[level] = reader.getShort();
             fullCombo[level] = reader.getShort();
             phi[level] = reader.getShort();
@@ -28,14 +28,14 @@ public final class Summary {
     }
 
     String serialize() {
-        final var bytes = avatar.getBytes();
-        final var reader = new ByteReader(new byte[33 + bytes.length]);
+        final byte[] bytes = avatar.getBytes();
+        final ByteReader reader = new ByteReader(new byte[33 + bytes.length]);
         reader.putByte(saveVersion);
         reader.putShort(challengeModeRank);
         reader.putFloat(rankingScore);
         reader.putByte(gameVersion);
         reader.putString(avatar);
-        for (var level = 0; level < 4; level++) {
+        for (byte level = 0; level < 4; level++) {
             reader.putShort(cleared[level]);
             reader.putShort(fullCombo[level]);
             reader.putShort(phi[level]);

@@ -1,5 +1,7 @@
 package given.phigros;
 
+import com.alibaba.fastjson2.JSONObject;
+
 import java.io.IOException;
 
 public class Util {
@@ -24,7 +26,7 @@ public class Util {
         for (var i = 0; i < array.size(); i++) {
             if (i == index)
                 continue;
-            String response = SaveManager.delete(session, array.getJSONObject(i).getString("objectId"));
+            JSONObject response = SaveManager.delete(session, array.getJSONObject(i).getString("objectId"));
             builder.append(response);
             builder.append('\n');
         }

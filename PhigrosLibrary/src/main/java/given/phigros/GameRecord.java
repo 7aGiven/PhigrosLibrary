@@ -1,24 +1,27 @@
 package given.phigros;
 
-import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.Map;
 
 public class GameRecord extends MapSaveModule<LevelRecord[]> {
     final static String name = "gameRecord";
     final static byte version = 1;
+    GameRecord(byte[] data) {
+        loadFromBinary(data);
+    }
 
     @Override
-    void getBytes(ByteArrayOutputStream outputStream, Map.Entry<String, LevelRecord[]> entry) {
-        final var strBytes = entry.getKey().getBytes();
-        outputStream.write(strBytes.length + 2);
-        outputStream.writeBytes(strBytes);
-        outputStream.write(46);
-        outputStream.write(48);
-        final var levelRecords = entry.getValue();
+    void getBytes(ByteWriter writer, Map.Entry<String, LevelRecord[]> entry) throws IOException {
+        final byte[] strBytes = entry.getKey().getBytes();
+        writer.putByte(strBytes.length + 2);
+        writer.outputStream.write(strBytes);
+        writer.putByte(46);
+        writer.putByte(48);
+        final LevelRecord[] levelRecords = entry.getValue();
         byte length = 0;
         byte fc = 0;
-        var num = 0;
-        for (var level = 0; level < 4; level++) {
+        byte num = 0;
+        for (byte level = 0; level < 4; level++) {
             if (levelRecords[level] != null) {
                 length = Util.modifyBit(length, level, true);
                 if (levelRecords[level].c)
@@ -26,26 +29,26 @@ public class GameRecord extends MapSaveModule<LevelRecord[]> {
                 num++;
             }
         }
-        outputStream.write(2 + 8 * num);
-        outputStream.write(length);
-        outputStream.write(fc);
-        for (var level = 0; level < 4; level++) {
+        writer.putByte(2 + 8 * num);
+        writer.putByte(length);
+        writer.putByte(fc);
+        for (byte level = 0; level < 4; level++) {
             if (levelRecords[level] != null) {
-                outputStream.writeBytes(SaveModule.int2bytes(levelRecords[level].s));
-                outputStream.writeBytes(SaveModule.int2bytes(Float.floatToIntBits(levelRecords[level].a)));
+                writer.putInt(levelRecords[level].s);
+                writer.putFloat(levelRecords[level].a);
             }
         }
     }
 
     @Override
-    void putBytes(byte[] data, int position) {
-        final var key = new String(data, position + 1, data[position] - 2);
-        final var reader = new ByteReader(data, position + data[position] + 2);
-        final var length = reader.getByte();
-        final var fc = reader.getByte();
-        final var levelRecords = new LevelRecord[4];
-        for (var level = 0; level < 4; level++) {
-            if (Util.getBit(length, level)) {
+    void putBytes(ByteReader reader) {
+        String key = reader.getString(2);
+        reader.position++;
+        byte len = reader.getByte();
+        byte fc = reader.getByte();
+        LevelRecord[] levelRecords = new LevelRecord[4];
+        for (byte level = 0; level < 4; level++) {
+            if (Util.getBit(len, level)) {
                 levelRecords[level] = new LevelRecord();
                 levelRecords[level].c = Util.getBit(fc, level);
                 levelRecords[level].s = reader.getInt();
