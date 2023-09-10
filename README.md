@@ -1,10 +1,12 @@
-本项目分为两个部分，分别为PhigrosRpc和PhigrosLibrary。
+本项目分为三个部分，分别为PhigrosRpc和PhigrosLibrary和PhigrosLibrary-Cpp。
 
 PhigrosLibrary是Java实现的Phigros云存档解析库。
 
+PhigrosLibrary-Cpp是C++实现的Phigros云存档解析库。
+
 PhigrosRpc是利用http对PhigrosLibrary的封装。
 
-本项目强制使用java 17
+本项目应使用Java 17以上和C++ 11以上
 
 **注：此项目为逆向成果，未非调用任何第三方接口。**
 
@@ -22,6 +24,7 @@ PhigrosRpc是利用http对PhigrosLibrary的封装。
 
 # 目录
 - [其他语言的实现](#其他语言实现查分)
+- [使用本项目的优秀项目](#使用本项目的优秀项目)
 - [PhigrosRpc](#phigrosrpc)
 - [PhigrosLibrary](#phigroslibrary)
   - [PhigrosLibrary简单应用](#phigroslibrary-简单应用)
@@ -37,6 +40,12 @@ PhigrosRpc是利用http对PhigrosLibrary的封装。
 位于cpp文件夹，由C++原生实现，未调用PhigrosRpc
 ### Nodejs查分
 位于nodejs文件夹，由nodejs通过nodejs C++ addon调用C++查分实现
+
+# 使用本项目的优秀项目
+[phi-plugin](https://github.com/catrong/phi-plugin)
+云崽bot插件，可查分等非常多的有关Phigros的功能
+
+UI精美，使用nodejs重构本项目的查分，使用本项目nodejs C++ addon的re8
 
 # PhigrosRpc
 
