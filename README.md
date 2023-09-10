@@ -27,6 +27,7 @@ PhigrosRpc是利用http对PhigrosLibrary的封装。
   - [PhigrosLibrary简单应用](#phigroslibrary-简单应用)
   - [PhigrosLibrary高级应用](#phigroslibrary的高级应用)
 - [Phigros曲目更新](#phigros-曲目更新) 
+- [淘宝店](#phigros-淘宝)
 - [Phigros QQ群](#phigros-qq群)
 
 # 其他语言实现查分
@@ -441,5 +442,11 @@ pip install UnityPy
 python3 gameInformation.py Phigros.apk
 ```
 将生成的difficulty.csv替换项目内的difficulty.csv即可
+## Phigros 淘宝店
+如果你希望修改存档，但是不会编译和使用项目，怎么办？
+
+https://h5.m.taobao.com/awp/core/detail.htm?ft=t&id=738050220389
+
+点进淘宝店花点小钱让作者帮你改存档。
 ## Phigros QQ群
 加入 282781491 闲聊
