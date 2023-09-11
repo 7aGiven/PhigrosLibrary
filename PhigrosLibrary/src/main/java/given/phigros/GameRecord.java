@@ -6,9 +6,6 @@ import java.util.Map;
 public class GameRecord extends MapSaveModule<LevelRecord[]> {
     final static String name = "gameRecord";
     final static byte version = 1;
-    GameRecord(byte[] data) {
-        loadFromBinary(data);
-    }
 
     @Override
     void getBytes(ByteWriter writer, Map.Entry<String, LevelRecord[]> entry) throws IOException {
@@ -43,6 +40,7 @@ public class GameRecord extends MapSaveModule<LevelRecord[]> {
     @Override
     void putBytes(ByteReader reader) {
         String key = reader.getString(2);
+        System.out.println(key);
         reader.position++;
         byte len = reader.getByte();
         byte fc = reader.getByte();

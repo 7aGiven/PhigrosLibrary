@@ -106,8 +106,8 @@ class SaveManager {
     }
 
     <T extends SaveModule> void modify(Class<T> clazz, ModifyStrategy<T> callback) throws IOException, InterruptedException {
-        HttpRequest request = HttpRequest.newBuilder(user.saveUrl).build();
-        data = client.send(request,HttpResponse.BodyHandlers.ofByteArray()).body();
+        HttpConnection connection = new HttpConnection(user.saveUrl);
+        data = connection.bytes();
         try (ByteArrayInputStream inputStream = new ByteArrayInputStream(data)) {
             try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream(inputStream.available())) {
                 try (ZipOutputStream zipWriter = new ZipOutputStream(outputStream)) {

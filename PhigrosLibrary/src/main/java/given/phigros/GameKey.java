@@ -8,9 +8,6 @@ public class GameKey extends MapSaveModule<GameKeyValue> {
     final static byte version = 1;
     public byte lanotaReadKeys;
     public boolean camelliaReadKey;
-    GameKey(byte[] data) {
-        loadFromBinary(data);
-    }
 
     void getBytes(ByteWriter writer, Map.Entry<String, GameKeyValue> entry) throws IOException {
         final byte[] strBytes = entry.getKey().getBytes();

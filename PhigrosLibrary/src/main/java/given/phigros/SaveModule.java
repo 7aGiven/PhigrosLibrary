@@ -3,6 +3,8 @@ package given.phigros;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -12,7 +14,7 @@ abstract class MapSaveModule<T> extends LinkedHashMap<String, T> implements Save
     abstract void putBytes(ByteReader reader);
 
     @Override
-    public void loadFromBinary(byte[] data) {
+    public SaveModule loadFromBinary(byte[] data) {
         clear();
         ByteReader reader = new ByteReader(data);
         short len = reader.getVarshort();
@@ -26,6 +28,7 @@ abstract class MapSaveModule<T> extends LinkedHashMap<String, T> implements Save
             ((GameKey) this).lanotaReadKeys = reader.getByte();
             ((GameKey) this).camelliaReadKey = reader.getByte() != 0;
         }
+        return this;
     }
 
     @Override
@@ -45,11 +48,14 @@ abstract class MapSaveModule<T> extends LinkedHashMap<String, T> implements Save
 }
 
 public interface SaveModule {
-    default void loadFromBinary(byte[] data) {
+    default SaveModule loadFromBinary(byte[] data) {
         ByteReader reader = new ByteReader(data);
         try {
             byte index = 0;
-            for (final Field field : getClass().getFields()) {
+            Field[] fields = getClass().getFields();
+            Arrays.sort(fields, Comparator.comparingInt(filed -> filed.getAnnotation(Order.class).value()));
+            for (final Field field : fields) {
+                System.out.println(field.toString());
                 if (field.getType() == boolean.class) {
                     field.setBoolean(this, Util.getBit(data[reader.position], index++));
                     continue;
@@ -75,6 +81,7 @@ public interface SaveModule {
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }
+        return this;
     }
 
     default byte[] serialize() throws IOException {
@@ -82,7 +89,9 @@ public interface SaveModule {
             ByteWriter writer = new ByteWriter(outputStream);
             byte b = 0;
             byte index = 0;
-            for (final Field field : getClass().getFields()) {
+            Field[] fields = getClass().getFields();
+            Arrays.sort(fields, Comparator.comparingInt(filed -> filed.getAnnotation(Order.class).value()));
+            for (final Field field : fields) {
                 if (field.getType() == boolean.class) {
                     b = Util.modifyBit(b, index++, field.getBoolean(this));
                     continue;
