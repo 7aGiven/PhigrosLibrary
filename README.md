@@ -25,8 +25,8 @@ PhigrosRpc是利用http对PhigrosLibrary的封装。
 # 目录
 - [其他语言的实现](#其他语言实现查分)
 - [使用本项目的优秀项目](#使用本项目的优秀项目)
-- [PhigrosRpc](https://github.com/7aGiven/PhigrosLibrary/blob/master/README-PhigrosRpc.md)
-- [PhigrosLibrary](https://github.com/7aGiven/PhigrosLibrary/blob/master/README-PhigrosLibrary.md)
+- [PhigrosRpc文档](https://github.com/7aGiven/PhigrosLibrary/blob/master/README-PhigrosRpc.md)
+- [PhigrosLibrary文档](https://github.com/7aGiven/PhigrosLibrary/blob/master/README-PhigrosLibrary.md)
 - [Phigros曲目更新](#phigros-曲目更新) 
 - [淘宝店](#phigros-淘宝)
 - [Phigros QQ群](#phigros-qq群)

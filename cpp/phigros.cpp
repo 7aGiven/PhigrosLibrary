@@ -26,7 +26,7 @@ void print_struct(void* vptr, int size) {
 	printf("\n");
 }
 
-const short save_size = 15 * 1024;
+const short save_size = 31 * 1024;
 const EVP_MD* md = EVP_md5();
 const EVP_CIPHER* cipher = EVP_aes_256_cbc();
 const unsigned char key[] = {0xe8,0x96,0x9a,0xd2,0xa5,0x40,0x25,0x9b,0x97,0x91,0x90,0x8b,0x88,0xe6,0xbf,0x03,0x1e,0x6d,0x21,0x95,0x6e,0xfa,0xd6,0x8a,0x50,0xdd,0x55,0xd6,0x7a,0xb0,0x92,0x4b};
@@ -755,12 +755,39 @@ void modify_save(char* sessionToken, char* type, std::function<short (char*, sho
 
 void re8(char* sessionToken) {
 	modify_save(sessionToken, "gameProgress", [](char* buf, short num) -> short {
-		buf += 8;
+		buf += buf[1] + 5;
 		for (char i = 0; i < 5; i++)
 			read_varshort(buf);
 		buf[5] = 0;
 		buf[6] = 0;
 		return num;
+	});
+}
+
+void adddata(char* sessionToken, int data) {
+	modify_save(sessionToken, "gameProgress", [data](char* buf, short num) -> short {
+		char* end = buf + num;
+		buf += buf[1] + 5;
+		long sum = data;
+		long p = 1;
+		char* datastart = buf;
+		for (char i = 0; i < 5; i++) {
+			sum += p * read_varshort(buf);
+			p *= 1024;
+		}
+		char* dataend = buf;
+		char len = 0;
+		short datas[5];
+		for (char i = 0; i < 5; i++) {
+			datas[i] = sum % 1024;
+			if (datas[i] > 127)
+				len++;
+			sum /= 1024;
+		}
+		memmove(buf, buf + len + 5 - (dataend - datastart), end - buf);
+		for (char i = 0; i < 5; i++)
+			write_varshort(datastart, datas[i]);
+		return num + len + 5 - (dataend - datastart);
 	});
 }
 

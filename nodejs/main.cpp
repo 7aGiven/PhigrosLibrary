@@ -410,6 +410,19 @@ static napi_value Methodre8(napi_env env, napi_callback_info info) {
 	return value;
 }
 
+static napi_value Methodadddata(napi_env env, napi_callback_info info) {
+	size_t argc = 2;
+	napi_value value[2];
+	napi_get_cb_info(env, info, &argc, value, 0, 0);
+	char buf[26];
+	int data;
+	size_t result_len;
+	napi_get_value_string_utf8(env, value[0], buf, 26, &result_len);
+	napi_get_value_int32(env, value[1], &data);
+	adddata(buf, data);
+	return value[1];
+}
+
 static napi_value MethodGameProgress(napi_env env, napi_callback_info info) {
 	size_t argc = 2;
 	napi_value value[2];
@@ -512,6 +525,7 @@ static napi_value Init(napi_env env, napi_value exports) {
 		{"modify_gameKey", 0, MethodGameKey, 0, 0, 0, napi_default, 0},
 		{"modify_gameRecord", 0, MethodGameRecord, 0, 0, 0, napi_default, 0},
 		{"re8", 0, Methodre8, 0, 0, 0, napi_default, 0},
+		{"adddata", 0, Methodadddata, 0, 0, 0, napi_default, 0},
 		{"b19", 0, MethodB19, 0, 0, 0, napi_default, 0},
 	};
 	napi_define_properties(env, exports, sizeof properties / sizeof(napi_property_descriptor), properties);
