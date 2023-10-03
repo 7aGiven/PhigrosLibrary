@@ -12,6 +12,7 @@ void close_socket(int sock) {
 }
 #elif defined _WIN32
   #include <array>
+  #include <functional>
   #include <ws2tcpip.h>
   #pragma comment(lib, "ws2_32")
 void close_socket(int sock) {

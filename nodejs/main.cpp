@@ -275,6 +275,7 @@ static short js_write_record(napi_env env, napi_value map, char* buf) {
 			setbit(len, i, true);
 		}
 	});
+	return 0;
 }
 
 static napi_value MethodDifficulty(napi_env env, napi_callback_info info) {
