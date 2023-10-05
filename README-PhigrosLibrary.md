@@ -234,7 +234,8 @@ public class LevelRecord {
 对于GameKey的结构(Map)
 ```java
 public class GameKey extends LinkedHashMap<String, GameKeyValue> implements SaveModule {
-    public byte lanotaReadKeys;   //是否读取Lanota收藏品(解锁倒霉蛋和船的AT)
+    public byte lanotaReadKeys;    //读取Lanota收藏品(解锁倒霉蛋和船的AT)
+    public boolean camelliaReadKey;//读取极星卫破译收藏品(解锁S.A.T.E.L.L.I.T.E.的AT)
 }
 public class GameKeyValue {
     public byte readCollection; //读收藏品

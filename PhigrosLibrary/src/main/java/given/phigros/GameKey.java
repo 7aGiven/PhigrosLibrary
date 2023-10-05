@@ -5,7 +5,7 @@ import java.util.Map;
 
 public class GameKey extends MapSaveModule<GameKeyValue> {
     final static String name = "gameKey";
-    final static byte version = 1;
+    final static byte version = 2;
     public byte lanotaReadKeys;
     public boolean camelliaReadKey;
 
