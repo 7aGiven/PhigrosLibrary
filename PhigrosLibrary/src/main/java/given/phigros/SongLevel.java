@@ -2,13 +2,13 @@ package given.phigros;
 
 public class SongLevel implements Comparable<SongLevel>{
     public String id;
-    public Level level;
+    public byte level;
     public int s;
     public float a;
     public boolean c;
     public float difficulty;
     public float rks;
-    void set(String id, Level level, boolean fc, float difficulty) {
+    void set(String id, byte level, boolean fc, float difficulty) {
         this.id = id;
         this.level = level;
         this.c = fc;

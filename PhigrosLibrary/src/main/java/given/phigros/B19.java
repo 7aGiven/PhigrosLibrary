@@ -15,13 +15,13 @@ class B19 implements Iterable<String> {
         reader = new ByteReader(data);
     }
 
-    SongLevel[] getB19(int num) {
+    SongLevel[] getBestN(int num) {
         byte minIndex = 1;
         final SongLevel[] b19 = new SongLevel[num + 1];
         Arrays.fill(b19,new SongLevel());
         for (String id:this) {
             final float[] levels = PhigrosUser.getInfo(id);
-            int level = levels.length - 1;
+            byte level = (byte) (levels.length - 1);
             for (; level >= 0; level--) {
                 if (levels[level] <= b19[minIndex].rks && levels[level] <= b19[0].rks)
                     break;
@@ -42,7 +42,7 @@ class B19 implements Iterable<String> {
                 if (songLevel.s == 1000000) {
                     songLevel.rks = levels[level];
                     if (levels[level] > b19[0].rks) {
-                        songLevel.set(id, Level.values()[level], getFC(level), levels[level]);
+                        songLevel.set(id, level, getFC(level), levels[level]);
                         b19[0] = songLevel;
                     }
                 } else {
@@ -51,7 +51,7 @@ class B19 implements Iterable<String> {
                 }
                 if (songLevel.rks < b19[minIndex].rks)
                     continue;
-                songLevel.set(id, Level.values()[level], getFC(level), levels[level]);
+                songLevel.set(id, level, getFC(level), levels[level]);
                 b19[minIndex] = songLevel;
                 minIndex = min(b19);
             }
@@ -214,7 +214,7 @@ class B19 implements Iterable<String> {
     private class B19Iterator implements Iterator<String> {
         private short position;
         B19Iterator() {
-            position = (short) (data[0] < 0 ? 2 : 1);
+            position = (short) (data[1] < 0 ? 3 : 2);
         }
 
         @Override

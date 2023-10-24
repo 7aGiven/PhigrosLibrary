@@ -7,16 +7,11 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.HttpServerCodec;
 
-import java.io.BufferedReader;
-import java.nio.file.Files;
 import java.nio.file.Paths;
 
 public class PhigrosServer {
     public static void main(String[] args) throws Exception {
-        try (final BufferedReader reader = Files.newBufferedReader(Paths.get("difficulty.csv"))) {
-            PhigrosUser.readInfo(reader);
-        }
-
+        PhigrosUser.readInfo(Paths.get("difficulty.csv"));
         ServerBootstrap server = new ServerBootstrap();
         server.channel(NioServerSocketChannel.class);
         server.group(new NioEventLoopGroup(1), new NioEventLoopGroup());

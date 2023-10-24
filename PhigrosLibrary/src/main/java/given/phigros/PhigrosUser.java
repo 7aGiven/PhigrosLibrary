@@ -25,18 +25,20 @@ public class PhigrosUser {
         this.session = session;
     }
     public PhigrosUser(URL saveUrl) {this.saveUrl = saveUrl;}
-    public static void readInfo(BufferedReader reader) throws IOException {
+    public static void readInfo(Path path) throws IOException {
         info.clear();
-        String lineString;
-        while ((lineString = reader.readLine()) != null) {
-            String[] line = lineString.split(",");
-            if (line.length != 4 && line.length != 5)
-                throw new RuntimeException(String.format("曲目%s的定数数量错误。", line[0]));
-            final float[] difficulty = new float[line.length - 1];
-            for (int i = 0; i < line.length - 1; i++) {
-                difficulty[i] = Float.parseFloat(line[i + 1]);
+        try (final BufferedReader reader = Files.newBufferedReader(path)) {
+            String lineString;
+            while ((lineString = reader.readLine()) != null) {
+                String[] line = lineString.split(",");
+                if (line.length != 4 && line.length != 5)
+                    throw new RuntimeException(String.format("曲目%s的定数数量错误。", line[0]));
+                final float[] difficulty = new float[line.length - 1];
+                for (int i = 0; i < line.length - 1; i++) {
+                    difficulty[i] = Float.parseFloat(line[i + 1]);
+                }
+                info.put(line[0], difficulty);
             }
-            info.put(line[0], difficulty);
         }
     }
     static float[] getInfo(String id) {
@@ -44,10 +46,6 @@ public class PhigrosUser {
         if (songInfo == null)
             throw new RuntimeException(String.format("缺少%s的信息。", id));
         return songInfo;
-    }
-
-    public JSONObject getSaveInfo() throws IOException {
-        return SaveManager.saveCheck(session);
     }
 
     public String getPlayerId() throws IOException {
@@ -65,7 +63,7 @@ public class PhigrosUser {
     }
 
     public SongLevel[] getBestN(int num) throws IOException {
-        return new B19(extractZip(GameRecord.class)).getB19(num);
+        return new B19(extractZip(GameRecord.class)).getBestN(num);
     }
     public SongExpect[] getExpect(String id) throws IOException {
         return new B19(extractZip(GameRecord.class)).getExpect(id);
@@ -113,10 +111,9 @@ public class PhigrosUser {
                     if (entry.getName().equals(name))
                         break;
                 }
-                if (zipReader.read() == version) {
-                    buffer = Util.readAllBytes(zipReader);
-                    zipReader.closeEntry();
-                } else
+                buffer = Util.readAllBytes(zipReader);
+                zipReader.closeEntry();
+                if (buffer[0] != version)
                     throw new RuntimeException("版本号已更新，请更新PhigrosLibrary。");
             }
         }

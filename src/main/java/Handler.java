@@ -4,8 +4,8 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.*;
 
-import java.io.IOException;
 import java.net.URI;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
 class Handler extends SimpleChannelInboundHandler<HttpRequest> {
@@ -16,47 +16,52 @@ class Handler extends SimpleChannelInboundHandler<HttpRequest> {
     }
 
     @Override
-    public void channelRead0(ChannelHandlerContext ctx, HttpRequest msg) throws Exception {
+    public void channelRead0(ChannelHandlerContext ctx, HttpRequest msg) {
         String[] path = msg.uri().split("/", 3);
         if (path.length != 3) {
             notFound(ctx);
             return;
         }
-        String result;
+        String result = "";
+        StringBuilder builder;
         try {
-            result = switch (path[1]) {
-                case "saveUrl" -> {
+            switch (path[1]) {
+                case "saveUrl":
                     if (path[2].length() != 25)
-                        yield "SessionToken的长度不为25";
-                    final PhigrosUser user = new PhigrosUser(path[2]);
-                    final Summary summary = user.update();
-                    yield summary.toString(user.saveUrl.toString());
-                }
-                case "playerId" -> new PhigrosUser(path[2]).getPlayerId();
-                case "b19" -> {
-                    StringBuilder builder = new StringBuilder("[");
-                    for (final SongLevel songLevel : new PhigrosUser(URI.create(path[2])).getBestN(19)) {
+                        result = "SessionToken的长度不为25";
+                    else {
+                        final PhigrosUser user = new PhigrosUser(path[2]);
+                        final Summary summary = user.update();
+                        result = summary.toString(user.saveUrl.toString());
+                    }
+                    break;
+                case "playerId":
+                    new PhigrosUser(path[2]).getPlayerId();
+                    break;
+                case "b19":
+                    builder = new StringBuilder("[");
+                    for (final SongLevel songLevel : new PhigrosUser(new URL(path[2])).getBestN(19)) {
                         builder.append(songLevel.toString());
                         builder.append(',');
                     }
                     builder.deleteCharAt(builder.length() - 1);
                     builder.append(']');
-                    yield  builder.toString();
-                }
-                case "expects" -> {
-                    StringBuilder builder = new StringBuilder("[");
-                    for (final SongExpect songExpect : new PhigrosUser(URI.create(path[2])).getExpects()) {
+                    result =  builder.toString();
+                    break;
+                case "expects":
+                    builder = new StringBuilder("[");
+                    for (final SongExpect songExpect : new PhigrosUser(new URL(path[2])).getExpects()) {
                         builder.append(songExpect.toString());
                         builder.append(',');
                     }
                     builder.deleteCharAt(builder.length() - 1);
                     builder.append(']');
-                    yield builder.toString();
-                }
-                case "song" -> {
+                    result = builder.toString();
+                    break;
+                case "song":
                     path = path[2].split("/", 2);
-                    StringBuilder builder = new StringBuilder("[");
-                    LevelRecord[] levelRecords = new PhigrosUser(URI.create(path[1])).get(GameRecord.class).get(path[0]);
+                    builder = new StringBuilder("[");
+                    LevelRecord[] levelRecords = new PhigrosUser(new URL(path[1])).get(GameRecord.class).get(path[0]);
                     for (byte level = 0; level < 4; level++) {
                         final LevelRecord record = levelRecords[level];
                         if (record != null)
@@ -66,23 +71,22 @@ class Handler extends SimpleChannelInboundHandler<HttpRequest> {
                     }
                     builder.deleteCharAt(builder.length() - 1);
                     builder.append(']');
-                    yield  builder.toString();
-                }
-                case "8" -> {
+                    result = builder.toString();
+                    break;
+                case "8":
                     new PhigrosUser(path[2]).modify(GameProgress.class, data -> {
                         data.chapter8UnlockBegin = false;
                         data.chapter8UnlockSecondPhase = false;
                         data.chapter8Passed = false;
                         data.chapter8SongUnlocked = 0;
                     });
-                    yield "OK";
-                }
-                case "data" -> {
-                    PhigrosUser money = new PhigrosUser(URI.create(path[2])).get(GameProgress.class).money;
-                    yield  String.format("%d,%d,%d,%d,%d", money[0], money[1], money[2], money[3], money[4]);
-                }
-                default -> "";
-            };
+                    result = "OK";
+                    break;
+                case "data":
+                    short[] money = new PhigrosUser(new URL(path[2])).get(GameProgress.class).money;
+                    result = String.format("%d,%d,%d,%d,%d", money[0], money[1], money[2], money[3], money[4]);
+                    break;
+            }
         } catch (Exception e) {
             response(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR, e.getMessage());
             return;
