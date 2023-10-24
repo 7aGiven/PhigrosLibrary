@@ -3,7 +3,7 @@ package given.phigros;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-public class ByteWriter {
+class ByteWriter {
     final ByteArrayOutputStream outputStream;
     ByteWriter(ByteArrayOutputStream outputStream) {
         this.outputStream = outputStream;

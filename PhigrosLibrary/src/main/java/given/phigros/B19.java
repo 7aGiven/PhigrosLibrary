@@ -16,11 +16,11 @@ class B19 implements Iterable<String> {
     }
 
     SongLevel[] getB19(int num) {
-        var minIndex = 1;
-        final var b19 = new SongLevel[num + 1];
+        byte minIndex = 1;
+        final SongLevel[] b19 = new SongLevel[num + 1];
         Arrays.fill(b19,new SongLevel());
         for (String id:this) {
-            final var levels = PhigrosUser.getInfo(id);
+            final float[] levels = PhigrosUser.getInfo(id);
             int level = levels.length - 1;
             for (; level >= 0; level--) {
                 if (levels[level] <= b19[minIndex].rks && levels[level] <= b19[0].rks)
@@ -34,7 +34,7 @@ class B19 implements Iterable<String> {
             for (; level < levels.length; level++) {
                 if (levelNotExist(level))
                     continue;
-                final var songLevel = new SongLevel();
+                final SongLevel songLevel = new SongLevel();
                 songLevel.s = reader.getInt();
                 songLevel.a = reader.getFloat();
                 if (songLevel.a < 70f)
@@ -69,11 +69,11 @@ class B19 implements Iterable<String> {
             if (!songId.equals(id))
                 continue;
             final float minRks = getMinRks();
-            final var levels = PhigrosUser.getInfo(id);
+            final float[] levels = PhigrosUser.getInfo(id);
             length = reader.getByte();
             reader.position++;
-            final var list = new ArrayList<SongExpect>();
-            for (var level = 0; level < levels.length; level++) {
+            final ArrayList<SongExpect> list = new ArrayList();
+            for (byte level = 0; level < levels.length; level++) {
                 if (levelNotExist(level))
                     continue;
                 if (levels[level] <= minRks)
@@ -82,19 +82,19 @@ class B19 implements Iterable<String> {
                 if (score == 1000000)
                     continue;
                 final float acc = reader.getFloat();
-                final var expect = (float) Math.sqrt(minRks / levels[level]) * 45f + 55f;
+                final float expect = (float) Math.sqrt(minRks / levels[level]) * 45f + 55f;
                 if (expect > acc)
                     list.add(new SongExpect(id, Level.values()[level], acc, expect));
             }
-            return list.toArray(SongExpect[]::new);
+            return list.toArray(new SongExpect[list.size()]);
         }
         throw new RuntimeException("不存在该id的曲目。");
     }
     SongExpect[] getExpects() {
-        final var minRks = getMinRks();
-        final var list = new ArrayList<SongExpect>();
+        final float minRks = getMinRks();
+        final ArrayList<SongExpect> list = new ArrayList();
         for (String id:this) {
-            final var levels = PhigrosUser.getInfo(id);
+            final float[] levels = PhigrosUser.getInfo(id);
             int level = levels.length - 1;
             for (; level >= 0; level--) {
                 if (levels[level] <= minRks)
@@ -114,21 +114,21 @@ class B19 implements Iterable<String> {
                     continue;
                 }
                 final float acc = reader.getFloat();
-                final var expect = (float) Math.sqrt(minRks / levels[level]) * 45f + 55f;
+                final float expect = (float) Math.sqrt(minRks / levels[level]) * 45f + 55f;
                 if (expect > acc)
                     list.add(new SongExpect(id, Level.values()[level], acc, expect));
             }
         }
-        final var array = list.toArray(SongExpect[]::new);
+        final SongExpect[] array = list.toArray(new SongExpect[list.size()]);
         Arrays.sort(array);
         return array;
     }
 
     private float getMinRks() {
-        var minIndex = 0;
-        final var b19 = new float[19];
+        byte minIndex = 0;
+        final float[] b19 = new float[19];
         for (String id:this) {
-            final var levels = PhigrosUser.getInfo(id);
+            final float[] levels = PhigrosUser.getInfo(id);
             int level = levels.length - 1;
             for (; level >= 0; level--) {
                 if (levels[level] <= b19[minIndex])
@@ -142,8 +142,8 @@ class B19 implements Iterable<String> {
             for (; level < levels.length; level++) {
                 if (levelNotExist(level))
                     continue;
-                final var score = reader.getInt();
-                final var acc = reader.getFloat();
+                final int score = reader.getInt();
+                final float acc = reader.getFloat();
                 if (acc < 70f)
                     continue;
                 float rks;
@@ -162,10 +162,10 @@ class B19 implements Iterable<String> {
         return b19[minIndex];
     }
 
-    private int min(SongLevel[] array) {
-        var index = -1;
-        var min = 17f;
-        for (int i = 1; i < array.length; i++) {
+    private byte min(SongLevel[] array) {
+        byte index = -1;
+        float min = 17f;
+        for (byte i = 1; i < array.length; i++) {
             if (array[i].id == null)
                 return i;
             if (array[i].rks < min) {
@@ -176,10 +176,10 @@ class B19 implements Iterable<String> {
         return index;
     }
 
-    private int min(float[] array) {
-        var index = -1;
-        var min = 17f;
-        for (var i = 0; i < 19; i++) {
+    private byte min(float[] array) {
+        byte index = -1;
+        float min = 17f;
+        for (byte i = 0; i < 19; i++) {
             if (array[i] == 0f)
                 return i;
             if (array[i] < min) {
@@ -212,9 +212,9 @@ class B19 implements Iterable<String> {
     }
 
     private class B19Iterator implements Iterator<String> {
-        private int position;
+        private short position;
         B19Iterator() {
-            position = data[0] < 0 ? 2 : 1;
+            position = (short) (data[0] < 0 ? 2 : 1);
         }
 
         @Override
@@ -224,8 +224,8 @@ class B19 implements Iterable<String> {
 
         @Override
         public String next() {
-            var length = data[position++];
-            final var id = new String(data, position, length - 2);
+            byte length = data[position++];
+            final String id = new String(data, position, length - 2);
             position += length;
             length = data[position++];
             reader.position = position;

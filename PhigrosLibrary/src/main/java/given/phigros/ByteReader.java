@@ -2,7 +2,7 @@ package given.phigros;
 
 class ByteReader {
     byte[] data;
-    int position;
+    short position;
 
     ByteReader(byte[] data) {
         this.data = data;

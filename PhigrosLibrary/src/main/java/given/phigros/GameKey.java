@@ -1,8 +1,5 @@
 package given.phigros;
 
-import java.io.IOException;
-import java.util.Map;
-
 public class GameKey extends MapSaveModule<GameKeyValue> {
     final static String name = "gameKey";
     final static byte version = 2;
@@ -11,11 +8,7 @@ public class GameKey extends MapSaveModule<GameKeyValue> {
     @Order(1)
     public boolean camelliaReadKey;
 
-    void output(ByteWriter writer, Map.Entry<String, GameKeyValue> entry) throws IOException {
-        final byte[] strBytes = entry.getKey().getBytes();
-        writer.putByte(strBytes.length);
-        writer.outputStream.write(strBytes);
-        final GameKeyValue value = entry.getValue();
+    void output(ByteWriter writer, GameKeyValue value) {
         byte length = 0;
         byte num = 1;
         for (byte index = 0; index < 5; index++) {
@@ -32,15 +25,13 @@ public class GameKey extends MapSaveModule<GameKeyValue> {
         }
     }
 
-    void input(ByteReader reader) {
-        String key = reader.getString(0);
-        reader.position++;
+    GameKeyValue input(ByteReader reader) {
         byte len = reader.getByte();
         final GameKeyValue value = new GameKeyValue();
         for (byte index = 0; index < 5; index++) {
             if (Util.getBit(len, index))
                 value.set(index, reader.getByte());
         }
-        put(key, value);
+        return value;
     }
 }

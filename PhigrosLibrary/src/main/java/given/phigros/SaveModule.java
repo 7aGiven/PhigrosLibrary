@@ -9,19 +9,23 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 abstract class MapSaveModule<T> extends LinkedHashMap<String, T> implements SaveModule {
-    abstract void output(ByteWriter writer, Map.Entry<String, T> entry) throws IOException;
+    abstract void output(ByteWriter writer, T entry) throws IOException;
 
-    abstract void input(ByteReader reader);
+    abstract T input(ByteReader reader);
 
     @Override
     public SaveModule loadFromBinary(byte[] data) {
         clear();
+        byte suffix = 0;
+        if (this instanceof GameRecord)
+            suffix = 2;
         ByteReader reader = new ByteReader(data);
         short len = reader.getVarshort();
         for (; len > 0; len--) {
-            short mark = (short) (reader.position + reader.data[reader.position] + 1);
-            mark += reader.data[mark] + 1;
-            input(reader);
+            String key = reader.getString(suffix);
+            short mark = reader.getByte();
+            mark += reader.position;
+            put(key, input(reader));
             reader.position = mark;
         }
         loadFromBinary(reader);
@@ -33,8 +37,15 @@ abstract class MapSaveModule<T> extends LinkedHashMap<String, T> implements Save
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             ByteWriter writer = new ByteWriter(outputStream);
             writer.putVarshort((short) size());
-            for (final Map.Entry entry : entrySet())
-                output(writer, entry);
+            for (final Map.Entry<String, T> entry : entrySet()) {
+                String key = entry.getKey();
+                if (this instanceof GameRecord)
+                    key += ".0";
+                final byte[] strBytes = key.getBytes();
+                writer.putByte(strBytes.length);
+                writer.outputStream.write(strBytes);
+                output(writer, entry.getValue());
+            }
             serialize(writer);
             return outputStream.toByteArray();
         }

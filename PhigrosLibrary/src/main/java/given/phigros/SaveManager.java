@@ -64,6 +64,18 @@ public class SaveManager {
         return response.getString("nickname");
     }
 
+    static String refreshSessionToken(String session) throws IOException {
+        JSONObject response = new HttpConnection(userInfo)
+                .pigeon(session)
+                .json();
+        String id = response.getString("objectId");
+        response = new HttpConnection(baseUrl + String.format("/users/%s/refreshSessionToken", id))
+                .put()
+                .pigeon(session)
+                .json();
+        return response.getString("sessionToken");
+    }
+
     static JSONArray saveArray(String session) throws IOException {
         JSONObject response = new HttpConnection(save)
                 .pigeon(session)
@@ -104,8 +116,7 @@ public class SaveManager {
     }
 
     <T extends SaveModule> void modify(Class<T> clazz, ModifyStrategy<T> callback) throws IOException, InterruptedException {
-        HttpConnection connection = new HttpConnection(user.saveUrl);
-        data = connection.bytes();
+        downloadSave();
         try (ByteArrayInputStream inputStream = new ByteArrayInputStream(data)) {
             try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream(inputStream.available())) {
                 try (ZipOutputStream zipWriter = new ZipOutputStream(outputStream)) {

@@ -42,6 +42,10 @@ public class HttpConnection {
         }
         return this;
     }
+    HttpConnection put() throws ProtocolException {
+        connection.setRequestMethod("PUT");
+        return this;
+    }
     HttpConnection put(byte[] body) throws IOException {
         connection.setRequestMethod("PUT");
         connection.setDoOutput(true);
