@@ -41,7 +41,4 @@ public class ByteWriter {
         putVarshort((short) b.length);
         outputStream.write(b);
     }
-    void close() throws IOException {
-        outputStream.close();
-    }
 }

@@ -9,8 +9,10 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -19,6 +21,9 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.logging.Logger;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 public class SaveManager {
     private static final String baseUrl = "https://rak3ffdi.cloud.tds1.tapapis.cn/1.1";
@@ -96,6 +101,44 @@ public class SaveManager {
         HttpConnection connection = new HttpConnection(user.saveUrl);
         if (connection.connect() == 404) throw new RuntimeException("存档文件不存在");
         data = connection.bytes();
+    }
+
+    <T extends SaveModule> void modify(Class<T> clazz, ModifyStrategy<T> callback) throws IOException, InterruptedException {
+        HttpConnection connection = new HttpConnection(user.saveUrl);
+        data = connection.bytes();
+        try (ByteArrayInputStream inputStream = new ByteArrayInputStream(data)) {
+            try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream(inputStream.available())) {
+                try (ZipOutputStream zipWriter = new ZipOutputStream(outputStream)) {
+                    try (ZipInputStream zipReader = new ZipInputStream(inputStream)) {
+                        String name = (String) clazz.getDeclaredField("name").get(null);
+                        ZipEntry entry;
+                        while ((entry = zipReader.getNextEntry()) != null) {
+                            ZipEntry dEntry = new ZipEntry(entry);
+                            dEntry.setCompressedSize(-1);
+                            zipWriter.putNextEntry(dEntry);
+                            if (entry.getName().equals(name)) {
+                                byte version = clazz.getDeclaredField("version").getByte(null);
+                                if (zipReader.read() != version)
+                                    throw new RuntimeException("存档该部分已升级。");
+                                Logger.getGlobal().info(String.valueOf(version));
+                                data = decrypt(Util.readAllBytes(zipReader));
+                                T tmp = clazz.getDeclaredConstructor().newInstance();
+                                tmp.loadFromBinary(data);
+                                callback.apply(tmp);
+                                data = encrypt(tmp.serialize());
+                                zipWriter.write(version);
+                            } else
+                                data = Util.readAllBytes(zipReader);
+                            zipWriter.write(data);
+                        }
+                        zipReader.closeEntry();
+                    } catch (NoSuchFieldException | NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+                data = outputStream.toByteArray();
+            }
+        }
     }
 
     public void uploadZip() throws IOException {

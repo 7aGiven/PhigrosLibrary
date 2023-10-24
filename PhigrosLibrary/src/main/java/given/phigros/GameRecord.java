@@ -8,7 +8,7 @@ public class GameRecord extends MapSaveModule<LevelRecord[]> {
     final static byte version = 1;
 
     @Override
-    void getBytes(ByteWriter writer, Map.Entry<String, LevelRecord[]> entry) throws IOException {
+    void output(ByteWriter writer, Map.Entry<String, LevelRecord[]> entry) throws IOException {
         final byte[] strBytes = entry.getKey().getBytes();
         writer.putByte(strBytes.length + 2);
         writer.outputStream.write(strBytes);
@@ -38,7 +38,7 @@ public class GameRecord extends MapSaveModule<LevelRecord[]> {
     }
 
     @Override
-    void putBytes(ByteReader reader) {
+    void input(ByteReader reader) {
         String key = reader.getString(2);
         System.out.println(key);
         reader.position++;

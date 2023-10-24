@@ -9,9 +9,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 abstract class MapSaveModule<T> extends LinkedHashMap<String, T> implements SaveModule {
-    abstract void getBytes(ByteWriter writer, Map.Entry<String, T> entry) throws IOException;
+    abstract void output(ByteWriter writer, Map.Entry<String, T> entry) throws IOException;
 
-    abstract void putBytes(ByteReader reader);
+    abstract void input(ByteReader reader);
 
     @Override
     public SaveModule loadFromBinary(byte[] data) {
@@ -21,13 +21,10 @@ abstract class MapSaveModule<T> extends LinkedHashMap<String, T> implements Save
         for (; len > 0; len--) {
             short mark = (short) (reader.position + reader.data[reader.position] + 1);
             mark += reader.data[mark] + 1;
-            putBytes(reader);
+            input(reader);
             reader.position = mark;
         }
-        if (this instanceof GameKey) {
-            ((GameKey) this).lanotaReadKeys = reader.getByte();
-            ((GameKey) this).camelliaReadKey = reader.getByte() != 0;
-        }
+        loadFromBinary(reader);
         return this;
     }
 
@@ -37,11 +34,8 @@ abstract class MapSaveModule<T> extends LinkedHashMap<String, T> implements Save
             ByteWriter writer = new ByteWriter(outputStream);
             writer.putVarshort((short) size());
             for (final Map.Entry entry : entrySet())
-                getBytes(writer, entry);
-            if (this instanceof GameKey) {
-                writer.putByte(((GameKey) this).lanotaReadKeys);
-                writer.putByte(((GameKey) this).camelliaReadKey ? 1:0);
-            }
+                output(writer, entry);
+            serialize(writer);
             return outputStream.toByteArray();
         }
     }
@@ -50,6 +44,10 @@ abstract class MapSaveModule<T> extends LinkedHashMap<String, T> implements Save
 public interface SaveModule {
     default SaveModule loadFromBinary(byte[] data) {
         ByteReader reader = new ByteReader(data);
+        loadFromBinary(reader);
+        return this;
+    }
+    default void loadFromBinary(ByteReader reader) {
         try {
             byte index = 0;
             Field[] fields = getClass().getFields();
@@ -57,7 +55,7 @@ public interface SaveModule {
             for (final Field field : fields) {
                 System.out.println(field.toString());
                 if (field.getType() == boolean.class) {
-                    field.setBoolean(this, Util.getBit(data[reader.position], index++));
+                    field.setBoolean(this, Util.getBit(reader.data[reader.position], index++));
                     continue;
                 }
                 if (index != 0) {
@@ -81,12 +79,18 @@ public interface SaveModule {
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }
-        return this;
     }
 
     default byte[] serialize() throws IOException {
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             ByteWriter writer = new ByteWriter(outputStream);
+            serialize(writer);
+            return outputStream.toByteArray();
+        }
+    }
+
+    default void serialize(ByteWriter writer) throws IOException {
+        try {
             byte b = 0;
             byte index = 0;
             Field[] fields = getClass().getFields();
@@ -97,7 +101,7 @@ public interface SaveModule {
                     continue;
                 }
                 if (b != 0 && index != 0) {
-                    outputStream.write(b);
+                    writer.putByte(b);
                     b = index = 0;
                 }
                 if (field.getType() == String.class)
@@ -110,11 +114,10 @@ public interface SaveModule {
                     for (final short h : (short[]) field.get(this))
                         writer.putVarshort(h);
                 else if (field.getType() == byte.class)
-                    outputStream.write(field.getByte(this));
+                    writer.putByte(field.getByte(this));
                 else
                     throw new RuntimeException("出现新类型。");
             }
-            return outputStream.toByteArray();
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }

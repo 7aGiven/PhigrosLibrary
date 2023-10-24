@@ -6,10 +6,12 @@ import java.util.Map;
 public class GameKey extends MapSaveModule<GameKeyValue> {
     final static String name = "gameKey";
     final static byte version = 2;
+    @Order(0)
     public byte lanotaReadKeys;
+    @Order(1)
     public boolean camelliaReadKey;
 
-    void getBytes(ByteWriter writer, Map.Entry<String, GameKeyValue> entry) throws IOException {
+    void output(ByteWriter writer, Map.Entry<String, GameKeyValue> entry) throws IOException {
         final byte[] strBytes = entry.getKey().getBytes();
         writer.putByte(strBytes.length);
         writer.outputStream.write(strBytes);
@@ -30,7 +32,7 @@ public class GameKey extends MapSaveModule<GameKeyValue> {
         }
     }
 
-    void putBytes(ByteReader reader) {
+    void input(ByteReader reader) {
         String key = reader.getString(0);
         reader.position++;
         byte len = reader.getByte();

@@ -118,7 +118,7 @@ public class PhigrosUser {
                         break;
                 }
                 if (zipReader.read() == version) {
-                    buffer = zipReader.readAllBytes();
+                    buffer = Util.readAllBytes(zipReader);
                     zipReader.closeEntry();
                 } else
                     throw new RuntimeException("版本号已更新，请更新PhigrosLibrary。");
