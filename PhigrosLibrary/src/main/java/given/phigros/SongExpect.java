@@ -2,10 +2,10 @@ package given.phigros;
 
 public class SongExpect implements Comparable<SongExpect> {
     public String id;
-    public Level level;
+    public byte level;
     public float acc;
     public float expect;
-    SongExpect(String id,Level level,float acc,float expect) {
+    SongExpect(String id, byte level,float acc,float expect) {
         this.id = id;
         this.level = level;
         this.acc = acc;

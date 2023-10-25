@@ -72,7 +72,7 @@ class B19 implements Iterable<String> {
             final float[] levels = PhigrosUser.getInfo(id);
             length = reader.getByte();
             reader.position++;
-            final ArrayList<SongExpect> list = new ArrayList();
+            final ArrayList<SongExpect> list = new ArrayList<>();
             for (byte level = 0; level < levels.length; level++) {
                 if (levelNotExist(level))
                     continue;
@@ -84,7 +84,7 @@ class B19 implements Iterable<String> {
                 final float acc = reader.getFloat();
                 final float expect = (float) Math.sqrt(minRks / levels[level]) * 45f + 55f;
                 if (expect > acc)
-                    list.add(new SongExpect(id, Level.values()[level], acc, expect));
+                    list.add(new SongExpect(id, level, acc, expect));
             }
             return list.toArray(new SongExpect[list.size()]);
         }
@@ -92,10 +92,10 @@ class B19 implements Iterable<String> {
     }
     SongExpect[] getExpects() {
         final float minRks = getMinRks();
-        final ArrayList<SongExpect> list = new ArrayList();
+        final ArrayList<SongExpect> list = new ArrayList<>();
         for (String id:this) {
             final float[] levels = PhigrosUser.getInfo(id);
-            int level = levels.length - 1;
+            byte level = (byte) (levels.length - 1);
             for (; level >= 0; level--) {
                 if (levels[level] <= minRks)
                     break;
@@ -116,7 +116,7 @@ class B19 implements Iterable<String> {
                 final float acc = reader.getFloat();
                 final float expect = (float) Math.sqrt(minRks / levels[level]) * 45f + 55f;
                 if (expect > acc)
-                    list.add(new SongExpect(id, Level.values()[level], acc, expect));
+                    list.add(new SongExpect(id, level, acc, expect));
             }
         }
         final SongExpect[] array = list.toArray(new SongExpect[list.size()]);

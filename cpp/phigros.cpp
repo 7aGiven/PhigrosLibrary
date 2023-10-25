@@ -575,7 +575,7 @@ void upload_save(char* sessionToken, std::function<short (char*, char*)> callbac
 	std::cout << "fileId = " << oldfileId << ", id = " << id << ", userId = " << userId << '\n';
 	std::regex_search(ptr, match, resummary);
 	num = base64decode(ptr + match.position(1), match.length(1), buf);
-	buf[7] = 60;
+	buf[7] = 81;
 	std::string summary = base64encode(buf, num);
 	std::cout << "summary = " << summary << "\n\n";
 

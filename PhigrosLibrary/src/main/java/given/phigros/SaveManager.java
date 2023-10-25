@@ -156,7 +156,7 @@ public class SaveManager {
         JSONObject response;
 
         final byte[] summary = Base64.getDecoder().decode(saveModel.summary);
-        summary[7] = 64;
+        summary[7] = 81;
         saveModel.summary = Base64.getEncoder().encodeToString(summary);
         Logger.getGlobal().warning(new Summary(saveModel.summary).toString());
 
