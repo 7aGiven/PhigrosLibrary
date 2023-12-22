@@ -98,10 +98,10 @@ class B19Class:
     
     def read_difficulty(self, path):
         difficulty.clear()
-        with open(path) as f:
+        with open(path,encoding="UTF-8") as f:
             lines = f.readlines()
         for line in lines:
-            line = line[:-1].split("\\")
+            line = line[:-1].split(",")
             diff = []
             for i in range(1, len(line)):
                 diff.append(float(line[i]))
