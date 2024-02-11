@@ -40,11 +40,13 @@ static napi_value MethodB19(napi_env env, napi_callback_info info) {
 	BIO* save_bio = download_save(url);
 	cJSON_Delete(summarys);
 	cJSON* save = parse_save(save_bio);
+	BIO_free(save_bio);
 	cJSON* b19 = get_b19(cJSON_GetObjectItemCaseSensitive(save, "gameRecord"));
 	cJSON_Delete(save);
 	char* str = cJSON_PrintUnformatted(b19);
 	napi_create_string_utf8(env, str, strlen(str), &value);
 	free(str);
+	cJSON_Delete(b19);
 	return value;
 }
 
@@ -59,20 +61,17 @@ static napi_value MethodRe8(napi_env env, napi_callback_info info) {
 	char* url = cJSON_GetObjectItemCaseSensitive(summary, "url")->valuestring;
 	BIO* save_bio = download_save(url);
 	cJSON* save = parse_save(save_bio);
+	BIO_free(save_bio);
 	cJSON* gameProgress = cJSON_GetObjectItemCaseSensitive(save, "gameProgress");
-	char* str = cJSON_Print(gameProgress);
-	free(str);
 	cJSON_SetBoolValue(cJSON_GetObjectItemCaseSensitive(gameProgress, "chapter8UnlockBegin"), 0);
 	cJSON_SetBoolValue(cJSON_GetObjectItemCaseSensitive(gameProgress, "chapter8UnlockSecondPhase"), 0);
 	cJSON_SetBoolValue(cJSON_GetObjectItemCaseSensitive(gameProgress, "chapter8Passed"), 0);
 	cJSON_GetObjectItemCaseSensitive(gameProgress, "chapter8SongUnlocked")->valueint = 0;
-	str = cJSON_Print(gameProgress);
-	free(str);
 	char* save_buf;
 	len = gen_save(&save_buf, save);
+	cJSON_Delete(save);
 	upload_save(sessionToken, save_buf, len, summary);
 	free(save_buf);
-	cJSON_Delete(save);
 	cJSON_Delete(summarys);
 	return value;
 }

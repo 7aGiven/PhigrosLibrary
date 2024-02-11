@@ -2,6 +2,7 @@
 #define PHIGROS_H
 #include "src/cJSON.h"
 typedef struct bio_st BIO;
+int BIO_free(BIO *a);
 char get_nickname(char* sessionToken, char** nickname);
 void load_difficulty(char* path);
 cJSON* parse_save(BIO* bio_zip);
