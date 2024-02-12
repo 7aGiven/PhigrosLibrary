@@ -16,6 +16,24 @@ static napi_value MethodNickname(napi_env env, napi_callback_info info) {
 	return value;
 }
 
+static napi_value MethodSummary(napi_env env, napi_callback_info info) {
+	napi_value global, parse, value;
+	napi_get_global(env, &global);
+	napi_get_named_property(env, global, "JSON", &value);
+	napi_get_named_property(env, value, "parse", &parse);
+	char sessionToken[26];
+	size_t len = 1;
+	napi_get_cb_info(env, info, &len, &value, 0, 0);
+	napi_get_value_string_utf8(env, value, sessionToken, 26, &len);
+	cJSON* summary = get_summary(sessionToken);
+	char* str = cJSON_PrintUnformatted(summary);
+	cJSON_Delete(summary);
+	napi_create_string_utf8(env, str, strlen(str), &value);
+	free(str);
+	napi_call_function(env, global, parse, 1, &value, &value);
+	return value;
+}
+
 static napi_value MethodSave(napi_env env, napi_callback_info info) {
 	napi_value global, parse, value;
 	napi_get_global(env, &global);
