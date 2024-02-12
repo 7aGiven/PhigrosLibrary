@@ -29,8 +29,11 @@ static napi_value MethodDifficulty(napi_env env, napi_callback_info info) {
 }
 
 static napi_value MethodSave(napi_env env, napi_callback_info info) {
+	napi_value global, parse, value;
+	napi_get_global(env, &global);
+	napi_get_named_property(env, global, "JSON", &value);
+	napi_get_named_property(env, value, "parse", &parse);
 	size_t len = 1;
-	napi_value value;
 	napi_get_cb_info(env, info, &len, &value, 0, 0);
 	char sessionToken[26];
 	napi_get_value_string_utf8(env, value, sessionToken, sizeof sessionToken, &len);
@@ -44,13 +47,19 @@ static napi_value MethodSave(napi_env env, napi_callback_info info) {
 	cJSON_Delete(save);
 	napi_create_string_utf8(env, str, strlen(str), &value);
 	free(str);
+	napi_call_function(env, global, parse, 1, &value, &value);
 	return value;
 }
 
 static napi_value MethodB19(napi_env env, napi_callback_info info) {
+	napi_value global, parse, stringify, value;
+	napi_get_global(env, &global);
+	napi_get_named_property(env, global, "JSON", &value);
+	napi_get_named_property(env, value, "parse", &parse);
+	napi_get_named_property(env, value, "stringify", &stringify);
 	size_t len = 1;
-	napi_value value;
 	napi_get_cb_info(env, info, &len, &value, 0, 0);
+	napi_call_function(env, global, stringify, 1, &value, &value);
 	napi_get_value_string_utf8(env, value, 0, 0, &len);
 	char* str = malloc(len + 1);
 	napi_get_value_string_utf8(env, value, str, len + 1, &len);
@@ -62,6 +71,7 @@ static napi_value MethodB19(napi_env env, napi_callback_info info) {
 	cJSON_Delete(b19);
 	napi_create_string_utf8(env, str, strlen(str), &value);
 	free(str);
+	napi_call_function(env, global, parse, 1, &value, &value);
 	return value;
 }
 
