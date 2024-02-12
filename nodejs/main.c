@@ -28,7 +28,7 @@ static napi_value MethodDifficulty(napi_env env, napi_callback_info info) {
 	return value;
 }
 
-static napi_value MethodB19(napi_env env, napi_callback_info info) {
+static napi_value MethodSave(napi_env env, napi_callback_info info) {
 	size_t len = 1;
 	napi_value value;
 	napi_get_cb_info(env, info, &len, &value, 0, 0);
@@ -41,12 +41,32 @@ static napi_value MethodB19(napi_env env, napi_callback_info info) {
 	cJSON_Delete(summarys);
 	cJSON* save = parse_save(save_bio);
 	BIO_free(save_bio);
-	cJSON* b19 = get_b19(cJSON_GetObjectItemCaseSensitive(save, "gameRecord"));
+	char* str = cJSON_PrintUnformatted(save);
 	cJSON_Delete(save);
-	char* str = cJSON_PrintUnformatted(b19);
 	napi_create_string_utf8(env, str, strlen(str), &value);
 	free(str);
+	return value;
+}
+
+static napi_value MethodB19(napi_env env, napi_callback_info info) {
+	size_t len = 1;
+	napi_value value;
+	napi_get_cb_info(env, info, &len, &value, 0, 0);
+	napi_get_value_string_utf8(env, value, 0, 0, &len);
+	char* str = malloc(len + 1);
+	napi_get_value_string_utf8(env, value, str, len + 1, &len);
+	printf("%s\n", str);
+	cJSON* gameRecord = cJSON_ParseWithLength(str, len);
+	printf("parse\n");
+	free(str);
+	printf("b19\n");
+	cJSON* b19 = get_b19(gameRecord);
+	printf("b19 ok\n");
+	cJSON_Delete(gameRecord);
+	str = cJSON_PrintUnformatted(b19);
 	cJSON_Delete(b19);
+	napi_create_string_utf8(env, str, strlen(str), &value);
+	free(str);
 	return value;
 }
 
@@ -79,6 +99,7 @@ static napi_value MethodRe8(napi_env env, napi_callback_info info) {
 napi_value Init(napi_env env, napi_value exports) {
 	napi_property_descriptor properties[] = {
 		{"get_nickname", 0, MethodNickname, 0, 0, 0, napi_default, 0},
+		{"get_save", 0, MethodSave, 0, 0, 0, napi_default, 0},
         {"load_difficulty", 0, MethodDifficulty, 0, 0, 0, napi_default, 0},
         {"b19", 0, MethodB19, 0, 0, 0, napi_default, 0},
 		{"re8", 0, MethodRe8, 0, 0, 0, napi_default, 0},
