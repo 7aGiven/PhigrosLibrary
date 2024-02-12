@@ -16,6 +16,26 @@ static napi_value MethodNickname(napi_env env, napi_callback_info info) {
 	return value;
 }
 
+static napi_value MethodSave(napi_env env, napi_callback_info info) {
+	napi_value global, parse, value;
+	napi_get_global(env, &global);
+	napi_get_named_property(env, global, "JSON", &value);
+	napi_get_named_property(env, value, "parse", &parse);
+	char url[75];
+	size_t len = 1;
+	napi_get_cb_info(env, info, &len, &value, 0, 0);
+	napi_get_value_string_utf8(env, value, url, sizeof url, &len);
+	BIO* save_bio = download_save(url);
+	cJSON* save = parse_save(save_bio);
+	BIO_free(save_bio);
+	char* str = cJSON_PrintUnformatted(save);
+	cJSON_Delete(save);
+	napi_create_string_utf8(env, str, strlen(str), &value);
+	free(str);
+	napi_call_function(env, global, parse, 1, &value, &value);
+	return value;
+}
+
 static napi_value MethodDifficulty(napi_env env, napi_callback_info info) {
 	size_t len = 1;
 	napi_value value;
@@ -25,29 +45,6 @@ static napi_value MethodDifficulty(napi_env env, napi_callback_info info) {
 	napi_get_value_string_utf8(env, value, path, len + 1, &len);
 	load_difficulty(path);
 	free(path);
-	return value;
-}
-
-static napi_value MethodSave(napi_env env, napi_callback_info info) {
-	napi_value global, parse, value;
-	napi_get_global(env, &global);
-	napi_get_named_property(env, global, "JSON", &value);
-	napi_get_named_property(env, value, "parse", &parse);
-	size_t len = 1;
-	napi_get_cb_info(env, info, &len, &value, 0, 0);
-	char sessionToken[26];
-	napi_get_value_string_utf8(env, value, sessionToken, sizeof sessionToken, &len);
-	cJSON* summary = get_summary(sessionToken);
-	char* url = cJSON_GetObjectItemCaseSensitive(summary, "url")->valuestring;
-	BIO* save_bio = download_save(url);
-	cJSON_Delete(summary);
-	cJSON* save = parse_save(save_bio);
-	BIO_free(save_bio);
-	char* str = cJSON_PrintUnformatted(save);
-	cJSON_Delete(save);
-	napi_create_string_utf8(env, str, strlen(str), &value);
-	free(str);
-	napi_call_function(env, global, parse, 1, &value, &value);
 	return value;
 }
 
@@ -103,9 +100,10 @@ static napi_value MethodRe8(napi_env env, napi_callback_info info) {
 napi_value Init(napi_env env, napi_value exports) {
 	napi_property_descriptor properties[] = {
 		{"get_nickname", 0, MethodNickname, 0, 0, 0, napi_default, 0},
+		{"get_summary", 0, MethodSummary, 0, 0, 0, napi_default, 0},
 		{"get_save", 0, MethodSave, 0, 0, 0, napi_default, 0},
-        {"load_difficulty", 0, MethodDifficulty, 0, 0, 0, napi_default, 0},
-        {"b19", 0, MethodB19, 0, 0, 0, napi_default, 0},
+		{"load_difficulty", 0, MethodDifficulty, 0, 0, 0, napi_default, 0},
+		{"b19", 0, MethodB19, 0, 0, 0, napi_default, 0},
 		{"re8", 0, MethodRe8, 0, 0, 0, napi_default, 0},
 	};
 	napi_define_properties(env, exports, sizeof properties / sizeof(napi_property_descriptor), properties);
