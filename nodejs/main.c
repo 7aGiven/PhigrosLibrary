@@ -71,7 +71,7 @@ static napi_value MethodRe8(napi_env env, napi_callback_info info) {
 	napi_get_cb_info(env, info, &len, &value, 0, 0);
 	char sessionToken[26];
 	napi_get_value_string_utf8(env, value, sessionToken, 26, &len);
-	cJSON* summary = get_summarys(sessionToken);
+	cJSON* summary = get_summary(sessionToken);
 	char* url = cJSON_GetObjectItemCaseSensitive(summary, "url")->valuestring;
 	BIO* save_bio = download_save(url);
 	cJSON* save = parse_save(save_bio);
