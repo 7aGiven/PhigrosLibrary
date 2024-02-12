@@ -55,13 +55,9 @@ static napi_value MethodB19(napi_env env, napi_callback_info info) {
 	napi_get_value_string_utf8(env, value, 0, 0, &len);
 	char* str = malloc(len + 1);
 	napi_get_value_string_utf8(env, value, str, len + 1, &len);
-	printf("%s\n", str);
 	cJSON* gameRecord = cJSON_ParseWithLength(str, len);
-	printf("parse\n");
 	free(str);
-	printf("b19\n");
 	cJSON* b19 = get_b19(gameRecord);
-	printf("b19 ok\n");
 	cJSON_Delete(gameRecord);
 	str = cJSON_PrintUnformatted(b19);
 	cJSON_Delete(b19);
