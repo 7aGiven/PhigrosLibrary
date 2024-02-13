@@ -626,7 +626,7 @@ char get_nickname(char* sessionToken, char** nickname) {
 		*nickname = *nickname = cJSON_GetObjectItemCaseSensitive(resp, "error")->valuestring;
 		len = strlen(*nickname);
 		mem = malloc(len + 1);
-		len = -cJSON_GetObjectItemCaseSensitive(resp, "code")->valueint;
+		len = 0;
 	} else {
 		*nickname = cJSON_GetObjectItemCaseSensitive(resp, "nickname")->valuestring;
 		len = strlen(*nickname);
