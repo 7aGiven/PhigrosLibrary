@@ -11,7 +11,11 @@ static napi_value MethodNickname(napi_env env, napi_callback_info info) {
 	napi_get_value_string_utf8(env, value, buf, 26, &len);
 	char* nickname;
 	len = get_nickname(buf, &nickname);
-	napi_create_string_utf8(env, nickname, len, &value);
+	if (len < 0) {
+		napi_throw_error(env, -len, nickname);
+	} else {
+		napi_create_string_utf8(env, nickname, len, &value);
+	}
 	free(nickname);
 	return value;
 }

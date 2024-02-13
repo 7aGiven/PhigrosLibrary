@@ -621,9 +621,17 @@ char get_nickname(char* sessionToken, char** nickname) {
 	BIO_do_connect(https);
 	cJSON* resp = read_json_body(https);
 	SSL_CTX_free(ctx);
-	*nickname = cJSON_GetObjectItemCaseSensitive(resp, "nickname")->valuestring;
-	len = strlen(*nickname);
-	char* mem = malloc(len + 1);
+	char* mem;
+	if (cJSON_HasObjectItem(resp, "error")) {
+		*nickname = *nickname = cJSON_GetObjectItemCaseSensitive(resp, "error")->valuestring;
+		len = strlen(*nickname);
+		mem = malloc(len + 1);
+		len = -cJSON_GetObjectItemCaseSensitive(resp, "code")->valueint;
+	} else {
+		*nickname = cJSON_GetObjectItemCaseSensitive(resp, "nickname")->valuestring;
+		len = strlen(*nickname);
+		mem = malloc(len + 1);
+	}
 	strcpy(mem, *nickname);
 	cJSON_Delete(resp);
 	*nickname = mem;
