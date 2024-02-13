@@ -210,7 +210,7 @@ void serialization(BIO* bio, cJSON* json, struct LeafNode* nodes, char len) {
 			write_string(bio, item->valuestring, 0);
 		else if (nodes[i].type == u16array)
 			for (char ii = 0; ii < 12; ii++)
-				BIO_write(bio, &cJSON_GetArrayItem(item, i)->valueint, 2);
+				BIO_write(bio, &cJSON_GetArrayItem(item, ii)->valueint, 2);
 		else if (nodes[i].type == varshort)
 			for (char ii = 0; ii < 5; ii++)
 				write_varshort(bio, cJSON_GetArrayItem(item, ii)->valueint);
