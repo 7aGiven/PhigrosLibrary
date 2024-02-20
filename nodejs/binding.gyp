@@ -4,6 +4,10 @@
 		"include_dirs": ["../src"]
 	},
 	"conditions": [
+		['OS=="android"', {"targets": [{
+			"target_name": "phigros_android",
+			"libraries": ["-lzip"]
+		}]}],
 		['OS=="linux"', {"targets": [{
 			"target_name": "phigros_linux",
 			"libraries": ["../../src/libzip.a"]
