@@ -1,15 +1,16 @@
 {
 	"target_defaults": {
-		"sources": ["main.c"]
+		"sources": ["main.c", "../src/cJSON.c", "../src/phigros.c", "../src/score.cpp"],
+		"include_dirs": ["../src"]
 	},
 	"conditions": [
 		['OS=="linux"', {"targets": [{
 			"target_name": "phigros_linux",
-			"libraries": ["../../phigros.a"]
+			"libraries": ["../../src/libzip.a"]
 		}]}],
         ['OS=="win"', {"targets": [{
 			"target_name": "phigros_win",
-			"libraries": ["../../phigros.lib"]
+			"libraries": ["../../src/zip.lib"]
 		}]}]
 	]
 }
