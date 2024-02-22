@@ -42,7 +42,7 @@ bool compare(record a, record b) {
 	return a.rks > b.rks;
 }
 
-void cpp_bestn_internal(struct record* phi, unsigned char len, cJSON* gameRecord) {
+void cpp_bestn_internal(struct record* phi, unsigned char len, unsigned char progress[12], cJSON* gameRecord) {
 	record* records = phi + 1;
 	cJSON* song;
 	record* low_record = records;
@@ -52,6 +52,14 @@ void cpp_bestn_internal(struct record* phi, unsigned char len, cJSON* gameRecord
 			if (level == 3 && difficulty.at(3) == 0)
 				break;
 			double acc = cJSON_GetArrayItem(song, 3 * level + 1)->valuedouble;
+			if (progress && acc) {
+				progress[3 * level]++;
+				if (cJSON_GetArrayItem(song, 3 * level)->valueint == 1000000) {
+					progress[3 * level + 1]++;
+					progress[3 * level + 2]++;
+				} else if (cJSON_GetArrayItem(song, 3 * level + 2)->valueint)
+					progress[3 * level + 1]++;
+			}
 			if (acc < 55)
 				continue;
 			char compare_phi = difficulty.at(level) > phi->rks && cJSON_GetArrayItem(song, 3 * level)->valueint == 1000000;
@@ -77,7 +85,7 @@ void cpp_bestn_internal(struct record* phi, unsigned char len, cJSON* gameRecord
 
 cJSON* get_b19(cJSON* gameRecord) {
 	record records[20] = {};
-	cpp_bestn_internal(records, 19, gameRecord);
+	cpp_bestn_internal(records, 19, 0, gameRecord);
 	float rks = 0;
 	cJSON* phi;
 	cJSON* array = cJSON_CreateArray();
@@ -106,7 +114,7 @@ cJSON* get_b19(cJSON* gameRecord) {
 
 cJSON* cpp_expect(cJSON* gameRecord) {
 	record records[20] = {};
-	cpp_bestn_internal(records, 19, gameRecord);
+	cpp_bestn_internal(records, 19, 0, gameRecord);
 	cJSON* array = cJSON_CreateArray();
 	float low = records[20].rks;
 	cJSON* song;
@@ -135,5 +143,14 @@ cJSON* cpp_expect(cJSON* gameRecord) {
 		}
 	}
 	return array;
+}
+
+float get_rks_progress(cJSON* gameRecord, unsigned char progress[12]) {
+	record records[20] = {};
+	cpp_bestn_internal(records, 19, progress, gameRecord);
+	float rks = 0;
+	for (char i = 0; i < 20; i++)
+		rks += records[i].rks;
+	return rks;
 }
 }

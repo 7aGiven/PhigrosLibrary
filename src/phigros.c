@@ -11,6 +11,8 @@
 	#define LOGSTR(str, len) ;
 #endif
 
+float get_rks_progress(cJSON* gameRecord, unsigned char progress[12]);
+
 const EVP_MD* md;
 const EVP_CIPHER* cipher;
 const unsigned char key[] = {0xe8,0x96,0x9a,0xd2,0xa5,0x40,0x25,0x9b,0x97,0x91,0x90,0x8b,0x88,0xe6,0xbf,0x03,0x1e,0x6d,0x21,0x95,0x6e,0xfa,0xd6,0x8a,0x50,0xdd,0x55,0xd6,0x7a,0xb0,0x92,0x4b};
@@ -729,7 +731,16 @@ BIO* download_save(char* url) {
 }
 
 void update_summary(cJSON* summary, cJSON* save) {
-
+	cJSON *gameProgress = cJSON_GetObjectItemCaseSensitive(save, "gameProgress");
+	cJSON_GetObjectItemCaseSensitive(summary, "challengeModeRank")->valueint = cJSON_GetObjectItemCaseSensitive(save, "challengeModeRank")->valueint;
+	cJSON *user = cJSON_GetObjectItemCaseSensitive(save, "user");
+	cJSON_SetValuestring(cJSON_GetObjectItemCaseSensitive(summary, "avatar"), cJSON_GetObjectItemCaseSensitive(user, "avatar")->valuestring);
+	cJSON *gameRecord = cJSON_GetObjectItemCaseSensitive(save, "gameRecord");
+	unsigned char progress[12] = {};
+	cJSON_GetObjectItemCaseSensitive(summary, "rankingScore")->valuedouble = get_rks_progress(gameRecord, progress);
+	cJSON* array = cJSON_GetObjectItemCaseSensitive(summary, "progress");
+	for (char i = 0; i < 12; i++)
+		cJSON_GetArrayItem(array, i)->valueint = progress[i];
 }
 
 char prefix[] = "%s /1.1/%s";
