@@ -25,7 +25,7 @@ PhigrosLibrary是C/C++实现的Phigros云存档解析库。
 # 其他语言实现查分
 均为C语言的包装器
 
-待实现
+查看nodejs和python文件夹
 # 使用本项目的优秀项目
 [phi-plugin](https://github.com/catrong/phi-plugin)
 云崽bot插件，可查分等非常多的有关Phigros的功能
