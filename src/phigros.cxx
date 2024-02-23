@@ -25,29 +25,33 @@ extern "C" {
 char* b64encode(void* mem, char* data, char len);
 cJSON* parse_summary(char* ptr, char* base64);
 void gen_summary(char* mem, cJSON* summary);
+cJSON* parse_save(BIO* bio_zip);
+short gen_save(char** ret, cJSON* json);
 
 const EVP_MD* md;
 
 BIO* read_body(BIO* bio) {
-	char buf[1024];
+	char buf[1024], *ptr;
 	BIO* mem = BIO_new(BIO_s_mem());
-	int len;
-	char* ptr;
-	while (1) {
-		len = BIO_read(bio, buf, sizeof buf - 1);
-		buf[len] = 0;
-		ptr = strstr(buf, "\r\n\r\n");
-		if (ptr) {
-			BIO_write(mem, ptr + 4, buf - ptr + len - 4);
-			break;
-		}
-	}
+	short len = BIO_read(bio, buf, sizeof buf - 1);
+	buf[len] = 0;
+	short code = atoi(buf + 9);
+	ptr = strstr(buf, "\r\n\r\n");
+	BIO_write(mem, ptr + 4, buf - ptr + len - 4);
 	while (1) {
 		len = BIO_read(bio, buf, sizeof buf);
 		if (!len) break;
 		BIO_write(mem, buf, len);
 	}
 	BIO_free_all(bio);
+	if (code != 200) {
+		len = BIO_get_mem_data(mem, &ptr);
+		char *error = (char*) malloc(len + 1);
+		memcpy(error, ptr, len);
+		error[len] = 0;
+		BIO_free(mem);
+		throw error;
+	}
 	return mem;
 }
 
@@ -473,10 +477,82 @@ void update_summary(cJSON* summary, cJSON* save) {
 
 
 
-EXPORT char *get_summary(char* sessionToken) {
+EXPORT char *get_nickname(char *sessionToken) {
+	char req[512];
+	short len = sprintf(req, info_req, "users/me", sessionToken);
+	SSL_CTX* ctx = SSL_CTX_new(TLS_client_method());
+	BIO* https = BIO_new_ssl_connect(ctx);
+	BIO_set_conn_hostname(https, "rak3ffdi.cloud.tds1.tapapis.cn:https");
+	BIO_write(https, req, len);
+	BIO_do_connect(https);
+	cJSON* resp = read_json_body(https, 0, 0);
+	SSL_CTX_free(ctx);
+	if (cJSON_HasObjectItem(resp, "error")) {
+		throw cJSON_GetObjectItemCaseSensitive(resp, "error")->valuestring;
+	}
+	char *nickname = cJSON_GetObjectItemCaseSensitive(resp, "nickname")->valuestring;
+	len = strlen(nickname);
+	char* mem = (char*) malloc(len + 1);
+	strcpy(mem, nickname);
+	cJSON_Delete(resp);
+	return mem;
+}
+
+EXPORT char *get_summary(char *sessionToken) {
 	cJSON* summary = internal_get_summary(sessionToken);
 	char* str = cJSON_PrintUnformatted(summary);
 	cJSON_Delete(summary);
 	return str;
+}
+
+EXPORT char *get_save(char *url) {
+	BIO* save_bio = download_save(url);
+	cJSON* save = parse_save(save_bio);
+	BIO_free(save_bio);
+	char* str = cJSON_PrintUnformatted(save);
+	cJSON_Delete(save);
+	return str;
+}
+
+EXPORT void load_difficulty(char *path) {
+	difficulties.clear();
+	char str[102];
+	float d[4];
+	char tab;
+	FILE* file = fopen(path, "r");
+	while (fscanf(file, "%s%f%f%f%c", str, d, d+1, d+2, &tab) != -1) {
+		if (tab == 9)
+			fscanf(file, "%f", d+3);
+		else
+			d[3] = 0;
+		difficulties[str] = std::array<float, 4>{d[0], d[1], d[2], d[3]};
+	}
+	fclose(file);
+}
+
+EXPORT char *get_b19(char *json) {
+	cJSON* gameRecord = cJSON_Parse(json);
+	cJSON* b19 = internal_get_b19(gameRecord);
+	cJSON_Delete(gameRecord);
+	return cJSON_PrintUnformatted(b19);
+}
+
+EXPORT void re8(char *sessionToken) {
+	cJSON* summary = internal_get_summary(sessionToken);
+	char* url = cJSON_GetObjectItemCaseSensitive(summary, "url")->valuestring;
+	BIO* save_bio = download_save(url);
+	cJSON* save = parse_save(save_bio);
+	BIO_free(save_bio);
+	cJSON* gameProgress = cJSON_GetObjectItemCaseSensitive(save, "gameProgress");
+	cJSON_SetBoolValue(cJSON_GetObjectItemCaseSensitive(gameProgress, "chapter8UnlockBegin"), 0);
+	cJSON_SetBoolValue(cJSON_GetObjectItemCaseSensitive(gameProgress, "chapter8UnlockSecondPhase"), 0);
+	cJSON_SetBoolValue(cJSON_GetObjectItemCaseSensitive(gameProgress, "chapter8Passed"), 0);
+	cJSON_GetObjectItemCaseSensitive(gameProgress, "chapter8SongUnlocked")->valueint = 0;
+	char* save_buf;
+	short len = gen_save(&save_buf, save);
+	cJSON_Delete(save);
+	upload_save(sessionToken, save_buf, len, summary);
+	free(save_buf);
+	cJSON_Delete(summary);
 }
 }
