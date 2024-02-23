@@ -1,0 +1,13 @@
+cmake_minimum_required(VERSION 3.5.0)
+set(ENABLE_COMMONCRYPTO OFF CACHE BOOL ENABLE_COMMONCRYPTO)
+set(ENABLE_GNUTLS OFF CACHE BOOL ENABLE_GNUTLS)
+set(ENABLE_MBEDTLS OFF CACHE BOOL ENABLE_MBEDTLS)
+set(ENABLE_OPENSSL OFF CACHE BOOL ENABLE_OPENSSL)
+set(BUILD_SHARED_LIBS OFF CACHE BOOL BUILD_SHARED_LIBS)
+set(LIBZIP_DO_INSTALL OFF CACHE BOOL LIBZIP_DO_INSTALL)
+add_subdirectory(libzip)
+
+project(PhigrosLibrary)
+include_directories(src)
+add_library(phigros SHARED src/cJSON.c src/phigros.c src/score.cpp)
+target_link_libraries(phigros zip)
