@@ -5,7 +5,6 @@
 #include <iostream>
 #include <map>
 #include <openssl/ssl.h>
-#include <zip.h>
 #include "cJSON.h"
 
 extern "C" {
@@ -16,6 +15,11 @@ extern "C" {
 #else
 	#define LOG(format, ...) ;
 	#define LOGSTR(str, len) ;
+#endif
+#ifdef _MSC_VER
+	#define EXPORT __declspec(dllexport)
+#elif __GNUC__
+	#define EXPORT __attribute__((visibility("default")))
 #endif
 
 char* b64encode(void* mem, char* data, char len);
@@ -110,7 +114,7 @@ char get_nickname(char* sessionToken, char** nickname) {
 	return len;
 }
 
-cJSON* get_summary(char* sessionToken) {
+cJSON* internal_get_summary(char* sessionToken) {
 	char req[512];
 	sprintf(req, info_req, "classes/_GameSave?limit=1", sessionToken);
 	SSL_CTX* ctx = SSL_CTX_new(TLS_client_method());
@@ -465,5 +469,14 @@ void update_summary(cJSON* summary, cJSON* save) {
 	cJSON* array = cJSON_GetObjectItemCaseSensitive(summary, "progress");
 	for (char i = 0; i < 12; i++)
 		cJSON_GetArrayItem(array, i)->valueint = progress[i];
+}
+
+
+
+EXPORT char *get_summary(char* sessionToken) {
+	cJSON* summary = internal_get_summary(sessionToken);
+	char* str = cJSON_PrintUnformatted(summary);
+	cJSON_Delete(summary);
+	return str;
 }
 }
