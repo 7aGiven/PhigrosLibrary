@@ -1,4 +1,6 @@
+#include <string.h>
 #include <openssl/buffer.h>
+#include <openssl/evp.h>
 #include <zip.h>
 #include "cJSON.h"
 

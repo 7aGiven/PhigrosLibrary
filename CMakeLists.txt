@@ -9,5 +9,5 @@ add_subdirectory(libzip)
 
 project(PhigrosLibrary)
 include_directories(src)
-add_library(phigros SHARED src/cJSON.c src/phigros.cxx src/score.cxx)
+add_library(phigros SHARED src/cJSON.c src/save.c src/phigros.cxx)
 target_link_libraries(phigros zip)
