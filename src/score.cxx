@@ -153,4 +153,17 @@ float get_rks_progress(cJSON* gameRecord, unsigned char progress[12]) {
 		rks += records[i].rks;
 	return rks;
 }
+
+void update_summary(cJSON* summary, cJSON* save) {
+	cJSON *gameProgress = cJSON_GetObjectItemCaseSensitive(save, "gameProgress");
+	cJSON_GetObjectItemCaseSensitive(summary, "challengeModeRank")->valueint = cJSON_GetObjectItemCaseSensitive(save, "challengeModeRank")->valueint;
+	cJSON *user = cJSON_GetObjectItemCaseSensitive(save, "user");
+	cJSON_SetValuestring(cJSON_GetObjectItemCaseSensitive(summary, "avatar"), cJSON_GetObjectItemCaseSensitive(user, "avatar")->valuestring);
+	cJSON *gameRecord = cJSON_GetObjectItemCaseSensitive(save, "gameRecord");
+	unsigned char progress[12] = {};
+	cJSON_GetObjectItemCaseSensitive(summary, "rankingScore")->valuedouble = get_rks_progress(gameRecord, progress);
+	cJSON* array = cJSON_GetObjectItemCaseSensitive(summary, "progress");
+	for (char i = 0; i < 12; i++)
+		cJSON_GetArrayItem(array, i)->valueint = progress[i];
+}
 }
