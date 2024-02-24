@@ -1,4 +1,3 @@
-phigros.a
-phigros.lib
-build/
-nodejs/build/
+/build
+!/build/build.sh
+/nodejs/build/
