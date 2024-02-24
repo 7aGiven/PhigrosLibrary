@@ -91,33 +91,6 @@ void md5(char* str, void* ptr, unsigned int len) {
 }
 
 char info_req[] = "GET /1.1/%s HTTP/1.0\r\nX-LC-Key: Qr9AEqtuoSVS3zeD6iVbM4ZC0AtkJcQ89tywVyi0\r\nX-LC-Session: %s\r\nX-LC-Id: rAK3FfdieFob2Nn8Am\r\nHost: rak3ffdi.cloud.tds1.tapapis.cn\r\n\r\n";
-char get_nickname(char* sessionToken, char** nickname) {
-	char req[512];
-	short len = sprintf(req, info_req, "users/me", sessionToken);
-	SSL_CTX* ctx = SSL_CTX_new(TLS_client_method());
-	BIO* https = BIO_new_ssl_connect(ctx);
-	BIO_set_conn_hostname(https, "rak3ffdi.cloud.tds1.tapapis.cn:https");
-	BIO_write(https, req, len);
-	BIO_do_connect(https);
-	cJSON* resp = read_json_body(https, 0, 0);
-	SSL_CTX_free(ctx);
-	char* mem;
-	if (cJSON_HasObjectItem(resp, "error")) {
-		*nickname = *nickname = cJSON_GetObjectItemCaseSensitive(resp, "error")->valuestring;
-		len = strlen(*nickname);
-		mem = (char*) malloc(len + 1);
-		len = 0;
-	} else {
-		*nickname = cJSON_GetObjectItemCaseSensitive(resp, "nickname")->valuestring;
-		len = strlen(*nickname);
-		mem = (char*) malloc(len + 1);
-	}
-	strcpy(mem, *nickname);
-	cJSON_Delete(resp);
-	*nickname = mem;
-	return len;
-}
-
 cJSON* internal_get_summary(char* sessionToken) {
 	char req[512];
 	sprintf(req, info_req, "classes/_GameSave?limit=1", sessionToken);
@@ -322,21 +295,6 @@ struct record {
 	float rks;
 };
 std::map<std::string, std::array<float, 4>> difficulties;
-void load_difficulty(char* path) {
-	difficulties.clear();
-	char str[102];
-	float d[4];
-	char tab;
-	FILE* file = fopen(path, "r");
-	while (fscanf(file, "%s%f%f%f%c", str, d, d+1, d+2, &tab) != -1) {
-		if (tab == 9)
-			fscanf(file, "%f", d+3);
-		else
-			d[3] = 0;
-		difficulties[str] = std::array<float, 4>{d[0], d[1], d[2], d[3]};
-	}
-	fclose(file);
-}
 
 record* low(record* records, unsigned char len) {
 	char n = 0;
@@ -391,7 +349,7 @@ void cpp_bestn_internal(struct record* phi, unsigned char len, unsigned char pro
 	std::sort(records, records + len, compare);
 }
 
-cJSON* get_b19(cJSON* gameRecord) {
+cJSON* internal_get_b19(cJSON* gameRecord) {
 	record records[20] = {};
 	cpp_bestn_internal(records, 19, 0, gameRecord);
 	float rks = 0;
