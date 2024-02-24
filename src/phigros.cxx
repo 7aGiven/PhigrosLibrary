@@ -435,9 +435,31 @@ void update_summary(cJSON* summary, cJSON* save) {
 
 
 
-EXPORT char *get_nickname(char *sessionToken) {
+struct Handle {
+	char sessionToken[26];
+	cJSON* summary;
+	cJSON* save;
+};
+
+EXPORT struct Handle *get_handle(char *sessionToken) {
+	struct Handle *handle = (struct Handle*) calloc(1, sizeof(struct Handle));
+	strcpy(handle->sessionToken, sessionToken);
+	return handle;
+}
+
+EXPORT void free_handle(struct Handle* handle) {
+	if (handle->summary) {
+		cJSON_Delete(handle->summary);
+		if (handle->save)
+			cJSON_Delete(handle->save);
+	}
+	free(handle);
+}
+
+
+EXPORT char *get_nickname(struct Handle *handle) {
 	char req[512];
-	short len = sprintf(req, info_req, "users/me", sessionToken);
+	short len = sprintf(req, info_req, "users/me", handle->sessionToken);
 	SSL_CTX* ctx = SSL_CTX_new(TLS_client_method());
 	BIO* https = BIO_new_ssl_connect(ctx);
 	BIO_set_conn_hostname(https, "rak3ffdi.cloud.tds1.tapapis.cn:https");
@@ -445,9 +467,6 @@ EXPORT char *get_nickname(char *sessionToken) {
 	BIO_do_connect(https);
 	cJSON* resp = read_json_body(https, 0, 0);
 	SSL_CTX_free(ctx);
-	if (cJSON_HasObjectItem(resp, "error")) {
-		throw cJSON_GetObjectItemCaseSensitive(resp, "error")->valuestring;
-	}
 	char *nickname = cJSON_GetObjectItemCaseSensitive(resp, "nickname")->valuestring;
 	len = strlen(nickname);
 	char* mem = (char*) malloc(len + 1);
@@ -456,20 +475,22 @@ EXPORT char *get_nickname(char *sessionToken) {
 	return mem;
 }
 
-EXPORT char *get_summary(char *sessionToken) {
-	cJSON* summary = internal_get_summary(sessionToken);
-	char* str = cJSON_PrintUnformatted(summary);
-	cJSON_Delete(summary);
-	return str;
+EXPORT char *get_summary(struct Handle *handle) {
+	if (!handle->summary)
+		handle->summary = internal_get_summary(handle->sessionToken);
+	return cJSON_PrintUnformatted(handle->summary);
 }
 
-EXPORT char *get_save(char *url) {
-	BIO* save_bio = download_save(url);
-	cJSON* save = parse_save(save_bio);
-	BIO_free(save_bio);
-	char* str = cJSON_PrintUnformatted(save);
-	cJSON_Delete(save);
-	return str;
+EXPORT char *get_save(struct Handle *handle) {
+	if (!handle->summary)
+		handle->summary = internal_get_summary(handle->sessionToken);
+	if (!handle->save) {
+		char* str = cJSON_GetObjectItemCaseSensitive(handle->summary, "url")->valuestring;
+		BIO* save_bio = download_save(str);
+		handle->save = parse_save(save_bio);
+		BIO_free(save_bio);
+	}
+	return cJSON_PrintUnformatted(handle->save);
 }
 
 EXPORT void load_difficulty(char *path) {
@@ -488,29 +509,39 @@ EXPORT void load_difficulty(char *path) {
 	fclose(file);
 }
 
-EXPORT char *get_b19(char *json) {
-	cJSON* gameRecord = cJSON_Parse(json);
+EXPORT char *get_b19(struct Handle *handle) {
+	char *str;
+	if (!handle->summary)
+		handle->summary = internal_get_summary(handle->sessionToken);
+	if (!handle->save) {
+		str = cJSON_GetObjectItemCaseSensitive(handle->summary, "url")->valuestring;
+		BIO* save_bio = download_save(str);
+		handle->save = parse_save(save_bio);
+		BIO_free(save_bio);
+	}
+	cJSON* gameRecord = cJSON_GetObjectItemCaseSensitive(handle->save, "gameRecord");
 	cJSON* b19 = internal_get_b19(gameRecord);
-	cJSON_Delete(gameRecord);
-	return cJSON_PrintUnformatted(b19);
+	str = cJSON_PrintUnformatted(b19);
+	cJSON_Delete(b19);
+	return str;
 }
 
-EXPORT void re8(char *sessionToken) {
-	cJSON* summary = internal_get_summary(sessionToken);
-	char* url = cJSON_GetObjectItemCaseSensitive(summary, "url")->valuestring;
-	BIO* save_bio = download_save(url);
-	cJSON* save = parse_save(save_bio);
+EXPORT void re8(struct Handle *handle) {
+	handle->summary = internal_get_summary(handle->sessionToken);
+	char* str = cJSON_GetObjectItemCaseSensitive(handle->summary, "url")->valuestring;
+	BIO* save_bio = download_save(str);
+	handle->save = parse_save(save_bio);
 	BIO_free(save_bio);
-	cJSON* gameProgress = cJSON_GetObjectItemCaseSensitive(save, "gameProgress");
+
+	cJSON* gameProgress = cJSON_GetObjectItemCaseSensitive(handle->save, "gameProgress");
 	cJSON_SetBoolValue(cJSON_GetObjectItemCaseSensitive(gameProgress, "chapter8UnlockBegin"), 0);
 	cJSON_SetBoolValue(cJSON_GetObjectItemCaseSensitive(gameProgress, "chapter8UnlockSecondPhase"), 0);
 	cJSON_SetBoolValue(cJSON_GetObjectItemCaseSensitive(gameProgress, "chapter8Passed"), 0);
 	cJSON_GetObjectItemCaseSensitive(gameProgress, "chapter8SongUnlocked")->valueint = 0;
 	char* save_buf;
-	short len = gen_save(&save_buf, save);
-	cJSON_Delete(save);
-	upload_save(sessionToken, save_buf, len, summary);
+	short len = gen_save(&save_buf, handle->save);
+	update_summary(handle->summary, handle->save);
+	upload_save(handle->sessionToken, save_buf, len, handle->summary);
 	free(save_buf);
-	cJSON_Delete(summary);
 }
 }
