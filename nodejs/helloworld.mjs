@@ -1,31 +1,25 @@
-import { platform } from "node:os"
-import { createRequire } from "node:module"
-const require = createRequire(import.meta.url)
+import ffi from "ffi-napi"
 
-let addon
-const p = platform()
-if (p == "linux") {
-	addon = require("./build/Release/phigros_linux.node")
-} else if (p == "win32") {
-	addon = require("./build/Release/phigros_win.node")
-}
+const path = "./libphigros" //libphigros.so的路径
+
+//除了get_handle和load_difficulty,其他函数的参数均为handle
+const phigros = ffi.Library(path,{
+    "get_handle": ["pointer", ["string"]],  //获取handle,申请内存,参数为sessionToken
+    "free_handle": ["void", ["pointer"]],   //释放handle的内存,不会被垃圾回收,使用完handle请确保释放
+    "get_nickname": ["string", ["pointer"]],//获取玩家昵称
+    "get_summary": ["string", ["pointer"]], //获取Summary
+    "get_save": ["string", ["pointer"]],    //获取存档
+    "load_difficulty": ["void", ["string"]],//读取difficulty.tsv,参数为文件路径
+    "get_b19": ["string", ["pointer"]],     //从存档读取B19,依赖load_difficulty
+    "re8": ["void", ["pointer"]]            //重置第八章剧情
+})
 
 const sessionToken = ""
-
-//获取玩家昵称
-const player = addon.get_nickname(sessionToken); console.log(player)
-
-//获取Summary
-const summary = addon.get_summary(sessionToken); console.log(summary)
-
-//获取存档
-const save = addon.get_save(summary.url); console.log(save)
-
-//读取difficulty.tsv
-addon.load_difficulty("../difficulty.tsv"); console.log("difficulty")
-
-//从存档读取B19
-const b19 = addon.b19(save.gameRecord); console.log(b19)
-
-//重置第八章剧情，请在确保安全的情况下测试。
-addon.re8(sessionToken)
+const handle = phigros.get_handle(sessionToken)
+console.log(handle)
+console.log(phigros.get_nickname(handle))
+console.log(phigros.get_summary(handle))
+console.log(phigros.get_save(handle))
+phigros.load_difficulty("../difficulty.tsv")
+console.log(phigros.get_b19(handle))
+phigros.free_handle(handle)
