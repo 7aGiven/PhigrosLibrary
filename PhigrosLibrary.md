@@ -5,17 +5,24 @@
 封装并优化了常用函数(B19,BestN,目标ACC)
 
 # 构建C/C++
-windows依赖Visual Studio Build Tools
+所有系统都依赖cmake
 
-运行build.cmd生成phigros.lib
+windows依赖Visual Studio Build Tools安装C++载荷
 
-linux依赖g++
+依赖libssl.lib libcrypto.lib zlib.lib以及zlib的头文件
 
-运行build.sh生成phigros.a
+运行build.cmd生成phigros.dll
+
+linux依赖g++与libssl-dev
+
+运行build.sh生成libphigros.so
 
 # C/C++使用方法
-目前仅支持x64的windows与linux的Release，如为其他系统与架构请自行编译
+### 直接引用源码
+直接把源码加进您的项目内
+### 调用编译完成的so与dll
+目前仅支持x64的windows与linux以及aarch64的linux的Release，如为其他系统与架构请自行编译
 
-下载Release内的phigros.a或phigros.lib和phigros.h
+下载Release内的libphigros.so或phigros.dll和phigros.h
 
 请看phigros.h的注释

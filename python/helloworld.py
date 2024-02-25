@@ -22,6 +22,6 @@ print(handle)
 print(phigros.get_nickname(handle))         # 获取玩家昵称
 print(phigros.get_summary(handle))          # 获取Summary
 print(phigros.get_save(handle))             # 获取存档
-phigros.load_difficulty("../difficulty.tsv")# 读取difficulty.tsv,参数为文件路径
+phigros.load_difficulty(b"../difficulty.tsv")# 读取difficulty.tsv,参数为文件路径
 print(phigros.get_b19(handle))              # 从存档读取B19,依赖load_difficulty
 phigros.free_handle(handle)                 # 释放handle的内存,不会被垃圾回收,使用完handle请确保释放

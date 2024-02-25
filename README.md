@@ -32,7 +32,7 @@ PhigrosLibrary是C/C++实现的Phigros云存档解析库。
 
 UI精美，使用nodejs重构本项目的查分，使用本项目nodejs C++ addon的re8
 ## Phigros 曲目更新
-@3035936740[Phigros_Resource](https://github.com/3035936740/Phigros_Resource/)可从apk文件中提取定数表(apk可从616.sb下载)
+@3035936740[Phigros_Resource](https://github.com/3035936740/Phigros_Resource/)可从apk文件中提取定数表
 
 运行以下代码将会在运行目录生成difficulty.csv
 ```python
