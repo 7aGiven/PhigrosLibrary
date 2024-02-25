@@ -1,7 +1,5 @@
 import ctypes
 
-print(dir(ctypes))
-
 phigros = ctypes.CDLL("./libphigros.so")
 print(phigros)
 phigros.get_handle.argtypes = ctypes.c_char_p,

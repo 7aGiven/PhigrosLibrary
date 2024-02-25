@@ -10,7 +10,7 @@ PhigrosLibrary是C/C++实现的Phigros云存档解析库。
 
 1. [头像id](https://github.com/7aGiven/PhigrosLibrary/blob/main/avatar.txt)
 2. [收藏品id](https://github.com/7aGiven/PhigrosLibrary/blob/main/collection.tsv)
-3. 定数表和曲绘请使用项目[Phigros_Resource](https://github.com/7aGiven/Phigros_Resource/)从apk文件中提取(apk可从616.sb下载)
+3. 定数表和曲绘请使用项目@3035936740[Phigros_Resource](https://github.com/3035936740/Phigros_Resource/)从apk文件中提取
 
 **注：3个文件都在项目根目录下，查看修改时间判断版本。**
 
@@ -32,7 +32,7 @@ PhigrosLibrary是C/C++实现的Phigros云存档解析库。
 
 UI精美，使用nodejs重构本项目的查分，使用本项目nodejs C++ addon的re8
 ## Phigros 曲目更新
-[Phigros_Resource](https://github.com/7aGiven/Phigros_Resource/)可从apk文件中提取定数表(apk可从616.sb下载)
+@3035936740[Phigros_Resource](https://github.com/3035936740/Phigros_Resource/)可从apk文件中提取定数表(apk可从616.sb下载)
 
 运行以下代码将会在运行目录生成difficulty.csv
 ```python
