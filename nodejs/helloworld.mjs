@@ -11,7 +11,6 @@ const phigros = ffi.Library(path,{
     "get_save": ["string", ["pointer"]],    //获取存档
     "load_difficulty": ["void", ["string"]],//读取difficulty.tsv,参数为文件路径
     "get_b19": ["string", ["pointer"]],     //从存档读取B19,依赖load_difficulty
-    "re8": ["void", ["pointer"]]            //重置第八章剧情
 })
 
 const sessionToken = ""

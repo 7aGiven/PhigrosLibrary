@@ -526,7 +526,7 @@ EXPORT char *get_b19(struct Handle *handle) {
 	return str;
 }
 
-EXPORT void re8(struct Handle *handle) {
+void re8(struct Handle *handle) {
 	handle->summary = internal_get_summary(handle->sessionToken);
 	char* str = cJSON_GetObjectItemCaseSensitive(handle->summary, "url")->valuestring;
 	BIO* save_bio = download_save(str);
