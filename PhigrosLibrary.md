@@ -23,6 +23,6 @@ linux依赖g++与libssl-dev
 ### 调用编译完成的so与dll
 目前仅支持x64的windows与linux以及aarch64的linux的Release，如为其他系统与架构请自行编译
 
-下载Release内的libphigros.so或phigros.dll和phigros.h
+下载Release内的libphigros.so或phigros.dll
 
-请看phigros.h的注释
+请看[phigros.h](https://github.com/7aGiven/PhigrosLibrary/blob/main/phigros.h)的注释
