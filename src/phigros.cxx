@@ -382,7 +382,7 @@ cJSON* cpp_expect(cJSON* gameRecord) {
 	record records[20] = {};
 	cpp_bestn_internal(records, 19, 0, gameRecord);
 	cJSON* array = cJSON_CreateArray();
-	float low = records[20].rks;
+	float low = records[19].rks;
 	cJSON* song;
 	cJSON_ArrayForEach(song, gameRecord) {
 		std::array<float, 4> difficulty = difficulties.at(song->string);
