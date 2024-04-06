@@ -96,6 +96,7 @@ inferior
 青芽
 瓷岁
 Feast远东之宴
+零號車輛
 神話
 El último baile
 Trojan
@@ -116,3 +117,6 @@ TECHNOPOLIS 2085
 ストレイソウル・アラウンド
 Manifold Hypothesis
 K.Moe (VIP)
+Xenolith
+Artificial Existence
+Indelible Scar
