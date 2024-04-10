@@ -92,10 +92,12 @@ void md5(char* str, void* ptr, unsigned int len) {
 
 char info_req[] = "GET /1.1/%s HTTP/1.1\r\nX-LC-Key: Qr9AEqtuoSVS3zeD6iVbM4ZC0AtkJcQ89tywVyi0\r\nX-LC-Session: %s\r\nX-LC-Id: rAK3FfdieFob2Nn8Am\r\nHost: rak3ffdi.cloud.tds1.tapapis.cn\r\nConnection: close\r\n\r\n";
 cJSON* internal_get_summary(char* sessionToken) {
+	SSL* ssl;
 	char req[512];
 	sprintf(req, info_req, "classes/_GameSave?limit=1", sessionToken);
 	SSL_CTX* ctx = SSL_CTX_new(TLS_client_method());
 	BIO* https = BIO_new_ssl_connect(ctx);
+	BIO_get_ssl(https, &ssl);
 	BIO_set_conn_hostname(https, "rak3ffdi.cloud.tds1.tapapis.cn:https");
 	SSL_set_tlsext_host_name(ssl, "rak3ffdi.cloud.tds1.tapapis.cn");
 	BIO_puts(https, req);
@@ -126,10 +128,12 @@ cJSON* internal_get_summary(char* sessionToken) {
 }
 
 cJSON* get_summarys(char* sessionToken) {
+	SSL* ssl;
 	char req[512];
 	sprintf(req, info_req, "classes/_GameSave", sessionToken);
 	SSL_CTX* ctx = SSL_CTX_new(TLS_client_method());
 	BIO* https = BIO_new_ssl_connect(ctx);
+	BIO_get_ssl(https, &ssl);
 	BIO_set_conn_hostname(https, "rak3ffdi.cloud.tds1.tapapis.cn:https");
 	SSL_set_tlsext_host_name(ssl, "rak3ffdi.cloud.tds1.tapapis.cn");
 	BIO_puts(https, req);
@@ -182,6 +186,7 @@ char header[] = " HTTP/1.%c\r\nX-LC-Key: Qr9AEqtuoSVS3zeD6iVbM4ZC0AtkJcQ89tywVyi
 char qiniu[] = "%s /buckets/rAK3Ffdi/objects/%s/uploads";
 char qiniu_header[] = " HTTP/1.1\r\nAuthorization: UpToken %s\r\nContent-Length: %hd\r\nHost: upload.qiniup.com\r\nConnection: %s\r\n";
 void upload_save(char* sessionToken, char* data, short data_len, cJSON* summary) {
+	SSL* ssl;
 	char head[2048];
 	char* body = head + 1024;
 	short len, body_len;
@@ -195,6 +200,7 @@ void upload_save(char* sessionToken, char* data, short data_len, cJSON* summary)
 	LOG("%s\n", body);
 
 	BIO* https = BIO_new_ssl_connect(ctx);
+	BIO_get_ssl(https, &ssl);
 	BIO_set_conn_hostname(https, "rak3ffdi.cloud.tds1.tapapis.cn:https");
 	SSL_set_tlsext_host_name(ssl, "rak3ffdi.cloud.tds1.tapapis.cn");
 	BIO_write(https, head, len);
@@ -251,6 +257,7 @@ void upload_save(char* sessionToken, char* data, short data_len, cJSON* summary)
 	LOG("%s", head);
 	LOG("%s\n", body);
 	https = BIO_new_ssl_connect(ctx);
+	BIO_get_ssl(https, &ssl);
 	BIO_set_conn_hostname(https, "rak3ffdi.cloud.tds1.tapapis.cn:https");
 	SSL_set_tlsext_host_name(ssl, "rak3ffdi.cloud.tds1.tapapis.cn");
 	BIO_write(https, head, len);
@@ -462,10 +469,12 @@ EXPORT void free_handle(struct Handle* handle) {
 
 
 EXPORT char *get_nickname(struct Handle *handle) {
+	SSL* ssl;
 	char req[512];
 	short len = sprintf(req, info_req, "users/me", handle->sessionToken);
 	SSL_CTX* ctx = SSL_CTX_new(TLS_client_method());
 	BIO* https = BIO_new_ssl_connect(ctx);
+	BIO_get_ssl(https, &ssl);
 	BIO_set_conn_hostname(https, "rak3ffdi.cloud.tds1.tapapis.cn:https");
 	SSL_set_tlsext_host_name(ssl, "rak3ffdi.cloud.tds1.tapapis.cn");
 	BIO_write(https, req, len);
