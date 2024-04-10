@@ -90,13 +90,14 @@ void md5(char* str, void* ptr, unsigned int len) {
 	str[32] = 0;
 }
 
-char info_req[] = "GET /1.1/%s HTTP/1.0\r\nX-LC-Key: Qr9AEqtuoSVS3zeD6iVbM4ZC0AtkJcQ89tywVyi0\r\nX-LC-Session: %s\r\nX-LC-Id: rAK3FfdieFob2Nn8Am\r\nHost: rak3ffdi.cloud.tds1.tapapis.cn\r\n\r\n";
+char info_req[] = "GET /1.1/%s HTTP/1.1\r\nX-LC-Key: Qr9AEqtuoSVS3zeD6iVbM4ZC0AtkJcQ89tywVyi0\r\nX-LC-Session: %s\r\nX-LC-Id: rAK3FfdieFob2Nn8Am\r\nHost: rak3ffdi.cloud.tds1.tapapis.cn\r\nConnection: close\r\n\r\n";
 cJSON* internal_get_summary(char* sessionToken) {
 	char req[512];
 	sprintf(req, info_req, "classes/_GameSave?limit=1", sessionToken);
 	SSL_CTX* ctx = SSL_CTX_new(TLS_client_method());
 	BIO* https = BIO_new_ssl_connect(ctx);
 	BIO_set_conn_hostname(https, "rak3ffdi.cloud.tds1.tapapis.cn:https");
+	SSL_set_tlsext_host_name(ssl, "rak3ffdi.cloud.tds1.tapapis.cn");
 	BIO_puts(https, req);
 	BIO_do_connect(https);
 	cJSON* resp = read_json_body(https, 0, 0);
@@ -130,6 +131,7 @@ cJSON* get_summarys(char* sessionToken) {
 	SSL_CTX* ctx = SSL_CTX_new(TLS_client_method());
 	BIO* https = BIO_new_ssl_connect(ctx);
 	BIO_set_conn_hostname(https, "rak3ffdi.cloud.tds1.tapapis.cn:https");
+	SSL_set_tlsext_host_name(ssl, "rak3ffdi.cloud.tds1.tapapis.cn");
 	BIO_puts(https, req);
 	BIO_do_connect(https);
 	cJSON* resp = read_json_body(https, 0, 0);
@@ -194,6 +196,7 @@ void upload_save(char* sessionToken, char* data, short data_len, cJSON* summary)
 
 	BIO* https = BIO_new_ssl_connect(ctx);
 	BIO_set_conn_hostname(https, "rak3ffdi.cloud.tds1.tapapis.cn:https");
+	SSL_set_tlsext_host_name(ssl, "rak3ffdi.cloud.tds1.tapapis.cn");
 	BIO_write(https, head, len);
 	BIO_write(https, body, body_len);
 	BIO_do_connect(https);
@@ -249,6 +252,7 @@ void upload_save(char* sessionToken, char* data, short data_len, cJSON* summary)
 	LOG("%s\n", body);
 	https = BIO_new_ssl_connect(ctx);
 	BIO_set_conn_hostname(https, "rak3ffdi.cloud.tds1.tapapis.cn:https");
+	SSL_set_tlsext_host_name(ssl, "rak3ffdi.cloud.tds1.tapapis.cn");
 	BIO_write(https, head, len);
 	BIO_write(https, body, body_len);
 	BIO_do_connect(https);
@@ -463,6 +467,7 @@ EXPORT char *get_nickname(struct Handle *handle) {
 	SSL_CTX* ctx = SSL_CTX_new(TLS_client_method());
 	BIO* https = BIO_new_ssl_connect(ctx);
 	BIO_set_conn_hostname(https, "rak3ffdi.cloud.tds1.tapapis.cn:https");
+	SSL_set_tlsext_host_name(ssl, "rak3ffdi.cloud.tds1.tapapis.cn");
 	BIO_write(https, req, len);
 	BIO_do_connect(https);
 	cJSON* resp = read_json_body(https, 0, 0);
