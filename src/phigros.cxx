@@ -66,12 +66,6 @@ cJSON* read_json_body(BIO* bio, char* mem, short len) {
 		len = BIO_get_mem_data(resp, &ptr);
 		json = cJSON_ParseWithLength(ptr, len);
 		BIO_free(resp);
-		if (cJSON_HasObjectItem(json, "error")) {
-			ptr = cJSON_GetObjectItemCaseSensitive(json, "error")->valuestring;
-			asprintf(&ptr, "ERROR:%s", ptr);
-			cJSON_Delete(json);
-			throw ptr;
-		}
 	}
 	return json;
 }
@@ -107,6 +101,12 @@ cJSON* internal_get_summary(char* sessionToken) {
 	BIO_do_connect(https);
 	cJSON* resp = read_json_body(https, 0, 0);
 	SSL_CTX_free(ctx);
+	if (cJSON_HasObjectItem(resp, "error")) {
+		char* ptr = cJSON_GetObjectItemCaseSensitive(resp, "error")->valuestring;
+		asprintf(&ptr, "ERROR:%s", ptr);
+		cJSON_Delete(resp);
+		throw ptr;
+	}
 
 	cJSON* result = cJSON_GetObjectItemCaseSensitive(resp, "results");
 	result = cJSON_GetArrayItem(result, 0);
@@ -488,14 +488,14 @@ EXPORT char *get_nickname(struct Handle *handle) {
 	SSL_set_tlsext_host_name(ssl, "rak3ffdi.cloud.tds1.tapapis.cn");
 	BIO_write(https, req, len);
 	BIO_do_connect(https);
-	cJSON* resp;
-	try {
-		resp = read_json_body(https, 0, 0);
-	} catch (char* e) {
-		SSL_CTX_free(ctx);
-		return e;
-	}
+	cJSON* resp = read_json_body(https, 0, 0);
 	SSL_CTX_free(ctx);
+	if (cJSON_HasObjectItem(resp, "error")) {
+		char* ptr = cJSON_GetObjectItemCaseSensitive(resp, "error")->valuestring;
+		asprintf(&ptr, "ERROR:%s", ptr);
+		cJSON_Delete(resp);
+		throw ptr;
+	}
 	char *nickname = cJSON_GetObjectItemCaseSensitive(resp, "nickname")->valuestring;
 	len = strlen(nickname);
 	char* mem = (char*) malloc(len + 1);
