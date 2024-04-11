@@ -36,6 +36,11 @@ BIO* read_body(BIO* bio) {
 	short len = BIO_read(bio, buf, sizeof buf - 1);
 	buf[len] = 0;
 	short code = atoi(buf + 9);
+	if (code == 404) {
+		BIO_free(mem);
+		BIO_free_all(bio);
+		throw code;
+	}
 	ptr = strstr(buf, "\r\n\r\n");
 	BIO_write(mem, ptr + 4, buf - ptr + len - 4);
 	while (1) {
@@ -44,14 +49,6 @@ BIO* read_body(BIO* bio) {
 		BIO_write(mem, buf, len);
 	}
 	BIO_free_all(bio);
-	if (code != 200) {
-		len = BIO_get_mem_data(mem, &ptr);
-		char *error = (char*) malloc(len + 1);
-		memcpy(error, ptr, len);
-		error[len] = 0;
-		BIO_free(mem);
-		throw error;
-	}
 	return mem;
 }
 
@@ -69,6 +66,12 @@ cJSON* read_json_body(BIO* bio, char* mem, short len) {
 		len = BIO_get_mem_data(resp, &ptr);
 		json = cJSON_ParseWithLength(ptr, len);
 		BIO_free(resp);
+		if (cJSON_HasObjectItem(json, "error")) {
+			ptr = cJSON_GetObjectItemCaseSensitive(json, "error")->valuestring;
+			asprintf(&ptr, "ERROR:%s", ptr);
+			cJSON_Delete(json);
+			throw ptr;
+		}
 	}
 	return json;
 }
@@ -485,7 +488,13 @@ EXPORT char *get_nickname(struct Handle *handle) {
 	SSL_set_tlsext_host_name(ssl, "rak3ffdi.cloud.tds1.tapapis.cn");
 	BIO_write(https, req, len);
 	BIO_do_connect(https);
-	cJSON* resp = read_json_body(https, 0, 0);
+	cJSON* resp;
+	try {
+		resp = read_json_body(https, 0, 0);
+	} catch (char* e) {
+		SSL_CTX_free(ctx);
+		return e;
+	}
 	SSL_CTX_free(ctx);
 	char *nickname = cJSON_GetObjectItemCaseSensitive(resp, "nickname")->valuestring;
 	len = strlen(nickname);
