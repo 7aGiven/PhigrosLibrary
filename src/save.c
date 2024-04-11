@@ -100,7 +100,7 @@ struct LeafNode Settings[] = {
 	{_float, "noteScale"}
 };
 
-short read_varshort(char** ptr) {
+short read_varshort(signed char** ptr) {
 	if ((*ptr)[0] >= 0) {
 		++*ptr;
 		return (*ptr)[-1];
