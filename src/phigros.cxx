@@ -324,7 +324,13 @@ void cpp_bestn_internal(struct record* phi, unsigned char len, unsigned char pro
 	cJSON* song;
 	record* low_record = records;
 	cJSON_ArrayForEach(song, gameRecord) {
-		std::array<float, 4> difficulty = difficulties.at(song->string);
+		std::map<std::string, std::array<float, 4>>::const_iterator iter = difficulties.find(song->string);
+		if (iter == difficulties.end()) {
+			char* err;
+			asprintf(&err, "ERROR:std::out_of_range %s", song->string);
+			throw err;
+		}
+		std::array<float, 4> difficulty = iter->second;
 		for (char level = 0; level < 4; level++) {
 			if (level == 3 && difficulty.at(3) == 0)
 				break;
@@ -534,7 +540,12 @@ EXPORT char *get_b19(struct Handle *handle) {
 		BIO_free(save_bio);
 	}
 	cJSON* gameRecord = cJSON_GetObjectItemCaseSensitive(handle->save, "gameRecord");
-	cJSON* b19 = internal_get_b19(gameRecord);
+	cJSON* b19;
+	try {
+		b19 = internal_get_b19(gameRecord);
+	} catch(char* e) {
+		return e;
+	}
 	str = cJSON_PrintUnformatted(b19);
 	cJSON_Delete(b19);
 	return str;
