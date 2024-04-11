@@ -494,7 +494,7 @@ EXPORT char *get_nickname(struct Handle *handle) {
 		char* ptr = cJSON_GetObjectItemCaseSensitive(resp, "error")->valuestring;
 		asprintf(&ptr, "ERROR:%s", ptr);
 		cJSON_Delete(resp);
-		throw ptr;
+		return ptr;
 	}
 	char *nickname = cJSON_GetObjectItemCaseSensitive(resp, "nickname")->valuestring;
 	len = strlen(nickname);
