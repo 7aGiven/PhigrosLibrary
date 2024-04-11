@@ -505,14 +505,24 @@ EXPORT char *get_nickname(struct Handle *handle) {
 }
 
 EXPORT char *get_summary(struct Handle *handle) {
-	if (!handle->summary)
-		handle->summary = internal_get_summary(handle->sessionToken);
+	if (!handle->summary) {
+		try {
+			handle->summary = internal_get_summary(handle->sessionToken);
+		} catch (char* e) {
+			return e;
+		}
+	}
 	return cJSON_PrintUnformatted(handle->summary);
 }
 
 EXPORT char *get_save(struct Handle *handle) {
-	if (!handle->summary)
-		handle->summary = internal_get_summary(handle->sessionToken);
+	if (!handle->summary) {
+		try {
+			handle->summary = internal_get_summary(handle->sessionToken);
+		} catch (char* e) {
+			return e;
+		}
+	}
 	if (!handle->save) {
 		char* str = cJSON_GetObjectItemCaseSensitive(handle->summary, "url")->valuestring;
 		BIO* save_bio = download_save(str);
@@ -540,8 +550,13 @@ EXPORT void load_difficulty(char *path) {
 
 EXPORT char *get_b19(struct Handle *handle) {
 	char *str;
-	if (!handle->summary)
-		handle->summary = internal_get_summary(handle->sessionToken);
+	if (!handle->summary) {
+		try {
+			handle->summary = internal_get_summary(handle->sessionToken);
+		} catch (char* e) {
+			return e;
+		}
+	}
 	if (!handle->save) {
 		str = cJSON_GetObjectItemCaseSensitive(handle->summary, "url")->valuestring;
 		BIO* save_bio = download_save(str);
@@ -559,7 +574,7 @@ EXPORT char *get_b19(struct Handle *handle) {
 	cJSON_Delete(b19);
 	return str;
 }
-
+/*
 void re8(struct Handle *handle) {
 	handle->summary = internal_get_summary(handle->sessionToken);
 	char* str = cJSON_GetObjectItemCaseSensitive(handle->summary, "url")->valuestring;
@@ -578,4 +593,5 @@ void re8(struct Handle *handle) {
 	upload_save(handle->sessionToken, save_buf, len, handle->summary);
 	free(save_buf);
 }
+*/
 }
