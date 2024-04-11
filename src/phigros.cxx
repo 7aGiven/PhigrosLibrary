@@ -101,15 +101,13 @@ cJSON* internal_get_summary(char* sessionToken) {
 	BIO_do_connect(https);
 	cJSON* resp = read_json_body(https, 0, 0);
 	SSL_CTX_free(ctx);
-	if (cJSON_HasObjectItem(resp, "error")) {
-		char* ptr = cJSON_GetObjectItemCaseSensitive(resp, "error")->valuestring;
-		asprintf(&ptr, "ERROR:%s", ptr);
-		cJSON_Delete(resp);
-		throw ptr;
-	}
 
 	cJSON* result = cJSON_GetObjectItemCaseSensitive(resp, "results");
 	result = cJSON_GetArrayItem(result, 0);
+	if (!result) {
+		cJSON_Delete(resp);
+		throw "ERROR:no result";
+	}
 	
 	cJSON* info = parse_summary(req, cJSON_GetObjectItemCaseSensitive(result, "summary")->valuestring);
 
@@ -504,22 +502,22 @@ EXPORT char *get_nickname(struct Handle *handle) {
 	return mem;
 }
 
-EXPORT char *get_summary(struct Handle *handle) {
+EXPORT const char *get_summary(struct Handle *handle) {
 	if (!handle->summary) {
 		try {
 			handle->summary = internal_get_summary(handle->sessionToken);
-		} catch (char* e) {
+		} catch (const char* e) {
 			return e;
 		}
 	}
 	return cJSON_PrintUnformatted(handle->summary);
 }
 
-EXPORT char *get_save(struct Handle *handle) {
+EXPORT const char *get_save(struct Handle *handle) {
 	if (!handle->summary) {
 		try {
 			handle->summary = internal_get_summary(handle->sessionToken);
-		} catch (char* e) {
+		} catch (const char* e) {
 			return e;
 		}
 	}
@@ -548,12 +546,12 @@ EXPORT void load_difficulty(char *path) {
 	fclose(file);
 }
 
-EXPORT char *get_b19(struct Handle *handle) {
+EXPORT const char *get_b19(struct Handle *handle) {
 	char *str;
 	if (!handle->summary) {
 		try {
 			handle->summary = internal_get_summary(handle->sessionToken);
-		} catch (char* e) {
+		} catch (const char* e) {
 			return e;
 		}
 	}
