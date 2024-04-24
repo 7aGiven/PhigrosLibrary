@@ -28,6 +28,7 @@ void gen_summary(char* mem, cJSON* summary);
 cJSON* parse_save(BIO* bio_zip);
 short gen_save(char** ret, cJSON* json);
 
+char errorbuffer[128];
 const EVP_MD* md;
 
 BIO* read_body(BIO* bio) {
@@ -327,9 +328,8 @@ void cpp_bestn_internal(struct record* phi, unsigned char len, unsigned char pro
 	cJSON_ArrayForEach(song, gameRecord) {
 		std::map<std::string, std::array<float, 4>>::const_iterator iter = difficulties.find(song->string);
 		if (iter == difficulties.end()) {
-			char* err;
-			asprintf(&err, "ERROR:std::out_of_range %s", song->string);
-			throw err;
+			sprintf(errorbuffer, "ERROR:std::out_of_range %s", song->string);
+			throw errorbuffer;
 		}
 		std::array<float, 4> difficulty = iter->second;
 		for (char level = 0; level < 4; level++) {
@@ -490,9 +490,9 @@ EXPORT char *get_nickname(struct Handle *handle) {
 	SSL_CTX_free(ctx);
 	if (cJSON_HasObjectItem(resp, "error")) {
 		char* ptr = cJSON_GetObjectItemCaseSensitive(resp, "error")->valuestring;
-		asprintf(&ptr, "ERROR:%s", ptr);
+		sprintf(errorbuffer, "ERROR:%s", ptr);
 		cJSON_Delete(resp);
-		return ptr;
+		return errorbuffer;
 	}
 	char *nickname = cJSON_GetObjectItemCaseSensitive(resp, "nickname")->valuestring;
 	len = strlen(nickname);
