@@ -457,6 +457,7 @@ struct Handle {
 	char sessionToken[26];
 	cJSON* summary;
 	cJSON* save;
+	char* buf;
 };
 
 EXPORT struct Handle *get_handle(char *sessionToken) {
@@ -471,6 +472,8 @@ EXPORT void free_handle(struct Handle* handle) {
 		if (handle->save)
 			cJSON_Delete(handle->save);
 	}
+	if (handle->buf)
+		free(handle->buf);
 	free(handle);
 }
 
@@ -496,10 +499,12 @@ EXPORT char *get_nickname(struct Handle *handle) {
 	}
 	char *nickname = cJSON_GetObjectItemCaseSensitive(resp, "nickname")->valuestring;
 	len = strlen(nickname);
-	char* mem = (char*) malloc(len + 1);
-	strcpy(mem, nickname);
+	if (handle->buf)
+		free(handle->buf);
+	handle->buf = (char*) malloc(len + 1);
+	strcpy(handle->buf, nickname);
 	cJSON_Delete(resp);
-	return mem;
+	return handle->buf;
 }
 
 EXPORT const char *get_summary(struct Handle *handle) {
@@ -510,7 +515,10 @@ EXPORT const char *get_summary(struct Handle *handle) {
 			return e;
 		}
 	}
-	return cJSON_PrintUnformatted(handle->summary);
+	if (handle->buf)
+		free(handle->buf);
+	handle->buf = cJSON_PrintUnformatted(handle->summary);
+	return handle->buf;
 }
 
 EXPORT const char *get_save(struct Handle *handle) {
@@ -527,7 +535,10 @@ EXPORT const char *get_save(struct Handle *handle) {
 		handle->save = parse_save(save_bio);
 		BIO_free(save_bio);
 	}
-	return cJSON_PrintUnformatted(handle->save);
+	if (handle->buf)
+		free(handle->buf);
+	handle->buf = cJSON_PrintUnformatted(handle->save);
+	return handle->buf;
 }
 
 EXPORT void load_difficulty(char *path) {
@@ -568,9 +579,11 @@ EXPORT const char *get_b19(struct Handle *handle) {
 	} catch(char* e) {
 		return e;
 	}
-	str = cJSON_PrintUnformatted(b19);
+	if (handle->buf)
+		free(handle->buf);
+	handle->buf = cJSON_PrintUnformatted(b19);
 	cJSON_Delete(b19);
-	return str;
+	return handle->buf;
 }
 /*
 void re8(struct Handle *handle) {
