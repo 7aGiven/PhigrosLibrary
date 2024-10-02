@@ -10,7 +10,7 @@ PhigrosLibrary是C/C++实现的Phigros云存档解析库。
 
 1. [头像id](https://github.com/7aGiven/PhigrosLibrary/blob/main/avatar.txt)
 2. [收藏品id](https://github.com/7aGiven/PhigrosLibrary/blob/main/collection.tsv)
-3. 定数表和曲绘请使用项目@3035936740[Phigros_Resource](https://github.com/3035936740/Phigros_Resource/)从apk文件中提取
+3. 定数表和曲绘请使用项目[Phigros_Resource](https://github.com/7aGiven/Phigros_Resource/)从apk文件中提取
 
 **注：3个文件都在项目根目录下，查看修改时间判断版本。**
 
@@ -32,20 +32,16 @@ PhigrosLibrary是C/C++实现的Phigros云存档解析库。
 
 UI精美，使用nodejs重构本项目的查分，使用本项目nodejs C++ addon的re8
 ## Phigros 曲目更新
-@3035936740[Phigros_Resource](https://github.com/3035936740/Phigros_Resource/)可从apk文件中提取定数表
+[Phigros_Resource](https://github.com/7aGiven/Phigros_Resource/)可从apk文件中提取定数表
 
 运行以下代码将会在运行目录生成difficulty.csv
 ```python
-pip install UnityPy
-python3 gameInformation.py Phigros.apk
+pip install UnityPy==1.10.18
+python gameInformation.py Phigros.apk
 ```
 将生成的difficulty.tsv替换项目内的difficulty.tsv即可
 ## Phigros 淘宝店
-如果你希望修改存档，但是不会编译和使用项目，怎么办？
-
-https://h5.m.taobao.com/awp/core/detail.htm?ft=t&id=738050220389
-
-点进淘宝店花点小钱让作者帮你改存档。
+已关店
 ## Phigros玩家 QQ群
 加入 282781491 闲聊
 ## PhigrosLibrary开发 QQ群
