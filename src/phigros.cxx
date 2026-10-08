@@ -90,7 +90,7 @@ void md5(char* str, void* ptr, unsigned int len) {
 
 char info_req[] = "GET /1.1/%s HTTP/1.1\r\nX-LC-Key: Qr9AEqtuoSVS3zeD6iVbM4ZC0AtkJcQ89tywVyi0\r\nX-LC-Session: %s\r\nX-LC-Id: rAK3FfdieFob2Nn8Am\r\nHost: rak3ffdi.cloud.tds1.tapapis.cn\r\nConnection: close\r\n\r\n";
 struct Handle {
-	char sessionToken[26];
+	char sessionToken[64];
 	char objectId[16];
 	cJSON* summary;
 	cJSON* save;
@@ -511,7 +511,7 @@ void update_summary(cJSON* summary, cJSON* save) {
 
 EXPORT struct Handle *get_handle(char *sessionToken) {
 	struct Handle *handle = (struct Handle*) calloc(1, sizeof(struct Handle));
-	strcpy(handle->sessionToken, sessionToken);
+	strncpy(handle->sessionToken, sessionToken, sizeof(handle->sessionToken) - 1);
 	return handle;
 }
 
