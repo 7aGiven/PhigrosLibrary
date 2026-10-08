@@ -89,10 +89,56 @@ void md5(char* str, void* ptr, unsigned int len) {
 }
 
 char info_req[] = "GET /1.1/%s HTTP/1.1\r\nX-LC-Key: Qr9AEqtuoSVS3zeD6iVbM4ZC0AtkJcQ89tywVyi0\r\nX-LC-Session: %s\r\nX-LC-Id: rAK3FfdieFob2Nn8Am\r\nHost: rak3ffdi.cloud.tds1.tapapis.cn\r\nConnection: close\r\n\r\n";
-cJSON* internal_get_summary(char* sessionToken) {
+struct Handle {
+	char sessionToken[26];
+	char objectId[16];
+	cJSON* summary;
+	cJSON* save;
+	char* buf;
+};
+
+void fetch_user_objectId(struct Handle* handle) {
+	if (handle->objectId[0])
+		return;
 	SSL* ssl;
 	char req[512];
-	sprintf(req, info_req, "classes/_GameSave?limit=1", sessionToken);
+	short len = sprintf(req, info_req, "users/me", handle->sessionToken);
+	SSL_CTX* ctx = SSL_CTX_new(TLS_client_method());
+	BIO* https = BIO_new_ssl_connect(ctx);
+	BIO_get_ssl(https, &ssl);
+	BIO_set_conn_hostname(https, "rak3ffdi.cloud.tds1.tapapis.cn:https");
+	SSL_set_tlsext_host_name(ssl, "rak3ffdi.cloud.tds1.tapapis.cn");
+	BIO_write(https, req, len);
+	BIO_do_connect(https);
+	cJSON* resp = read_json_body(https, 0, 0);
+	SSL_CTX_free(ctx);
+	if (cJSON_HasObjectItem(resp, "error")) {
+		char* ptr = cJSON_GetObjectItemCaseSensitive(resp, "error")->valuestring;
+		sprintf(errorbuffer, "ERROR:%s", ptr);
+		cJSON_Delete(resp);
+		throw (const char*)errorbuffer;
+	}
+	cJSON* objectId = cJSON_GetObjectItemCaseSensitive(resp, "objectId");
+	if (!objectId) {
+		cJSON_Delete(resp);
+		throw "ERROR:no objectId";
+	}
+	strcpy(handle->objectId, objectId->valuestring);
+	cJSON_Delete(resp);
+}
+
+char gamesave_where[] = "classes/_GameSave?where=%7B%22user%22%3A%7B%22__type%22%3A%22Pointer%22%2C%22className%22%3A%22_User%22%2C%22objectId%22%3A%22";
+char gamesave_where_end[] = "%22%7D%7D";
+cJSON* internal_get_summary(struct Handle* handle) {
+	fetch_user_objectId(handle);
+	SSL* ssl;
+	char path[256];
+	char req[1024];
+	strcpy(path, gamesave_where);
+	strcat(path, handle->objectId);
+	strcat(path, gamesave_where_end);
+	strcat(path, "&order=-updatedAt&limit=1");
+	sprintf(req, info_req, path, handle->sessionToken);
 	SSL_CTX* ctx = SSL_CTX_new(TLS_client_method());
 	BIO* https = BIO_new_ssl_connect(ctx);
 	BIO_get_ssl(https, &ssl);
@@ -108,6 +154,11 @@ cJSON* internal_get_summary(char* sessionToken) {
 	if (!result) {
 		cJSON_Delete(resp);
 		throw "ERROR:no result";
+	}
+	cJSON* user = cJSON_GetObjectItemCaseSensitive(result, "user");
+	if (strcmp(cJSON_GetObjectItemCaseSensitive(user, "objectId")->valuestring, handle->objectId)) {
+		cJSON_Delete(resp);
+		throw "ERROR:save user mismatch";
 	}
 	
 	cJSON* info = parse_summary(req, cJSON_GetObjectItemCaseSensitive(result, "summary")->valuestring);
@@ -129,10 +180,15 @@ cJSON* internal_get_summary(char* sessionToken) {
 	return info;
 }
 
-cJSON* get_summarys(char* sessionToken) {
+cJSON* get_summarys(struct Handle* handle) {
+	fetch_user_objectId(handle);
 	SSL* ssl;
-	char req[512];
-	sprintf(req, info_req, "classes/_GameSave", sessionToken);
+	char path[256];
+	char req[1024];
+	strcpy(path, gamesave_where);
+	strcat(path, handle->objectId);
+	strcat(path, gamesave_where_end);
+	sprintf(req, info_req, path, handle->sessionToken);
 	SSL_CTX* ctx = SSL_CTX_new(TLS_client_method());
 	BIO* https = BIO_new_ssl_connect(ctx);
 	BIO_get_ssl(https, &ssl);
@@ -453,13 +509,6 @@ void update_summary(cJSON* summary, cJSON* save) {
 
 
 
-struct Handle {
-	char sessionToken[26];
-	cJSON* summary;
-	cJSON* save;
-	char* buf;
-};
-
 EXPORT struct Handle *get_handle(char *sessionToken) {
 	struct Handle *handle = (struct Handle*) calloc(1, sizeof(struct Handle));
 	strcpy(handle->sessionToken, sessionToken);
@@ -510,7 +559,7 @@ EXPORT char *get_nickname(struct Handle *handle) {
 EXPORT const char *get_summary(struct Handle *handle) {
 	if (!handle->summary) {
 		try {
-			handle->summary = internal_get_summary(handle->sessionToken);
+			handle->summary = internal_get_summary(handle);
 		} catch (const char* e) {
 			return e;
 		}
@@ -524,7 +573,7 @@ EXPORT const char *get_summary(struct Handle *handle) {
 EXPORT const char *get_save(struct Handle *handle) {
 	if (!handle->summary) {
 		try {
-			handle->summary = internal_get_summary(handle->sessionToken);
+			handle->summary = internal_get_summary(handle);
 		} catch (const char* e) {
 			return e;
 		}
@@ -561,7 +610,7 @@ EXPORT const char *get_b19(struct Handle *handle) {
 	char *str;
 	if (!handle->summary) {
 		try {
-			handle->summary = internal_get_summary(handle->sessionToken);
+			handle->summary = internal_get_summary(handle);
 		} catch (const char* e) {
 			return e;
 		}
@@ -587,7 +636,7 @@ EXPORT const char *get_b19(struct Handle *handle) {
 }
 /*
 void re8(struct Handle *handle) {
-	handle->summary = internal_get_summary(handle->sessionToken);
+	handle->summary = internal_get_summary(handle);
 	char* str = cJSON_GetObjectItemCaseSensitive(handle->summary, "url")->valuestring;
 	BIO* save_bio = download_save(str);
 	handle->save = parse_save(save_bio);
