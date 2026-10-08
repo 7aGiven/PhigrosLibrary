@@ -160,7 +160,7 @@ void deserialization(cJSON* json, char** ptr, struct LeafNode* nodes, char len) 
 		} else if (nodes[i].type == string) {
 			item = read_string(ptr, 0);
 		} else if (nodes[i].type == varshort) {
-			item = read_varshort(ptr);
+			item = cJSON_CreateNumber(read_varshort(ptr));
 		} else if (nodes[i].type == u16array) {
 			item = cJSON_CreateArray();
 			for (int ii = 0; ii < 12; ii++) {
@@ -204,7 +204,7 @@ void serialization(BIO* bio, cJSON* json, struct LeafNode* nodes, char len) {
 		} else if (nodes[i].type == string)
 			write_string(bio, item->valuestring, 0);
 		else if (nodes[i].type == varshort)
-			write_varshort(bio, &item->valueint);
+			write_varshort(bio, item->valueint);
 		else if (nodes[i].type == u16array)
 			for (char ii = 0; ii < 12; ii++)
 				BIO_write(bio, &cJSON_GetArrayItem(item, ii)->valueint, 2);
