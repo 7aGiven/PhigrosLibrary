@@ -1,5 +1,6 @@
 import base64
 import io
+import json
 import struct
 from types import GenericAlias
 import zipfile
@@ -262,8 +263,17 @@ class B19Class:
     async def get_summary(self, sessionToken):
         headers = global_headers.copy()
         headers["X-LC-Session"] = sessionToken
-        async with self.client.get("https://rak3ffdi.cloud.tds1.tapapis.cn/1.1/classes/_GameSave", headers=headers) as response:
+        async with self.client.get("https://rak3ffdi.cloud.tds1.tapapis.cn/1.1/users/me", headers=headers) as response:
+            objectId = (await response.json())["objectId"]
+        params = {
+            "where": json.dumps({"user":{"__type":"Pointer","className":"_User","objectId":objectId}}),
+            "order": "-updatedAt",
+            "limit": 1
+        }
+        async with self.client.get("https://rak3ffdi.cloud.tds1.tapapis.cn/1.1/classes/_GameSave", headers=headers, params=params) as response:
             result = (await response.json())["results"][0]
+        if result["user"]["objectId"] != objectId:
+            raise Exception("save user mismatch")
         summary = base64.b64decode(result["summary"])
         summary = deserialize(Summary, Buffer(summary))
         summary["updateAt"] = result["updatedAt"]
